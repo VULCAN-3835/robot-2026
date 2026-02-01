@@ -16,4 +16,20 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+  public static class ClimbSubsystemConstants {
+    public static enum climbStates{REST,L1,L2,L3}
+    
+    public static final int climbMotor1Port = 0;
+    public static final int climbMotor2Port = 0;
+    public static final int limitSwitchPort = 0;
+    
+    public static final double kp = 0;
+    public static final double ki = 0;
+    public static final double kd = 0;
+
+    public static final double restHeight = 0;
+    public static final double L1Height = 0;
+    public static final double L2Height = 0;
+    public static final double L3Height = 0;
+  }
 }
