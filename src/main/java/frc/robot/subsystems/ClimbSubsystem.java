@@ -4,10 +4,9 @@
 
 package frc.robot.subsystems;
 
-
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
-
+import edu.wpi.first.hal.DIOJNI;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,7 +34,7 @@ public class ClimbSubsystem extends SubsystemBase {
      ClimbSubsystemConstants.kd,
      null);
 
-
+    setHeight(climbStates.REST);
   }
 
   public boolean getLimitSwitch(){
@@ -61,6 +60,26 @@ public class ClimbSubsystem extends SubsystemBase {
         break;
     }
   }
+  
+  public void setSpeed(climbStates state){
+    switch (state) {
+      case REST:
+        climbMotor1.set(0);
+        break;
+      case L1:
+        climbMotor1.set(ClimbSubsystemConstants.L1Speed);
+        break;
+      case L2:
+        climbMotor1.set(ClimbSubsystemConstants.L2Speed);
+        break;
+      case L3:
+        climbMotor1.set(ClimbSubsystemConstants.L3Speed);
+        break;
+      default:
+        climbMotor1.set(0);
+        break;
+    }
+  }
 
   public boolean isAtSetPoint() {
     return pidController.atGoal();
@@ -68,12 +87,12 @@ public class ClimbSubsystem extends SubsystemBase {
 
 
   public boolean isConnected() {
-   // boolean limitSwitchLivness = DIOJNI.checkDIOChannel(ClimbSubsystemConstants.limitSwitchPort);
+    boolean limitSwitchLivness = DIOJNI.checkDIOChannel(ClimbSubsystemConstants.limitSwitchPort);
 
     boolean motor1Liveness = this.climbMotor1.isConnected() && this.climbMotor1.isAlive(); 
     boolean motor2Liveness = this.climbMotor2.isConnected() && this.climbMotor2.isAlive();
 
-    return /*limitSwitchLivness &&*/ motor1Liveness && motor2Liveness;
+    return limitSwitchLivness && motor1Liveness && motor2Liveness;
   }
 
   @Override

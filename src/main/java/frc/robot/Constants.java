@@ -31,5 +31,10 @@ public final class Constants {
     public static final double L1Height = 0;
     public static final double L2Height = 0;
     public static final double L3Height = 0;
+
+    public static final double L1Speed = 0;
+    public static final double L2Speed = 0;
+    public static final double L3Speed = 0;
+
   }
 }
