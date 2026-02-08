@@ -16,4 +16,24 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+  public static final class IntakeConstants {
+    public static enum intakeStates {REST, SOURCE}
+
+    public static final int leftArmMotorID = 0;
+    public static final int rightArmMotorID = 0;
+
+    public static final int leftRollerMotorID = 0;
+    public static final int rightRollerMotorID = 0;
+
+    public static final double intakePower = 0;
+
+    public static final double restPoint = 0;
+    public static final double sourcePoint = 0;
+
+    public static final double kp = 0;
+    public static final double ki = 0;
+    public static final double kd = 0;
+
+    public static final double pidTolerance = 0;
+  }
 }
