@@ -33,6 +33,8 @@ public final class Constants {
     public static final double kp = 0;
     public static final double ki = 0;
     public static final double kd = 0;
+    public static final double kMaxVelocity = 0;
+    public static final double kMaxAcceleration = 0;
 
     public static final double pidTolerance = 0;
   }

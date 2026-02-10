@@ -16,7 +16,8 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 import frc.robot.RobotContainer;
@@ -29,9 +30,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX leftRollerMotor;
   private TalonFX rightRollerMotor;
 
-  private PIDController pidController;
-
-  private double target;
+  private ProfiledPIDController pidController;
 
   public IntakeSubsystem() {
 
@@ -43,10 +42,9 @@ public class IntakeSubsystem extends SubsystemBase {
     this.rightRollerMotor = new TalonFX(IntakeConstants.rightRollerMotorID); // Follower
     this.rightRollerMotor.setControl(new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
-    this.pidController = new PIDController(IntakeConstants.kp, IntakeConstants.ki, IntakeConstants.kd);
+    this.pidController = new ProfiledPIDController(IntakeConstants.kp, IntakeConstants.ki, IntakeConstants.kd, new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration));
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
-    this.target = IntakeConstants.restPoint;
   }
 
   /**
@@ -55,18 +53,17 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param state The desired state of the four bar
    */
   public void setArmState(intakeStates state) {
+
     switch (state) {
 
       case REST:
-        target = IntakeConstants.restPoint;
+        pidController.setGoal(IntakeConstants.restPoint);
         break;
 
       case SOURCE:
-        target = IntakeConstants.sourcePoint;
+        pidController.setGoal(IntakeConstants.sourcePoint);
         break;
 
-      default:
-        target = IntakeConstants.restPoint;
     }
 
   }
@@ -103,7 +100,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     
     double currentPos = leftArmMotor.getPosition().getValueAsDouble();
-    double output = pidController.calculate(currentPos, target);
+    double output = pidController.calculate(currentPos);
     setArmPower(output);
   }
 }
