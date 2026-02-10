@@ -8,19 +8,18 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
-import frc.robot.RobotContainer;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
@@ -93,6 +92,31 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   public void setRollerPower(double power) {
     leftRollerMotor.set(power);
+  }
+
+  public SequentialCommandGroup toIntake() {
+    return new SequentialCommandGroup(
+
+    
+      // 1. Starts rolling the rollers for intake
+      new InstantCommand(() -> setRollerState(true)),
+
+      // 2. Sets the arm down to the source position
+      new InstantCommand(() -> setArmState(intakeStates.SOURCE))
+
+    );
+  }
+
+  public SequentialCommandGroup toRest() {
+    return new SequentialCommandGroup(
+
+      // 1. Returns the arm into its rest position
+      new InstantCommand(() -> setArmState(intakeStates.REST)),
+
+      // 2. Stops rolling the rollers
+      new InstantCommand(() -> setRollerState(false))
+
+    );
   }
 
   @Override
