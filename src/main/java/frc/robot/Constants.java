@@ -19,11 +19,11 @@ public final class Constants {
   public static final class IntakeConstants {
     public static enum intakeStates {REST, SOURCE}
 
-    public static final int leftArmMotorID = 0;
-    public static final int rightArmMotorID = 0;
+    public static final int armMotorID = 0;
+    public static final int rollerMotorID = 0;
 
-    public static final int leftRollerMotorID = 0;
-    public static final int rightRollerMotorID = 0;
+    public static final int restLimitSwitchID = 0;
+    public static final int sourceLimitSwitchID = 0;
 
     public static final double intakePower = 0;
 

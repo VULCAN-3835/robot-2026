@@ -4,46 +4,57 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
-  private TalonFX leftArmMotor;
-  private TalonFX rightArmMotor;
-
-  private TalonFX leftRollerMotor;
-  private TalonFX rightRollerMotor;
+  private TalonFX armMotor;
+  private TalonFX rollerMotor;
 
   private ProfiledPIDController pidController;
 
+  private DigitalInput restLimitSwitch;
+  private DigitalInput sourceLimitSwitch;
+
+  private intakeStates target;
+
   public IntakeSubsystem() {
 
-    this.leftArmMotor = new TalonFX(IntakeConstants.leftArmMotorID); // Leader
-    this.rightArmMotor = new TalonFX(IntakeConstants.rightArmMotorID); // Follower
-    this.rightArmMotor.setControl(new Follower(leftArmMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    this.armMotor = new TalonFX(IntakeConstants.armMotorID);
 
-    this.leftRollerMotor = new TalonFX(IntakeConstants.leftRollerMotorID); // Leader
-    this.rightRollerMotor = new TalonFX(IntakeConstants.rightRollerMotorID); // Follower
-    this.rightRollerMotor.setControl(new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
-
-    this.pidController = new ProfiledPIDController(IntakeConstants.kp, IntakeConstants.ki, IntakeConstants.kd, new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration));
+    this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
+    this.pidController = new ProfiledPIDController(IntakeConstants.kp, IntakeConstants.ki, IntakeConstants.kd, new Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration));
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
+    pidController.setGoal(IntakeConstants.restPoint);
+    this.target = intakeStates.REST;
+
+    this.restLimitSwitch = new DigitalInput(IntakeConstants.restLimitSwitchID);
+    this.sourceLimitSwitch = new DigitalInput(IntakeConstants.sourceLimitSwitchID);
+
+
+  }
+
+  public boolean getRestLimitSwitch() {
+      return restLimitSwitch.get();
+  }
+
+  public boolean getSourceLimitSwitch() {
+      return sourceLimitSwitch.get();
   }
 
   /**
@@ -57,10 +68,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
       case REST:
         pidController.setGoal(IntakeConstants.restPoint);
+        target = intakeStates.REST;
         break;
 
       case SOURCE:
         pidController.setGoal(IntakeConstants.sourcePoint);
+        target = intakeStates.SOURCE;
         break;
 
     }
@@ -73,7 +86,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param power The desired power of the arm motors
    */
   public void setArmPower(double power) {
-    leftArmMotor.set(power);
+    armMotor.set(power);
   }
 
   /**
@@ -91,7 +104,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param power The desired power of the roller motors
    */
   public void setRollerPower(double power) {
-    leftRollerMotor.set(power);
+    rollerMotor.set(power);
   }
 
   public SequentialCommandGroup toIntake() {
@@ -123,8 +136,14 @@ public class IntakeSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     
-    double currentPos = leftArmMotor.getPosition().getValueAsDouble();
-    double output = pidController.calculate(currentPos);
-    setArmPower(output);
+    
+    if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.SOURCE && getSourceLimitSwitch())) {
+      double currentArmPos = armMotor.getPosition().getValueAsDouble();
+      double armOutput = pidController.calculate(currentArmPos);
+      setArmPower(armOutput);
+    }
+    else {
+      setArmPower(0);
+    }
   }
 }
