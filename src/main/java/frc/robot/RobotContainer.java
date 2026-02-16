@@ -6,9 +6,17 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
+import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -20,14 +28,21 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
+  private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
+  private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController xboxControllerButton =
+      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+
+  private SendableChooser<Command> autoChooser = new SendableChooser<>();
+
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+     autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser.setDefaultOption("EMPTY", null);
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     // Configure the trigger bindings
     configureBindings();
   }
@@ -43,13 +58,34 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
   }
+  private void setUpContollers(boolean oneController) {
+
+    chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
+        () -> xboxControllerDrive.getLeftY(),
+        () -> xboxControllerDrive.getLeftX(),
+        () -> xboxControllerDrive.getRightX()));
+
+    xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
+
+    
+
+    
+    configureButtonBinding(oneController ? xboxControllerDrive : xboxControllerButton);
+  }
+
+  private void configureButtonBinding(CommandXboxController cmdXboxController) {
+    // Here we will configure the button bindings
+
+    // uses
+
+
+  }
+  
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -58,6 +94,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return autoChooser.getSelected();
   }
 }
