@@ -25,6 +25,8 @@ public final class Constants {
     public static final int restLimitSwitchID = 0;
     public static final int sourceLimitSwitchID = 0;
 
+    public static final int armEncoderID = 0;
+
     public static final double intakePower = 0;
 
     public static final double restPoint = 0;

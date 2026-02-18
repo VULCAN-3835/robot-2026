@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.CANcoder;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -14,6 +15,10 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+
+import edu.wpi.first.units.measure.Angle;
+import static edu.wpi.first.units.Units.Degrees;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
@@ -29,6 +34,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private DigitalInput restLimitSwitch;
   private DigitalInput sourceLimitSwitch;
+
+  private CANcoder armEncoder;
 
   private intakeStates target;
 
@@ -46,6 +53,7 @@ public class IntakeSubsystem extends SubsystemBase {
     this.restLimitSwitch = new DigitalInput(IntakeConstants.restLimitSwitchID);
     this.sourceLimitSwitch = new DigitalInput(IntakeConstants.sourceLimitSwitchID);
 
+    this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
 
   }
 
@@ -54,7 +62,11 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean getSourceLimitSwitch() {
-      return sourceLimitSwitch.get();
+    return sourceLimitSwitch.get();
+  }
+
+  public Angle getArmAngle() {
+    return armEncoder.getAbsolutePosition().getValue();
   }
 
   /**
@@ -138,8 +150,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     
     if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.SOURCE && getSourceLimitSwitch())) {
-      double currentArmPos = armMotor.getPosition().getValueAsDouble();
-      double armOutput = pidController.calculate(currentArmPos);
+      double armOutput = pidController.calculate(getArmAngle().in(Degrees));
       setArmPower(armOutput);
     }
     else {
