@@ -33,7 +33,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private ProfiledPIDController pidController;
 
   private DigitalInput restLimitSwitch;
-  private DigitalInput sourceLimitSwitch;
+  private DigitalInput intakeLimitSwitch;
 
   private CANcoder armEncoder;
 
@@ -51,7 +51,7 @@ public class IntakeSubsystem extends SubsystemBase {
     this.target = intakeStates.REST;
 
     this.restLimitSwitch = new DigitalInput(IntakeConstants.restLimitSwitchID);
-    this.sourceLimitSwitch = new DigitalInput(IntakeConstants.sourceLimitSwitchID);
+    this.intakeLimitSwitch = new DigitalInput(IntakeConstants.intakeLimitSwitchID);
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
 
@@ -61,8 +61,8 @@ public class IntakeSubsystem extends SubsystemBase {
       return restLimitSwitch.get();
   }
 
-  public boolean getSourceLimitSwitch() {
-    return sourceLimitSwitch.get();
+  public boolean getIntakeLimitSwitch() {
+    return intakeLimitSwitch.get();
   }
 
   public Angle getArmAngle() {
@@ -83,9 +83,9 @@ public class IntakeSubsystem extends SubsystemBase {
         target = intakeStates.REST;
         break;
 
-      case SOURCE:
-        pidController.setGoal(IntakeConstants.sourcePoint);
-        target = intakeStates.SOURCE;
+      case INTAKE:
+        pidController.setGoal(IntakeConstants.intakePoint);
+        target = intakeStates.INTAKE;
         break;
 
     }
@@ -126,8 +126,8 @@ public class IntakeSubsystem extends SubsystemBase {
       // 1. Starts rolling the rollers for intake
       new InstantCommand(() -> setRollerState(true)),
 
-      // 2. Sets the arm down to the source position
-      new InstantCommand(() -> setArmState(intakeStates.SOURCE))
+      // 2. Sets the arm down to the intake position
+      new InstantCommand(() -> setArmState(intakeStates.INTAKE))
 
     );
   }
@@ -149,7 +149,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     
     
-    if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.SOURCE && getSourceLimitSwitch())) {
+    if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.INTAKE && getIntakeLimitSwitch())) {
       double armOutput = pidController.calculate(getArmAngle().in(Degrees));
       setArmPower(armOutput);
     }

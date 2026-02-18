@@ -17,20 +17,20 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
   }
   public static final class IntakeConstants {
-    public static enum intakeStates {REST, SOURCE}
+    public static enum intakeStates {REST, INTAKE}
 
     public static final int armMotorID = 0;
     public static final int rollerMotorID = 0;
 
     public static final int restLimitSwitchID = 0;
-    public static final int sourceLimitSwitchID = 0;
+    public static final int intakeLimitSwitchID = 0;
 
     public static final int armEncoderID = 0;
 
     public static final double intakePower = 0;
 
     public static final double restPoint = 0;
-    public static final double sourcePoint = 0;
+    public static final double intakePoint = 0;
 
     public static final double kp = 0;
     public static final double ki = 0;
