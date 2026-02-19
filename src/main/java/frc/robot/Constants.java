@@ -162,4 +162,9 @@ public final class Constants {
 
     }
   }
+  public static final class StorageConstants {
+    public static final int feedMotorID = 0;
+
+    public static final double feedPower = 0;
+  }
 }
