@@ -16,22 +16,22 @@ public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
 
-  public IntakeSubsystem() {
+  public StorageSubsystem() {
 
     this.feedMotor = new TalonFX(StorageConstants.feedMotorID);
 
   }
 
   public void setFeedMotorState(boolean powered) {
-    setFeedMotorPower(powered ? StorageConstants.feedPower : 0)
+    setFeedMotorPower(powered ? StorageConstants.feedPower : 0);
   }
 
   public void setFeedMotorPower(double power) {
     feedMotor.set(power);
   }
 
-  public Command setFeedMotorState(boolean powered) {
-    return new InstantCommand(() -> setFeedMotorState(powered))
+  public Command setFeedMotorStateCMD(boolean powered) {
+    return new InstantCommand(() -> setFeedMotorState(powered));
   }
 
   @Override
