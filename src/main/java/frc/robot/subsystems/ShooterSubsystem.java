@@ -8,9 +8,11 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import frc.robot.Constants.ShooterConstants;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,33 +33,50 @@ public class ShooterSubsystem extends SubsystemBase {
   private SimpleMotorFeedforward hoodFF;
   private SimpleMotorFeedforward turretFF;
 
-  private double turretTolerence = 5;
-  private double hoodTolerence = 3;
+  
 
   private static InterpolatingDoubleTreeMap distanceToRPMMap = new InterpolatingDoubleTreeMap(); 
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap(); 
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap(); 
 
   public ShooterSubsystem() {
-    this.turretMotor = new TalonFX(0);
-    this.flyWheelMotor = new TalonFX(0);
-    this.hoodMotor = new TalonFX(0);
+  this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
+  this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
+  this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
-    this.hoodCancoder = new CANcoder(0);
-    this.turretCancoder = new CANcoder(0);
+  this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
+  this.turretCancoder = new CANcoder(ShooterConstants.kTurretCANcoderID);
 
-    this.hoodPID = new ProfiledPIDController(0, 0, 0, null);
-    this.hoodPID.setTolerance(hoodTolerence);
-    this.turretPID = new ProfiledPIDController(0, 0, 0, null);
-    this.turretPID.setTolerance(hoodTolerence);
+  this.hoodPID = new ProfiledPIDController(
+    ShooterConstants.kHoodP,
+    ShooterConstants.kHoodI,
+    ShooterConstants.kHoodD,
+    new Constraints(
+      ShooterConstants.kHoodMaxVel,
+      ShooterConstants.kHoodMaxAccel));
+  this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
 
-    this.hoodFF = new SimpleMotorFeedforward(0, 0, 0);
-    this.turretFF = new SimpleMotorFeedforward(0, 0, 0);
+  this.turretPID = new ProfiledPIDController(
+    ShooterConstants.kTurretP,
+    ShooterConstants.kTurretI,
+    ShooterConstants.kTurretD,
+    new Constraints(
+      ShooterConstants.kTurretMaxVel,
+      ShooterConstants.kTurretMaxAccel));
+  this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
 
+  this.hoodFF = new SimpleMotorFeedforward(
+    ShooterConstants.kHoodKS,
+    ShooterConstants.kHoodKV,
+    ShooterConstants.kHoodKA);
+  this.turretFF = new SimpleMotorFeedforward(
+    ShooterConstants.kTurretKS,
+    ShooterConstants.kTurretKV,
+    ShooterConstants.kTurretKA);
+    
     initializeMaps();
-
   }
-
+  
 
   private static void initializeMaps(){
     // Example data points for distance to RPM mapping
