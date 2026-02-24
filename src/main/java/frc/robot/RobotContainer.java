@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.ShooterSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -71,8 +73,8 @@ public class RobotContainer {
         () -> xboxControllerDrive.getLeftX(),
         () -> xboxControllerDrive.getRightX()));
 
-    xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
-
+    xboxControllerDrive.start().onTrue(new InstantCommand(()->chassisSubsystem.zeroHeading()));
+    
     
 
     
@@ -80,9 +82,8 @@ public class RobotContainer {
   }
 
   private void configureButtonBinding(CommandXboxController cmdXboxController) {
-    // Here we will configure the button bindings
-
-    // uses
+    cmdXboxController.rightTrigger().whileTrue(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(cmdXboxController.getRightTriggerAxis())));
+    cmdXboxController.rightTrigger().onFalse(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(0)));
 
 
   }

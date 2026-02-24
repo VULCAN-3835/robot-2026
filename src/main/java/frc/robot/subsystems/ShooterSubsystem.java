@@ -25,7 +25,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX flyWheelMotor;
 
   private CANcoder hoodCancoder;
-  private CANcoder turretCancoder;
 
   private ProfiledPIDController hoodPID;
   private ProfiledPIDController turretPID;
@@ -45,7 +44,7 @@ public class ShooterSubsystem extends SubsystemBase {
   this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
   this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
-  this.turretCancoder = new CANcoder(ShooterConstants.kTurretCANcoderID);
+  this.hoodCancoder.setPosition(Degrees.of(5));
 
   this.hoodPID = new ProfiledPIDController(
     ShooterConstants.kHoodP,
@@ -122,10 +121,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Angle getHoodAngle(){
-    return this.hoodCancoder.getAbsolutePosition().getValue();
+    return this.hoodCancoder.getPosition().getValue();
   }
   public Angle getTurrentAngle(){
-    return this.turretCancoder.getAbsolutePosition().getValue();
+    return this.turretMotor.getPosition().getValue();
   }
 
   public void setTurretAngle(double deg){
@@ -133,6 +132,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
   public void setHoodAngle(double deg){
     this.hoodPID.setGoal(deg);
+  }
+
+  public void setFlywheelRPM(double power){
+    this.flyWheelMotor.set(power);
   }
 
   @Override

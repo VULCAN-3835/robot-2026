@@ -165,12 +165,11 @@ public final class Constants {
   public static class ShooterConstants {
 
     // TalonFX device IDs for the shooter subsystem
-    public static final int kTurretMotorID = 0;
-    public static final int kHoodMotorID = 0;
-    public static final int kFlywheelMotorID = 0;
+    public static final int kTurretMotorID = 61;
+    public static final int kHoodMotorID = 60;
+    public static final int kFlywheelMotorID = 62;
   // CANcoder device IDs for the shooter subsystem
-  public static final int kHoodCANcoderID = 0;
-  public static final int kTurretCANcoderID = 0;
+  public static final int kHoodCANcoderID = 59;
     
   // PID and feedforward constants for shooter subsystem
   // Hood (angle) controller
