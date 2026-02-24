@@ -99,10 +99,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = -0.164;
-    public static final double kRightFrontOffset = -0.1606; 
-    public static final double kLeftBackOffset = -0.218;
-    public static final double kRightBackOffset = -0.6787;
+    public static final double kLeftFrontOffset = 0.113525390625;
+    public static final double kRightFrontOffset = -1.936279296875; 
+    public static final double kLeftBackOffset = 0.3056640625000002;
+    public static final double kRightBackOffset = 0.12498866796875062;
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
