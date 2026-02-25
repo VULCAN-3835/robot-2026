@@ -57,15 +57,15 @@ public class IntakeSubsystem extends SubsystemBase {
 
   }
 
-  public boolean getRestLimitSwitch() {
+  private boolean getRestLimitSwitch() {
       return restLimitSwitch.get();
   }
 
-  public boolean getIntakeLimitSwitch() {
+  private boolean getIntakeLimitSwitch() {
     return intakeLimitSwitch.get();
   }
 
-  public Angle getArmAngle() {
+  private Angle getArmAngle() {
     return armEncoder.getAbsolutePosition().getValue();
   }
 
@@ -97,7 +97,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * 
    * @param power The desired power of the arm motors
    */
-  public void setArmPower(double power) {
+  private void setArmPower(double power) {
     armMotor.set(power);
   }
 
@@ -115,7 +115,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * 
    * @param power The desired power of the roller motors
    */
-  public void setRollerPower(double power) {
+  private void setRollerPower(double power) {
     rollerMotor.set(power);
   }
 
