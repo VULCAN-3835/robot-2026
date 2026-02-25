@@ -24,7 +24,7 @@ public final class Constants {
   }
   public static class ClimbSubsystemConstants {
     public static enum climbStatesVelocities{L1OUTDOWN,L1OUTUP,L1IN,L2OUT,L2IN,L3OUT,L3IN}
-    public static enum climbStatesHeight{REST,POS1,POS2,L1GETDOWN}
+    public static enum climbStatesHeight{REST,POS1,POS2,L1OUTDOWN,L1OUTUP}
 
     public static final int climbMotor1Port = 0;
     public static final int limitSwitchPort = 0;
@@ -38,7 +38,8 @@ public final class Constants {
     public static final double RESTHeight = 0;
     public static final double POS1Height = 0;
     public static final double POS2Height = 0;
-    public static final double L1GETDOWN = 0;
+    public static final double L1OUTDOWN = 0;
+    public static final double L1OUTUP = 0;
 
     public static final double L1Speed = 0;
     public static final double L2Speed = 0;

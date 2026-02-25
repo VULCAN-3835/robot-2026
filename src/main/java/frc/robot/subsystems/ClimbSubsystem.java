@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import static edu.wpi.first.units.Units.Centimeters;
+import static edu.wpi.first.units.Units.Newton;
 
 import edu.wpi.first.hal.DIOJNI;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -31,13 +32,14 @@ public class ClimbSubsystem extends SubsystemBase {
   double output;
   double currentHeight;
 
-  climbStatesHeight heightState;
-  climbStatesHeight getDownHeightState;
+  climbStatesHeight heightStateOutUPL1;
+  climbStatesHeight heightStateOutDOWNL1;
+  climbStatesHeight heightState1;
   climbStatesHeight heightState2;
-  climbStatesHeight heightState3;
 
-  climbStatesVelocities speedState;
-  climbStatesVelocities getDownSpeedState;
+  climbStatesVelocities speedStateGetDown;
+  climbStatesVelocities speedStateInL1;
+  climbStatesVelocities speedStateOutL1;
   climbStatesVelocities speedStateInL2;
   climbStatesVelocities speedStateOutL2;
   climbStatesVelocities speedStateInL3;
@@ -71,8 +73,10 @@ public class ClimbSubsystem extends SubsystemBase {
       case POS2:
         pidController.setGoal(ClimbSubsystemConstants.POS2Height);
         break;
-      case L1GETDOWN:
-        pidController.setGoal(ClimbSubsystemConstants.L1GETDOWN);  
+      case L1OUTDOWN:
+        pidController.setGoal(ClimbSubsystemConstants.L1OUTDOWN);  
+      case L1OUTUP:
+        pidController.setGoal(ClimbSubsystemConstants.L1OUTUP);  
       default:
         pidController.setGoal(ClimbSubsystemConstants.RESTHeight);
         break;
@@ -86,7 +90,7 @@ public class ClimbSubsystem extends SubsystemBase {
         climbMotor.set(ClimbSubsystemConstants.L1Speed);
         break;
       case L1OUTDOWN:
-        climbMotor.set(ClimbSubsystemConstants.L1Speed);
+        climbMotor.set(-ClimbSubsystemConstants.L1Speed);
         break;
       case L1IN:
         climbMotor.set(ClimbSubsystemConstants.L1Speed);
@@ -109,12 +113,7 @@ public class ClimbSubsystem extends SubsystemBase {
     }
   }
 
-  public void climbBySpeed(climbStatesHeight heightState,climbStatesVelocities speedState){
-    setHeight(heightState);
-    setSpeed(speedState);
-  }
-
-  public boolean isAtSetPoint(){
+  private boolean isAtSetPoint(){
     return pidController.atGoal();
   }
 
@@ -127,6 +126,47 @@ public class ClimbSubsystem extends SubsystemBase {
     return ClimbSubsystemConstants.distancePerRotation.timesDivisor(angle).in(Centimeters);
   }
 
+   public SequentialCommandGroup climbByHeight(climbStatesHeight heightState,climbStatesVelocities speedState){
+    return new SequentialCommandGroup(
+    new InstantCommand(() -> setHeight(heightState)),
+    new InstantCommand(() -> setSpeed(speedState)),
+    new WaitUntilCommand(() -> isAtSetPoint()),
+    new InstantCommand(() -> stopMotor())
+    );
+  }
+
+  public SequentialCommandGroup ClimbL1PeriodicCMD(){
+    this.speedStateGetDown = climbStatesVelocities.L1OUTDOWN;
+    this.heightStateOutDOWNL1 = climbStatesHeight.L1OUTDOWN;
+    return new SequentialCommandGroup(
+      climbByHeight(heightStateOutUPL1, speedStateOutL1),
+      climbByHeight(heightState2,speedStateInL1),
+      climbByHeight(heightStateOutDOWNL1,speedStateGetDown)
+    );
+  }
+
+  public SequentialCommandGroup FullClimbCMD(){
+    this.speedStateInL1 = climbStatesVelocities.L1IN;
+    this.speedStateOutL1 = climbStatesVelocities.L1OUTUP;
+    this.speedStateInL2 = climbStatesVelocities.L2IN;
+    this.speedStateOutL2 = climbStatesVelocities.L2OUT;
+    this.speedStateInL3 = climbStatesVelocities.L3IN;
+    this.speedStateOutL3 = climbStatesVelocities.L3OUT;
+
+    this.heightStateOutUPL1 = climbStatesHeight.L1OUTUP;
+    this.heightState1 = climbStatesHeight.POS1;
+    this.heightState2 = climbStatesHeight.POS2;
+
+    return new SequentialCommandGroup(
+    climbByHeight(heightStateOutUPL1,speedStateInL1),
+    climbByHeight(heightState1,speedStateInL1),
+    climbByHeight(heightState2,speedStateOutL2),
+    climbByHeight(heightState1,speedStateInL2),
+    climbByHeight(heightState2,speedStateOutL3),
+    climbByHeight(heightState1,speedStateInL3)
+    );
+  }
+
   public boolean isConnected() {
    boolean limitSwitchLivness = DIOJNI.checkDIOChannel(ClimbSubsystemConstants.limitSwitchPort);
 
@@ -134,80 +174,7 @@ public class ClimbSubsystem extends SubsystemBase {
 
    return limitSwitchLivness && motorLiveness;
   }
-
-  public SequentialCommandGroup GetDownFromL1(){
-    this.getDownHeightState = climbStatesHeight.L1GETDOWN;
-    this.getDownSpeedState = climbStatesVelocities.L1OUTDOWN;
-
-    return new SequentialCommandGroup(
-      //1. set height to the PID
-      new InstantCommand(() -> setHeight(getDownHeightState)),
-      //2.Move the outer elevator a little up then we fall
-      new InstantCommand(() -> setSpeed(getDownSpeedState)),
-      //3. check if we reached the goal
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //4. stop the motor
-      new InstantCommand(() -> stopMotor())
-    );
-  }
-
-  public SequentialCommandGroup ClimbToL1PeriodicCMD(){
-    this.heightState = climbStatesHeight.POS1;
-    this.speedState = climbStatesVelocities.L1OUTUP;
-    return new SequentialCommandGroup(
-      //1. set height to the PID and climb to L1
-      new InstantCommand(() -> climbBySpeed(getDownHeightState, getDownSpeedState)),
-      //2. check if we reached the goal
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //3. stop the motor
-      new InstantCommand(() -> stopMotor())
-      );
-  }
-   public SequentialCommandGroup ClimbToL1EndGameCMD(){
-    this.heightState = climbStatesHeight.POS1;
-    this.speedState = climbStatesVelocities.L1IN;
-    return new SequentialCommandGroup(
-      //1. set height to the PID and climb to L1
-      new InstantCommand(() -> climbBySpeed(getDownHeightState, getDownSpeedState)),
-      //2. check if we reached the goal
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //3. stop the motor
-      new InstantCommand(() -> stopMotor())
-      );
-  }
-
-   public SequentialCommandGroup FullClimbCMD(){
-    this.heightState2 = climbStatesHeight.POS2;
-    this.heightState3 = climbStatesHeight.POS1;
-    this.speedStateOutL2 = climbStatesVelocities.L2OUT;
-    this.speedStateInL2 = climbStatesVelocities.L2IN;
-    this.speedStateOutL3 = climbStatesVelocities.L3OUT;
-    this.speedStateInL3 = climbStatesVelocities.L3IN;
-
-    return new SequentialCommandGroup(
-      //1. climbs to L1
-      ClimbToL1EndGameCMD(),
-      //2. set the goal height to L2 for outer elevator and sets the speed
-      new InstantCommand(() ->climbBySpeed(heightState2,speedStateOutL2)),
-      //3.checks if the elevator is at the setpoint
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //4.stops the motor 
-      new InstantCommand(() -> stopMotor()),
-      //5. set the goal height to L2 for inner elevator and sets the speed
-      new InstantCommand(() -> climbBySpeed(heightState3,speedStateInL2)),
-      //6.checks if the elevator is at the setpoint
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //7.stops the motor
-      new InstantCommand(() -> stopMotor()),
-      //8. set the goal height to L3 for outer elevator and sets the speed
-      new InstantCommand(() -> climbBySpeed(heightState2,speedStateOutL3)),
-      //9.checks if the elevator is at the setpoint
-      new WaitUntilCommand(() -> isAtSetPoint()),
-      //10.stops the motor
-      new InstantCommand(() -> stopMotor())
-    );
-   }
-
+  
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
