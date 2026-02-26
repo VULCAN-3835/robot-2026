@@ -23,7 +23,8 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.Constants.IntakeConstants.intakeStates;
+import frc.robot.Constants.IntakeConstants.ArmStates;
+import frc.robot.Constants.IntakeConstants.RollerStates;;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
@@ -37,7 +38,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private CANcoder armEncoder;
 
-  private intakeStates target;
+  private ArmStates armTarget;
+  private RollerStates rollerState;
 
   public IntakeSubsystem() {
 
@@ -48,7 +50,7 @@ public class IntakeSubsystem extends SubsystemBase {
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
     pidController.setGoal(IntakeConstants.restPoint);
-    this.target = intakeStates.REST;
+    this.armTarget = ArmStates.REST;
 
     this.restLimitSwitch = new DigitalInput(IntakeConstants.restLimitSwitchID);
     this.intakeLimitSwitch = new DigitalInput(IntakeConstants.intakeLimitSwitchID);
@@ -69,52 +71,41 @@ public class IntakeSubsystem extends SubsystemBase {
     return armEncoder.getAbsolutePosition().getValue();
   }
 
-  /**
-   * sets the target based on the desired state
-   * 
-   * @param state The desired state of the four bar
-   */
-  public void setArmState(intakeStates state) {
-
+  public void setArmState(ArmStates state) {
+    armTarget = state;
     switch (state) {
 
       case REST:
         pidController.setGoal(IntakeConstants.restPoint);
-        target = intakeStates.REST;
         break;
 
       case INTAKE:
         pidController.setGoal(IntakeConstants.intakePoint);
-        target = intakeStates.INTAKE;
         break;
+      
 
     }
 
   }
 
-  /**
-   * sets the power of the arm motors
-   * 
-   * @param power The desired power of the arm motors
-   */
   private void setArmPower(double power) {
     armMotor.set(power);
   }
 
-  /**
-   * sets the power of the roller motors based on the desired state
-   * 
-   * @param powered The desired state of the roller motors (powered or unpowered)
-   */
-  public void setRollerState(boolean powered) {
-    setRollerPower(powered ? IntakeConstants.intakePower : 0);
+  public void setRollerState(RollerStates state) {
+    rollerState = state;
+    switch (state) {
+      case REST:
+        setRollerPower(0);
+        break;
+      case INTAKE:
+        setRollerPower(IntakeConstants.intakePower);
+        break;
+      case RELEASE:
+        setRollerPower(IntakeConstants.releasePower);
+    }
   }
 
-  /**
-   * set the power of the roller motors
-   * 
-   * @param power The desired power of the roller motors
-   */
   private void setRollerPower(double power) {
     rollerMotor.set(power);
   }
@@ -124,10 +115,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
     
       // 1. Starts rolling the rollers for intake
-      new InstantCommand(() -> setRollerState(true)),
+      new InstantCommand(() -> setRollerState(RollerStates.INTAKE)),
 
       // 2. Sets the arm down to the intake position
-      new InstantCommand(() -> setArmState(intakeStates.INTAKE))
+      new InstantCommand(() -> setArmState(ArmStates.INTAKE))
 
     );
   }
@@ -136,10 +127,26 @@ public class IntakeSubsystem extends SubsystemBase {
     return new SequentialCommandGroup(
 
       // 1. Returns the arm into its rest position
-      new InstantCommand(() -> setArmState(intakeStates.REST)),
+      new InstantCommand(() -> setArmState(ArmStates.REST)),
 
       // 2. Stops rolling the rollers
-      new InstantCommand(() -> setRollerState(false))
+      new InstantCommand(() -> setRollerState(RollerStates.REST))
+
+    );
+  }
+
+  public SequentialCommandGroup releaseRollerCMD() {
+    RollerStates currentRollerState = rollerState;
+    return new SequentialCommandGroup(
+
+      // 1. Set rollers to release balls that are stuck
+      new InstantCommand(() -> setRollerState(RollerStates.RELEASE)),
+
+      // 2. Wait for balls to release
+      new WaitCommand(IntakeConstants.releaseTime),
+
+      // 3. Set the roller to its original state
+      new InstantCommand(() -> setRollerState(currentRollerState))
 
     );
   }
@@ -149,7 +156,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     
     
-    if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.INTAKE && getIntakeLimitSwitch())) {
+    if (!(armTarget == ArmStates.REST && getRestLimitSwitch()) && !(armTarget == ArmStates.INTAKE && getIntakeLimitSwitch())) {
       double armOutput = pidController.calculate(getArmAngle().in(Degrees));
       setArmPower(armOutput);
     }

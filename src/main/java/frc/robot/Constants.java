@@ -17,7 +17,12 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
   }
   public static final class IntakeConstants {
-    public static enum intakeStates {REST, INTAKE}
+    public static enum ArmStates {
+      REST, INTAKE
+    }
+    public static enum RollerStates {
+      REST, INTAKE, RELEASE
+    }
 
     public static final int armMotorID = 0;
     public static final int rollerMotorID = 0;
@@ -28,6 +33,9 @@ public final class Constants {
     public static final int armEncoderID = 0;
 
     public static final double intakePower = 0;
+    public static final double releasePower = 0;
+
+    public static final double releaseTime = 0;
 
     public static final double restPoint = 0;
     public static final double intakePoint = 0;
