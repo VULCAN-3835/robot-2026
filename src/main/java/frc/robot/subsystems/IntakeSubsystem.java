@@ -172,6 +172,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("pid output", pidOutput);
     SmartDashboard.putNumber("ff output", ffOutput);
-    this.armMotor.setVoltage(pidOutput + ffOutput);
+    this.armMotor.set(pidOutput + ffOutput);
   }
 }

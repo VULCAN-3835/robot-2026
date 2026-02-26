@@ -29,15 +29,15 @@ public final class Constants {
     public static final double restPoint = 300;
     public static final double intakePoint = 121;
 
-    public static final double kp = 0.02;
+    public static final double kp = 0.003;
     public static final double ki = 0;
-    public static final double kd = 0.001;
+    public static final double kd = 0.0001;
     public static final double kMaxVelocity = 120;
     public static final double kMaxAcceleration = 80;
 
     // ArmFeedforward constants
     public static final double kS = 0;
-    public static final double kG = 0.5;
+    public static final double kG = 0.04;
     public static final double kV = 0;
     public static final double armHorizontalDeg = 120;
 
