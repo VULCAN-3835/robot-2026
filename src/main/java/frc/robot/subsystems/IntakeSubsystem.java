@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.Degrees;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -37,6 +38,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX rollerMotor;
 
   private ProfiledPIDController pidController;
+  private ArmFeedforward armFeedforward;
 
   private CANcoder armEncoder;
 
@@ -55,8 +57,13 @@ public class IntakeSubsystem extends SubsystemBase {
       new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
     );
     
-    //pidController.enableContinuousInput(IntakeConstants.intakePoint, IntakeConstants.restPoint);
     pidController.setTolerance(IntakeConstants.pidTolerance);
+
+    this.armFeedforward = new ArmFeedforward(
+      IntakeConstants.kS,
+      IntakeConstants.kG,
+      IntakeConstants.kV
+    );
 
     // this.target = intakeStates.REST;
     this.pidController.setGoal(IntakeConstants.restPoint);
@@ -155,9 +162,16 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
-    // Simple PID control to move the arm to the target position
+    // PID output (in volts)
     double pidOutput = pidController.calculate(getArmAngleDegrees());
+
+    // Feedforward: convert encoder degrees to radians relative to horizontal
+    double angleRad = Math.toRadians(getArmAngleDegrees() - IntakeConstants.armHorizontalDeg);
+    double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
+    double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
+
     SmartDashboard.putNumber("pid output", pidOutput);
-    this.armMotor.set(pidOutput);
+    SmartDashboard.putNumber("ff output", ffOutput);
+    this.armMotor.setVoltage(pidOutput + ffOutput);
   }
 }
