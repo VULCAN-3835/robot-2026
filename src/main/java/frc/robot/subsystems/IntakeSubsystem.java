@@ -24,7 +24,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.ArmStates;
-import frc.robot.Constants.IntakeConstants.RollerStates;;
+import frc.robot.Constants.IntakeConstants.RollerStates;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
