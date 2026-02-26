@@ -5,6 +5,10 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.CANcoder;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -12,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -20,6 +25,7 @@ import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
 import frc.robot.Constants.IntakeConstants;
@@ -32,9 +38,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private ProfiledPIDController pidController;
 
-  private DigitalInput restLimitSwitch;
-  private DigitalInput intakeLimitSwitch;
-
   private CANcoder armEncoder;
 
   private intakeStates target;
@@ -42,31 +45,31 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
 
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
-
+    
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
-    this.pidController = new ProfiledPIDController(IntakeConstants.kp, IntakeConstants.ki, IntakeConstants.kd, new Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration));
+    
+    this.pidController = new ProfiledPIDController(
+      IntakeConstants.kp,
+      IntakeConstants.ki,
+      IntakeConstants.kd,
+      new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
+    );
+    
+    //pidController.enableContinuousInput(IntakeConstants.intakePoint, IntakeConstants.restPoint);
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
-    pidController.setGoal(IntakeConstants.restPoint);
-    this.target = intakeStates.REST;
-
-    this.restLimitSwitch = new DigitalInput(IntakeConstants.restLimitSwitchID);
-    this.intakeLimitSwitch = new DigitalInput(IntakeConstants.intakeLimitSwitchID);
+    // this.target = intakeStates.REST;
+    this.pidController.setGoal(IntakeConstants.restPoint);
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
+    this.armEncoder.setPosition(Degrees.of(IntakeConstants.restPoint));
 
   }
 
-  public boolean getRestLimitSwitch() {
-      return restLimitSwitch.get();
-  }
 
-  public boolean getIntakeLimitSwitch() {
-    return intakeLimitSwitch.get();
-  }
-
-  public Angle getArmAngle() {
-    return armEncoder.getAbsolutePosition().getValue();
+  public double getArmAngleDegrees() {
+    armEncoder.getPosition().refresh();
+    return armEncoder.getPosition().getValue().in(Degrees);
   }
 
   /**
@@ -149,12 +152,12 @@ public class IntakeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     
     
-    if (!(target == intakeStates.REST && getRestLimitSwitch()) && !(target == intakeStates.INTAKE && getIntakeLimitSwitch())) {
-      double armOutput = pidController.calculate(getArmAngle().in(Degrees));
-      setArmPower(armOutput);
-    }
-    else {
-      setArmPower(0);
-    }
+    SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
+    SmartDashboard.putNumber("arm target", pidController.getGoal().position);
+
+    // Simple PID control to move the arm to the target position
+    double pidOutput = pidController.calculate(getArmAngleDegrees());
+    SmartDashboard.putNumber("pid output", pidOutput);
+    this.armMotor.set(pidOutput);
   }
 }

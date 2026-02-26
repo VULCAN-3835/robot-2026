@@ -19,25 +19,30 @@ public final class Constants {
   public static final class IntakeConstants {
     public static enum intakeStates {REST, INTAKE}
 
-    public static final int armMotorID = 0;
-    public static final int rollerMotorID = 0;
+    public static final int armMotorID = 51;
+    public static final int rollerMotorID = 50;
 
-    public static final int restLimitSwitchID = 0;
-    public static final int intakeLimitSwitchID = 0;
-
-    public static final int armEncoderID = 0;
+    public static final int armEncoderID = 52;
 
     public static final double intakePower = 0;
 
-    public static final double restPoint = 0;
-    public static final double intakePoint = 0;
+    public static final double restPoint = 300;
+    public static final double intakePoint = 121;
 
-    public static final double kp = 0;
+    public static final double kp = 0.0015;
     public static final double ki = 0;
     public static final double kd = 0;
-    public static final double kMaxVelocity = 0;
-    public static final double kMaxAcceleration = 0;
+    public static final double kMaxVelocity = 0.6;
+    public static final double kMaxAcceleration = 0.6;
 
-    public static final double pidTolerance = 0;
+    public static final double pidTolerance = 5;
   }
+    
+    // Safe angle ranges (degrees) for barrier checks in periodic
+    // These are conservative defaults — update to match your physical limits.
+    public static final double kHoodMinAngleDeg = 0.0;
+    public static final double kHoodMaxAngleDeg = 60.0;
+
+    public static final double kTurretMinAngleDeg = -180.0;
+    public static final double kTurretMaxAngleDeg = 180.0;
 }
