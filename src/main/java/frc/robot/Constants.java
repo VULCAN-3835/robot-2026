@@ -163,8 +163,15 @@ public final class Constants {
     }
   }
   public static final class StorageConstants {
+    public static enum StorageState {
+      REST, FEED, RELOAD
+    }
+
     public static final int feedMotorID = 0;
 
     public static final double feedPower = 0;
+    public static final double reloadPower = 0;
+
+    public static final double reloadTime = 0;
   }
 }

@@ -8,30 +8,55 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants.StorageConstants;
+import frc.robot.Constants.StorageConstants.StorageState;
 
 public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
 
+  private StorageState state;
+
   public StorageSubsystem() {
 
     this.feedMotor = new TalonFX(StorageConstants.feedMotorID);
+    this.state = StorageState.REST;
 
   }
 
-  public void setFeedMotorState(boolean powered) {
-    setFeedMotorPower(powered ? StorageConstants.feedPower : 0);
+  public void setFeedMotorState(StorageState state) {
+    this.state = state;
+    switch (state) {
+      case REST:
+        setFeedMotorPower(0);
+        break;
+      case FEED:
+        setFeedMotorPower(StorageConstants.feedPower);
+        break;
+      case RELOAD:
+        setFeedMotorPower(StorageConstants.reloadPower);
+    }
   }
 
-  public void setFeedMotorPower(double power) {
+  private void setFeedMotorPower(double power) {
     feedMotor.set(power);
   }
 
-  public Command setFeedMotorStateCMD(boolean powered) {
-    return new InstantCommand(() -> setFeedMotorState(powered));
+  public Command setFeedMotorStateCMD(StorageState state) {
+    return new InstantCommand(() -> setFeedMotorState(state));
+  }
+
+  public SequentialCommandGroup reloadFeedMotorCMD() {
+    StorageState currentState = this.state;
+    return new SequentialCommandGroup(
+      setFeedMotorStateCMD(StorageState.RELOAD),
+      new WaitCommand(StorageConstants.reloadTime),
+      setFeedMotorStateCMD(currentState)
+    );
   }
 
   @Override
