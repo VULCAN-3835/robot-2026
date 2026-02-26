@@ -162,4 +162,36 @@ public final class Constants {
 
     }
   }
+  public static final class IntakeConstants {
+    public static enum ArmStates {
+      REST, INTAKE
+    }
+    public static enum RollerStates {
+      REST, INTAKE, RELEASE
+    }
+
+    public static final int armMotorID = 0;
+    public static final int rollerMotorID = 0;
+
+    public static final int restLimitSwitchID = 0;
+    public static final int intakeLimitSwitchID = 0;
+
+    public static final int armEncoderID = 0;
+
+    public static final double intakePower = 0;
+    public static final double releasePower = 0;
+
+    public static final double releaseTime = 0;
+
+    public static final double restPoint = 0;
+    public static final double intakePoint = 0;
+
+    public static final double kp = 0;
+    public static final double ki = 0;
+    public static final double kd = 0;
+    public static final double kMaxVelocity = 0;
+    public static final double kMaxAcceleration = 0;
+
+    public static final double pidTolerance = 0;
+  }
 }
