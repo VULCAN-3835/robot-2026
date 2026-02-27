@@ -18,12 +18,14 @@ import frc.robot.Constants.StorageConstants.StorageState;
 public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
+  private TalonFX ElevatorMotor;
 
   private StorageState state;
 
   public StorageSubsystem() {
 
     this.feedMotor = new TalonFX(StorageConstants.feedMotorID);
+    this.ElevatorMotor = new TalonFX(StorageConstants.elevatorMotorID);
     this.state = StorageState.REST;
 
   }
@@ -33,9 +35,6 @@ public class StorageSubsystem extends SubsystemBase {
     switch (state) {
       case REST:
         setFeedMotorPower(0);
-        break;
-      case FEED:
-        setFeedMotorPower(StorageConstants.feedPower);
         break;
       case RELOAD:
         setFeedMotorPower(StorageConstants.reloadPower);

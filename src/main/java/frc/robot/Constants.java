@@ -162,14 +162,17 @@ public final class Constants {
 
     }
   }
+
   public static final class StorageConstants {
+
     public static enum StorageState {
-      REST, FEED, RELOAD
+      REST, RELOAD
     }
 
-    public static final int feedMotorID = 0;
+    // CAN IDs for storage subsystem motors
+    public static final int feedMotorID = 40;
+    public static final int elevatorMotorID = 41;
 
-    public static final double feedPower = 0;
     public static final double reloadPower = 0;
 
     public static final double reloadTime = 0;
