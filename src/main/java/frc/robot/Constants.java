@@ -15,11 +15,15 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide
+ * numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants
+ * should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * <p>
+ * It is advised to statically import this class (or one of its inner classes)
+ * wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -27,6 +31,7 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
     public static final double kDeadband = 0.1;
   }
+
   public static class ModuleConstants {
     public static final double kWheelDiameterMeters = Units.inchesToMeters(4); // Module wheel diameter in meters
     public static final double kWheelCircumference = kWheelDiameterMeters * Math.PI;
@@ -100,7 +105,7 @@ public final class Constants {
     // public static final double kRightBackOffset = -0.228515625;
 
     public static final double kLeftFrontOffset = 0.113525390625;
-    public static final double kRightFrontOffset = -1.936279296875; 
+    public static final double kRightFrontOffset = -1.936279296875;
     public static final double kLeftBackOffset = 0.3056640625000002;
     public static final double kRightBackOffset = 0.12498866796875062;
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
@@ -128,19 +133,19 @@ public final class Constants {
     public static final double kMOI = 6.81;
 
     // Swerve Kinematics:
-    public static final SwerveDriveKinematics kDriveKinematics = new
-    SwerveDriveKinematics(
-    new Translation2d(kWheelBase / 2, kTrackWidth / 2), 
-    new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
-    new Translation2d(-kWheelBase / 2,kTrackWidth / 2), 
-    new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
+    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+        new Translation2d(kWheelBase / 2, kTrackWidth / 2),
+        new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
+        new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+        new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
     );
 
-    // public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-    //     new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
-    //     new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
-    //     new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
-    //     new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
+    // public static final SwerveDriveKinematics kDriveKinematics = new
+    // SwerveDriveKinematics(
+    // new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
+    // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
+    // new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
+    // new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
     // );
 
     public static final RobotConfig DEFAUL_ROBOT_CONFIG = new RobotConfig(kMassKG, kMOI,
@@ -162,37 +167,46 @@ public final class Constants {
 
     }
   }
+
   public static class ShooterConstants {
 
     // TalonFX device IDs for the shooter subsystem
     public static final int kTurretMotorID = 61;
     public static final int kHoodMotorID = 60;
     public static final int kFlywheelMotorID = 62;
-  // CANcoder device IDs for the shooter subsystem
-  public static final int kHoodCANcoderID = 59;
-    
-  // PID and feedforward constants for shooter subsystem
-  // Hood (angle) controller
-  public static final double kHoodP = 0.0;
-  public static final double kHoodI = 0.0;
-  public static final double kHoodD = 0.0;
-  public static final double kHoodKS = 0.0;
-  public static final double kHoodKV = 0.0;
-  public static final double kHoodKA = 0.0;
-  public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
-  public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
-  public static final double kHoodTolerance = 3.0;
 
-  // Turret (angle) controller
-  public static final double kTurretP = 0.0;
-  public static final double kTurretI = 0.0;
-  public static final double kTurretD = 0.0;
-  public static final double kTurretKS = 0.0;
-  public static final double kTurretKV = 0.0;
-  public static final double kTurretKA = 0.0;
-  public static final double kTurretMaxVel =     0.0; // deg/s or appropriate units
-  public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
-  public static final double kTurretTolerance = 5.0;
+    // CANcoder device IDs for the shooter subsystem
+    public static final int kHoodCANcoderID = 59;
+
+    // Digital input port for the limit switch
+    public static final int kLimitSwitchID = 0; 
+
+    // PID and feedforward constants for shooter subsystem
+    // Hood (angle) controller
+    public static final double kHoodP = 0.002;
+    public static final double kHoodI = 0.0;
+    public static final double kHoodD = 0.00001;
+
+    public static final double kHoodKS = 0.0;
+    public static final double kHoodKV = 0.0;
+    public static final double kHoodKA = 0.0;
+
+    public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
+    public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
+    public static final double kHoodTolerance = 2;
+
+    // Turret (angle) controller
+    public static final double kTurretP = 0.003;
+    public static final double kTurretI = 0.0;
+    public static final double kTurretD = 0;
+
+    public static final double kTurretKS = 0.0;
+    public static final double kTurretKV = 0.0;
+    public static final double kTurretKA = 0.001;
+
+    public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
+    public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
+    public static final double kTurretTolerance = 3.5;
 
   }
 }
