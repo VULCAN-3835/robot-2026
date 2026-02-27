@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -172,6 +173,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("pid output", pidOutput);
     SmartDashboard.putNumber("ff output", ffOutput);
-    this.armMotor.set(pidOutput + ffOutput);
+    double totalOutput = pidOutput + ffOutput;
+    this.armMotor.set(totalOutput);
+
+    System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
+        Timer.getFPGATimestamp(),
+        getArmAngleDegrees(),
+        pidController.getGoal().position,
+        pidController.getSetpoint().position,
+        pidController.getSetpoint().velocity,
+        pidController.getPositionError(),
+        pidOutput,
+        ffOutput,
+        totalOutput);
   }
 }
