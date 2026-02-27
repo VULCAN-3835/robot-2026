@@ -26,16 +26,26 @@ public final class Constants {
 
     public static final double intakePower = 0;
 
-    public static final double restPoint = 300;
-    public static final double intakePoint = 121;
+    public static final double kArmGearRatio = 32.0/18.0;
 
-    public static final double kp = 0.0015;
+    public static final double restPoint = 75;
+    public static final double intakePoint = 10;
+
+    public static final double kp = 0.08;
     public static final double ki = 0;
     public static final double kd = 0;
-    public static final double kMaxVelocity = 0.6;
-    public static final double kMaxAcceleration = 0.6;
+    public static final double kMaxVelocity = 120;
+    public static final double kMaxAcceleration = 80;
+
+    // ArmFeedforward constants
+    public static final double kS = 0;
+    public static final double kG = 3.8;
+    public static final double kV = 1.16;
+    public static final double kA = 3;
+    public static final double armHorizontalDeg = 120;
 
     public static final double pidTolerance = 5;
+
   }
     
     // Safe angle ranges (degrees) for barrier checks in periodic
