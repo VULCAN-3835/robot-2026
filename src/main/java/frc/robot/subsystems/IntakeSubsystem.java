@@ -44,6 +44,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private CANcoder armEncoder;
 
   private intakeStates target;
+  private double factor = 0.45;
+
 
   public IntakeSubsystem() {
 
@@ -63,21 +65,26 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armFeedforward = new ArmFeedforward(
       IntakeConstants.kS,
       IntakeConstants.kG,
-      IntakeConstants.kV
+      IntakeConstants.kV,
+      IntakeConstants.kA
     );
 
     // this.target = intakeStates.REST;
     this.pidController.setGoal(IntakeConstants.restPoint);
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(IntakeConstants.restPoint));
+    this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
+
 
   }
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees);
+    return armEncoder.getPosition().getValue().in(Degrees) * (18/32.0);
+  }
+  public boolean isAtSetpoint() {
+    return pidController.atGoal();
   }
 
   /**
@@ -174,7 +181,16 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("pid output", pidOutput);
     SmartDashboard.putNumber("ff output", ffOutput);
     double totalOutput = pidOutput + ffOutput;
-    this.armMotor.set(totalOutput);
+
+    if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
+      factor = 0.5;
+    }
+
+    if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
+      factor = 0.45;
+    }
+    this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+    // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
     System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
         Timer.getFPGATimestamp(),
