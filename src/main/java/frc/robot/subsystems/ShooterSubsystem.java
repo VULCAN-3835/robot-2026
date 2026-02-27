@@ -58,7 +58,6 @@ public class ShooterSubsystem extends SubsystemBase {
       ShooterConstants.kHoodMaxAccel));
   this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
 
-  this.setHoodAngle(6);
 
   this.turretPID = new ProfiledPIDController(
     ShooterConstants.kTurretP,
@@ -77,6 +76,9 @@ public class ShooterSubsystem extends SubsystemBase {
     ShooterConstants.kTurretKS,
     ShooterConstants.kTurretKV,
     ShooterConstants.kTurretKA);
+
+    this.setHoodAngle(90);
+    this.setTurretAngle(45);
     
     initializeMaps();
   }
@@ -125,7 +127,7 @@ public class ShooterSubsystem extends SubsystemBase {
     return distanceToPitch.get(distance);
   }
 
-  public Angle getHoodAngle(){
+  public Angle getHoodAngleDegs(){
     return this.hoodCancoder.getPosition().getValue();
   }
   
@@ -153,7 +155,7 @@ public class ShooterSubsystem extends SubsystemBase {
   // This method will be called once per scheduler run
   
   // Calculate PID output
-  double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
+  double hoodPIDOutput = hoodPID.calculate(this.getHoodAngleDegs().in(Degrees));
   double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
   
   // Calculate feedforward output using the setpoint velocity
@@ -167,7 +169,7 @@ public class ShooterSubsystem extends SubsystemBase {
   SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
   SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
-  SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
+  SmartDashboard.putNumber("hood actual", this.getHoodAngleDegs().in(Degrees));
   SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
 
   SmartDashboard.putNumber("hood PID output", hoodPIDOutput);

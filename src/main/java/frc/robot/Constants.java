@@ -196,7 +196,7 @@ public final class Constants {
     public static final double kHoodTolerance = 2;
 
     // Turret (angle) controller
-    public static final double kTurretP = 0.003;
+    public static final double kTurretP = 0.035;
     public static final double kTurretI = 0.0;
     public static final double kTurretD = 0;
 
