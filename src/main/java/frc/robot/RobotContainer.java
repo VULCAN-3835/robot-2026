@@ -53,8 +53,10 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-      m_driverController.b().onTrue(new SequentialCommandGroup(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)),new WaitUntilCommand(()->intakeSubsystem.isAtSetpoint()),new InstantCommand(()->intakeSubsystem.setArmPower(0))));
-      m_driverController.a().onTrue(new SequentialCommandGroup(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),new WaitUntilCommand(()->intakeSubsystem.isAtSetpoint()),new InstantCommand(()->intakeSubsystem.setArmPower(0))));
+      m_driverController.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      m_driverController.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      m_driverController.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      m_driverController.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
   }
 
   /**

@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -52,7 +53,11 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
     
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
-    
+
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    this.armMotor.getConfigurator().apply(config);
+
     this.pidController = new ProfiledPIDController(
       IntakeConstants.kp,
       IntakeConstants.ki,
@@ -70,7 +75,6 @@ public class IntakeSubsystem extends SubsystemBase {
     );
 
     // this.target = intakeStates.REST;
-    this.pidController.setGoal(IntakeConstants.restPoint);
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
@@ -125,16 +129,16 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param powered The desired state of the roller motors (powered or unpowered)
    */
   public void setRollerState(boolean powered) {
-    setRollerPower(powered ? IntakeConstants.intakePower : 0);
+    setRollerVoltage(powered ? IntakeConstants.intakePower : 0);
   }
 
   /**
    * set the power of the roller motors
    * 
-   * @param power The desired power of the roller motors
+   * @param voltage The desired power of the roller motors
    */
-  public void setRollerPower(double power) {
-    rollerMotor.set(power);
+  public void setRollerVoltage(double voltage) {
+    rollerMotor.setVoltage(voltage);
   }
 
   public SequentialCommandGroup toIntake() {
@@ -183,24 +187,32 @@ public class IntakeSubsystem extends SubsystemBase {
     double totalOutput = pidOutput + ffOutput;
 
     if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
-      factor = 0.5;
+      factor = 0.45;
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.45;
+      factor = 0.3;
     }
-    this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+    // if (isAtSetpoint()) {
+    //   this.armMotor.setVoltage(0); 
+    // }
+    // else{
+    //   this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+    // }
+
     // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
-    System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
-        Timer.getFPGATimestamp(),
-        getArmAngleDegrees(),
-        pidController.getGoal().position,
-        pidController.getSetpoint().position,
-        pidController.getSetpoint().velocity,
-        pidController.getPositionError(),
-        pidOutput,
-        ffOutput,
-        totalOutput);
+
+
+    // System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
+    //     Timer.getFPGATimestamp(),
+    //     getArmAngleDegrees(),
+    //     pidController.getGoal().position,
+    //     pidController.getSetpoint().position,
+    //     pidController.getSetpoint().velocity,
+    //     pidController.getPositionError(),
+    //     pidOutput,
+    //     ffOutput,
+    //     totalOutput);
   }
 }
