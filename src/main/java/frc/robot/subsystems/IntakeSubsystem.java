@@ -79,7 +79,7 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
 
-
+    this.setArmState(intakeStates.REST);
   }
 
 
@@ -193,12 +193,13 @@ public class IntakeSubsystem extends SubsystemBase {
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
       factor = 0.3;
     }
-    // if (isAtSetpoint()) {
-    //   this.armMotor.setVoltage(0); 
-    // }
-    // else{
-    //   this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
-    // }
+
+    if (isAtSetpoint()) {
+      this.armMotor.setVoltage(0); 
+    }
+    else{
+      this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+    }
 
     // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
