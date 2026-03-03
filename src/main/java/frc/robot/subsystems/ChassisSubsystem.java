@@ -172,12 +172,12 @@ public class ChassisSubsystem extends SubsystemBase {
     this.leftCam = new AtCamUtil("Camera-left",
         new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[0].getX(),
             Constants.ChassisConstants.kDriveKinematics.getModules()[0].getY(), 0.22,
-            new Rotation3d(0, Math.toRadians(20), Math.toRadians(-30))));
+            new Rotation3d(0, Math.toRadians(20), Math.toRadians(30))));
 
     this.rightCam = new AtCamUtil("Camera-right",
         new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[1].getX(),
             Constants.ChassisConstants.kDriveKinematics.getModules()[1].getY(), 0.22,
-            new Rotation3d(0, Math.toRadians(20), Math.toRadians(30))));
+            new Rotation3d(0, Math.toRadians(20), Math.toRadians(-30))));
 
     // Initilizing a pose estimator
     this.poseEstimator = new SwerveDrivePoseEstimator(ChassisConstants.kDriveKinematics,
@@ -482,28 +482,28 @@ public class ChassisSubsystem extends SubsystemBase {
    * Update pose estimator using vision data from the At Cam
    */
   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
-    double xyStds;
-    double degStds;
 
-    // TODO: this takes into account only one
-    double distanceFromTraget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("distance from target", distanceFromTraget);
-    SmartDashboard.putBoolean("in here 1", false);
-    if (this.leftCam.hasValidTarget(distanceFromTraget)) {
-      SmartDashboard.putBoolean("in here 1", true);
+    Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
+
+    double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
+    SmartDashboard.putNumber("distance from target", LeftdistanceFromTraget);
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget)) {
       last_timestamp = Timer.getFPGATimestamp();
-      Pose2d visionBotPose = this.leftCam.updateResult(currentPose2d);
-
-      xyStds = Math.max(0.1, 0.3 / Math.pow(distanceFromTraget, 2)); // TODO: what is this?
-      degStds = Math.max(6, 6 * distanceFromTraget);
-
-      SmartDashboard.putNumber("itai/xySTDs", xyStds);
-      SmartDashboard.putString("itai/pose", visionBotPose.toString());
 
       // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
       // Units.degreesToRadians(degStds)));
-      poseEstimator.addVisionMeasurement(visionBotPose,
-          Timer.getFPGATimestamp() - this.leftCam.getCameraTimeStampSec());
+      poseEstimator.addVisionMeasurement(leftVisionBotPose,
+          this.leftCam.getCameraTimeStampSec());
+    }
+
+    double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
+    Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
+    SmartDashboard.putNumber("distance from target", RightdistanceFromTraget);
+    if (this.rightCam.hasValidTarget(RightdistanceFromTraget)) {
+      last_timestamp = Timer.getFPGATimestamp();
+
+      poseEstimator.addVisionMeasurement(rightVisionBotPose,
+          this.rightCam.getCameraTimeStampSec());
     }
   }
   // // if has 2 cams - this one is for limelight
@@ -592,33 +592,16 @@ public class ChassisSubsystem extends SubsystemBase {
     // updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.poseEstimator.update(getRotation2d(), getModPositions());
 
-    var test = this.leftCam.updateResult(this.poseEstimator.getEstimatedPosition());
-    SmartDashboard.putString("yarin test", test.toString());
-    this.field.setRobotPose(test);
+    // var test =
+    // this.leftCam.updateResult(this.poseEstimator.getEstimatedPosition());
+    // SmartDashboard.putString("yarin test", test.toString());
+    // this.field.setRobotPose(test);
 
     SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
     // System.out.println("[current_pose] " +
     // this.poseEstimator.getEstimatedPosition());
-
-    // if (this.frontCam.hasValidTarget()) {
-    // this.poseEstimator.addVisionMeasurement(this.frontCam.getPoseFromCamera(),
-    // Timer.getFPGATimestamp() - (this.frontCam.getCameraTimeStampSec()));
-    // }
-
-    // this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
-    // this.field.setRobotPose(this.frontCam.getPoseFromCamera());
-
-    // SmartDashboard.putBoolean(this.frontCam.getName() + "/has valid target",
-    // this.frontCam.hasValidTarget(this.frontCam.distanceFromTargetMeters()));
-    // SmartDashboard.putNumber(this.frontCam.getName() + "/distance from target",
-    // this.frontCam.distanceFromTargetMeters());
-    // SmartDashboard.putBoolean(frontCam.getName()+"/connected",
-    // frontCam.isConnected());
-    // SmartDashboard.putBoolean(frontCam.getName()+"/has valid target",
-    // frontCam.hasValidTarget());
-    // SmartDashboard.putNumber(frontCam.getName()+"/tag ID", frontCam.getID());
-    // SmartDashboard.putNumber(frontCam.getName()+"/distance from target",
-    // frontCam.distanceFromTargetMeters());
+    updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
+    this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
