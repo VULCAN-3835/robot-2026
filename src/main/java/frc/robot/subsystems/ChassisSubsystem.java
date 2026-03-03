@@ -83,8 +83,8 @@ public class ChassisSubsystem extends SubsystemBase {
   private Pose2d currentPose2dHolonomic;
   private Pose2d holonomicSetPoint;
 
-  // private AtCamUtil frontCam;
-  private LimelightUtil limelight;
+  private AtCamUtil leftCam;
+  private AtCamUtil rightCam;
 
   // An array of the four swerve Modules
   private SwerveModule[] swerve_modules = new SwerveModule[4];
@@ -169,9 +169,15 @@ public class ChassisSubsystem extends SubsystemBase {
 
     // X+ ->forward Y+ ->left Z+ -> up
     // translation in meters rotation in radians
-    // this.frontCam = new AtCamUtil("Camera 1",
-    //     new Transform3d(-0.35, 0, 0.3, new Rotation3d(0, Math.toRadians(-27), Math.toRadians(5))),
-    //     this.getRotation2d());
+    this.leftCam = new AtCamUtil("Camera-left",
+        new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[0].getX(),
+            Constants.ChassisConstants.kDriveKinematics.getModules()[0].getY(), 0.22,
+            new Rotation3d(0, Math.toRadians(20), Math.toRadians(-30))));
+
+    this.rightCam = new AtCamUtil("Camera-right",
+        new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[1].getX(),
+            Constants.ChassisConstants.kDriveKinematics.getModules()[1].getY(), 0.22,
+            new Rotation3d(0, Math.toRadians(20), Math.toRadians(30))));
 
     // Initilizing a pose estimator
     this.poseEstimator = new SwerveDrivePoseEstimator(ChassisConstants.kDriveKinematics,
@@ -283,9 +289,13 @@ public class ChassisSubsystem extends SubsystemBase {
     this.imu.reset();
   }
 
-  // public AtCamUtil getFrontCam() {
-  //   return this.frontCam;
-  // }
+  public AtCamUtil getLeftCam() {
+    return this.leftCam;
+  }
+
+  public AtCamUtil getRightCam() {
+    return this.rightCam;
+  }
 
   /**
    * Returns the heading of the robot
@@ -471,40 +481,42 @@ public class ChassisSubsystem extends SubsystemBase {
   /**
    * Update pose estimator using vision data from the At Cam
    */
-  // private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
-  //   double xyStds;
-  //   double degStds;
+  private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
+    double xyStds;
+    double degStds;
 
-  //   // TODO: this takes into account only one
-  //   double distanceFromTraget = frontCam.distanceFromTargetMeters();
-  //   SmartDashboard.putNumber("distance from target", distanceFromTraget);
-  //   SmartDashboard.putBoolean("in here 1", false);
-  //   if (this.frontCam.hasValidTarget(distanceFromTraget)) {
-  //     SmartDashboard.putBoolean("in here 1", true);
-  //     last_timestamp = Timer.getFPGATimestamp();
-  //     Pose2d visionBotPose = this.frontCam.updateResult(currentPose2d);
-      
-  //     xyStds = Math.max(0.1, 0.3 / Math.pow(distanceFromTraget, 2)); // TODO: what is this?
-  //     degStds = Math.max(6, 6*distanceFromTraget);
+    // TODO: this takes into account only one
+    double distanceFromTraget = leftCam.distanceFromTargetMeters();
+    SmartDashboard.putNumber("distance from target", distanceFromTraget);
+    SmartDashboard.putBoolean("in here 1", false);
+    if (this.leftCam.hasValidTarget(distanceFromTraget)) {
+      SmartDashboard.putBoolean("in here 1", true);
+      last_timestamp = Timer.getFPGATimestamp();
+      Pose2d visionBotPose = this.leftCam.updateResult(currentPose2d);
 
-  //     SmartDashboard.putNumber("itai/xySTDs", xyStds);
-  //     SmartDashboard.putString("itai/pose", visionBotPose.toString());
+      xyStds = Math.max(0.1, 0.3 / Math.pow(distanceFromTraget, 2)); // TODO: what is this?
+      degStds = Math.max(6, 6 * distanceFromTraget);
 
-  //     // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
-  //     poseEstimator.addVisionMeasurement(visionBotPose,
-  //         Timer.getFPGATimestamp() - this.frontCam.getCameraTimeStampSec());
-  //   }
+      SmartDashboard.putNumber("itai/xySTDs", xyStds);
+      SmartDashboard.putString("itai/pose", visionBotPose.toString());
 
-  //   // if has 2 cams - this one is for limelight
-  //   // if (visionBotPoseSource.getX() != 0.0 &&
-  //   // this.limelightRight.hasValidTarget()) {
-  //   // xyStds = 0.5 * (1 / Math.pow(limelightRight.distanceFromTargetMeters(), 2));
-  //   // degStds = 6;
+      // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
+      // Units.degreesToRadians(degStds)));
+      poseEstimator.addVisionMeasurement(visionBotPose,
+          Timer.getFPGATimestamp() - this.leftCam.getCameraTimeStampSec());
+    }
+  }
+  // // if has 2 cams - this one is for limelight
+  // // if (visionBotPoseSource.getX() != 0.0 &&
+  // // this.limelightRight.hasValidTarget()) {
+  // // xyStds = 0.5 * (1 / Math.pow(limelightRight.distanceFromTargetMeters(),
+  // 2));
+  // // degStds = 6;
 
-  //   // poseEstimator.setVisionMeasurementStdDevs(
-  //   // VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
-  //   // poseEstimator.addVisionMeasurement(visionBotPoseSource,
-  //   // Timer.getFPGATimestamp() - (this.limelightRight.getCameraTimeStampSec()));
+  // // poseEstimator.setVisionMeasurementStdDevs(
+  // // VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
+  // // poseEstimator.addVisionMeasurement(visionBotPoseSource,
+  // // Timer.getFPGATimestamp() - (this.limelightRight.getCameraTimeStampSec()));
   // }
 
   public void setSwerveToCoast() {
@@ -580,9 +592,9 @@ public class ChassisSubsystem extends SubsystemBase {
     // updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.poseEstimator.update(getRotation2d(), getModPositions());
 
-    // var test = this.frontCam.updateResult(this.poseEstimator.getEstimatedPosition());
-    // SmartDashboard.putString("yarin test", test.toString());
-    // this.field.setRobotPose(test);
+    var test = this.leftCam.updateResult(this.poseEstimator.getEstimatedPosition());
+    SmartDashboard.putString("yarin test", test.toString());
+    this.field.setRobotPose(test);
 
     SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
     // System.out.println("[current_pose] " +
@@ -597,9 +609,9 @@ public class ChassisSubsystem extends SubsystemBase {
     // this.field.setRobotPose(this.frontCam.getPoseFromCamera());
 
     // SmartDashboard.putBoolean(this.frontCam.getName() + "/has valid target",
-    //     this.frontCam.hasValidTarget(this.frontCam.distanceFromTargetMeters()));
+    // this.frontCam.hasValidTarget(this.frontCam.distanceFromTargetMeters()));
     // SmartDashboard.putNumber(this.frontCam.getName() + "/distance from target",
-    //     this.frontCam.distanceFromTargetMeters());
+    // this.frontCam.distanceFromTargetMeters());
     // SmartDashboard.putBoolean(frontCam.getName()+"/connected",
     // frontCam.isConnected());
     // SmartDashboard.putBoolean(frontCam.getName()+"/has valid target",

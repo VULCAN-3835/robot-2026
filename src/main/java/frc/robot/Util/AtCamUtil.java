@@ -42,7 +42,7 @@ public class AtCamUtil {
     private PhotonPoseEstimator photonPoseEstimator;
     private Rotation2d rot;
     private double lastTimeStamp = 0;
-    public AtCamUtil(String name, Transform3d robotToCamera, Rotation2d rot) {
+    public AtCamUtil(String name, Transform3d robotToCamera) {
         // constructing the camera
         this.name = name;
         // this.cam = new PhotonCamera(NetworkTableInstance.getDefault(), name);
