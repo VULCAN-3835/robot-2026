@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
@@ -85,6 +86,7 @@ public class RobotContainer {
     cmdXboxController.rightTrigger().whileTrue(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(cmdXboxController.getRightTriggerAxis())));
     cmdXboxController.rightTrigger().onFalse(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(0)));
 
+    cmdXboxController.a().whileTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(),ChassisConstants.hubTopCenter)));
 
   }
   

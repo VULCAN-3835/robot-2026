@@ -9,9 +9,12 @@ import static edu.wpi.first.units.Units.Degrees;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
@@ -148,6 +151,23 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public boolean getLimitSwitch(){
     return this.limitSwitch.get();
+  }
+
+  public double calculateAzimuthAngle(Pose2d robotPose,Translation3d target){
+    Translation2d turretPosition = robotPose.getTranslation();
+
+    Translation2d direction = target.toTranslation2d().minus(turretPosition);
+
+    double fieldAngleDeg = direction.getAngle().getDegrees();
+
+    double turretAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
+
+    return MathUtil.inputModulus(turretAngleDeg, -180, 180);
+  }
+
+  public void aimAtTarget(Pose2d robotPose, Translation3d target){
+    double azimuth = calculateAzimuthAngle(robotPose, target);
+    setTurretAngle(azimuth);
   }
 
   @Override
