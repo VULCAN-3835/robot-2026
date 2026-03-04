@@ -539,6 +539,10 @@ public class ChassisSubsystem extends SubsystemBase {
     }
   }
 
+  public double getDistanceFromHub() {
+    return this.distanceFromHub;
+  }
+
   private void initHolonomicDriver() {
     this.controller = new HolonomicDriveController(
         new PIDController(1.75, 0, 0),
@@ -611,9 +615,10 @@ public class ChassisSubsystem extends SubsystemBase {
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = Math.sqrt(this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getSquaredDistance(ChassisConstants.hubTopCenter.toTranslation2d()));
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getDistance(ChassisConstants.hubTopCenter.toTranslation2d()));
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
+    SmartDashboard.putString("translation of hub", ChassisConstants.hubTopCenter.toTranslation2d().toString());
 
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 

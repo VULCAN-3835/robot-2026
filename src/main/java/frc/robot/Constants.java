@@ -4,9 +4,13 @@
 
 package frc.robot;
 
+import java.util.function.IntFunction;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.util.FlippingUtil;
+import com.pathplanner.lib.util.GeometryUtil;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -16,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -81,15 +86,25 @@ public final class Constants {
 
   public static class ChassisConstants {
 
-      public static final double width = Units.inchesToMeters(47.0);
-    public static final double height =
-        Units.inchesToMeters(72.0); // includes the catcher at the top
+    public static final double width = Units.inchesToMeters(47.0);
+    public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
+    
+    public static final Translation3d hubTopCenter = new Translation3d(
+        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
+        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
+        height);
+         
+        
+    //TODO: add invert to red allience
+    // hub top center pose in blue alliance  
+    // public static final Translation3d hubTopCenter = new Translation3d(
+    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(26).get().getX() + width / 2.0,
+    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
+    //     height);
+  
+   
 
-    public static final Translation3d hubTopCenter =
-        new Translation3d(
-            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(26).get().getX() + width / 2.0,
-            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
-            height);
+
 
 
     // Ports for driving motors
@@ -145,12 +160,11 @@ public final class Constants {
     public static final double kMOI = 6.81;
 
     // Swerve Kinematics:
-    public static final SwerveDriveKinematics kDriveKinematics = new
-    SwerveDriveKinematics(
-    new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
-    new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
-    new Translation2d(-kWheelBase / 2,kTrackWidth / 2), 
-    new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
+    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+        new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
+        new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
+        new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+        new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
     );
 
     // public static final SwerveDriveKinematics kDriveKinematics = new
@@ -192,7 +206,7 @@ public final class Constants {
     public static final int kHoodCANcoderID = 59;
 
     // Digital input port for the limit switch
-    public static final int kLimitSwitchID = 0; 
+    public static final int kLimitSwitchID = 0;
 
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
