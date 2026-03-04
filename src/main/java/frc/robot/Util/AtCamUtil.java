@@ -42,7 +42,7 @@ public class AtCamUtil {
     private PhotonPoseEstimator photonPoseEstimator;
     private Rotation2d rot;
     private double lastTimeStamp = 0;
-    public AtCamUtil(String name, Transform3d robotToCamera, Rotation2d rot) {
+    public AtCamUtil(String name, Transform3d robotToCamera) {
         // constructing the camera
         this.name = name;
         // this.cam = new PhotonCamera(NetworkTableInstance.getDefault(), name);
@@ -337,16 +337,27 @@ public class AtCamUtil {
 
             var bestTransform = bestYawError < alternateYawError ? bestTarget3d : altTarget3d;
 
-            Pose3d tagPose = aprilTagFieldLayout.getTagPose(fiducialId).get();
-
+            Optional<Pose3d> tagPoseOpt = aprilTagFieldLayout.getTagPose(fiducialId);
+            if (tagPoseOpt.isEmpty()) {
+                continue;
+            }
+            Pose3d tagPose = tagPoseOpt.get();
             estimatedPose = tagPose.transformBy(bestTransform.inverse()).transformBy(robotToCamera.inverse())
                     .toPose2d();
         }
 
+        if (!this.result.hasTargets()) {
+            return estimatedPose;
+        }
         Optional<EstimatedRobotPose> ePose = photonPoseEstimator.estimateCoprocMultiTagPose(result);
         if (ePose.isEmpty()) {
-            this.lastTimeStamp = photonPoseEstimator.estimateLowestAmbiguityPose(result).get().timestampSeconds;
-            return photonPoseEstimator.estimateLowestAmbiguityPose(result).get().estimatedPose.toPose2d();
+            Optional<EstimatedRobotPose> fallback = photonPoseEstimator.estimateLowestAmbiguityPose(result);
+            if (fallback.isEmpty()) {
+                return estimatedPose;
+            }
+            this.lastTimeStamp = fallback.get().timestampSeconds;
+            return fallback.get().estimatedPose.toPose2d();
+
         }
         this.lastTimeStamp = ePose.get().timestampSeconds;
         return ePose.get().estimatedPose.toPose2d();
