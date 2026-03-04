@@ -26,6 +26,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -69,6 +70,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.photonvision.PhotonUtils;
+
 public class ChassisSubsystem extends SubsystemBase {
   // An enum with the names of the wheel modules
   public enum Wheels {
@@ -105,6 +108,8 @@ public class ChassisSubsystem extends SubsystemBase {
   private Field2d field;
 
   private double last_timestamp;
+  
+  private double distanceFromHub;
 
   // The states of the modules
   private SwerveModuleState[] swerveModuleStates = new SwerveModuleState[] {
@@ -185,6 +190,7 @@ public class ChassisSubsystem extends SubsystemBase {
         this.swerve_positions,
         startingPos);
 
+    this.distanceFromHub = 0;
     // Configuring the controller for the path planner
     AutoBuilder.configure(
         this::getPose,
@@ -600,8 +606,14 @@ public class ChassisSubsystem extends SubsystemBase {
     SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
     // System.out.println("[current_pose] " +
     // this.poseEstimator.getEstimatedPosition());
+
+
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
+
+    this.distanceFromHub = Math.sqrt(this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getSquaredDistance(ChassisConstants.hubTopCenter.toTranslation2d()));
+
+    SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
 
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 

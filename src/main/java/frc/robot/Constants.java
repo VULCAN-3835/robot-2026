@@ -8,8 +8,11 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -73,7 +76,16 @@ public final class Constants {
 
   public static class ChassisConstants {
 
-    public static final String reefCam = "limelight-reef";
+      public static final double width = Units.inchesToMeters(47.0);
+    public static final double height =
+        Units.inchesToMeters(72.0); // includes the catcher at the top
+
+    public static final Translation3d hubTopCenter =
+        new Translation3d(
+            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(26).get().getX() + width / 2.0,
+            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
+            height);
+
 
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
