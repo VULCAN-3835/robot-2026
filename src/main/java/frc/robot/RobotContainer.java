@@ -31,7 +31,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
-  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -65,6 +65,10 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
+    // xboxControllerDrive.a().whileTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(),ChassisConstants.getHubTopCenter())));
+    shooterSubsystem.setDefaultCommand(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()),shooterSubsystem));
+    xboxControllerDrive.b().onTrue(new InstantCommand(()->shooterSubsystem.setFlywheelRPM(1000)));
+    xboxControllerDrive.b().onFalse(new InstantCommand(()->shooterSubsystem.setFlywheelRPM(0)));
     setUpContollers(true);
   }
   private void setUpContollers(boolean oneController) {
@@ -83,10 +87,10 @@ public class RobotContainer {
   }
 
   private void configureButtonBinding(CommandXboxController cmdXboxController) {
-    cmdXboxController.rightTrigger().whileTrue(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(cmdXboxController.getRightTriggerAxis())));
+    cmdXboxController.rightTrigger().whileTrue(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(1000)));
     cmdXboxController.rightTrigger().onFalse(new InstantCommand(() -> shooterSubsystem.setFlywheelRPM(0)));
 
-    cmdXboxController.a().whileTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(),ChassisConstants.hubTopCenter)));
+    cmdXboxController.a().whileTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(),ChassisConstants.getHubTopCenter())));
 
   }
   

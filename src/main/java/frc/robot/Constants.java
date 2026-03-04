@@ -89,18 +89,20 @@ public final class Constants {
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
     
-    public static final Translation3d hubTopCenter = new Translation3d(
-        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
-        AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
-        height);
-         
-        
-    //TODO: add invert to red allience
-    // hub top center pose in blue alliance  
     // public static final Translation3d hubTopCenter = new Translation3d(
-    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(26).get().getX() + width / 2.0,
+    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
     //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
     //     height);
+    private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+    public static Translation3d getHubTopCenter(){
+      int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue ? 26 : 10;
+      return new Translation3d(
+        fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
+        fieldLayout.getFieldWidth() / 2.0,
+        height);
+    }
+         
+
   
    
 
@@ -223,7 +225,7 @@ public final class Constants {
     public static final double kHoodTolerance = 2;
 
     // Turret (angle) controller
-    public static final double kTurretP = 0.035;
+    public static final double kTurretP = 0.015;
     public static final double kTurretI = 0.0;
     public static final double kTurretD = 0;
 

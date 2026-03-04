@@ -6,9 +6,12 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.ChassisConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -38,56 +41,55 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private DigitalInput limitSwitch;
 
-  private static InterpolatingDoubleTreeMap distanceToRPMMap = new InterpolatingDoubleTreeMap(); 
-  private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap(); 
-  private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap(); 
+  private static InterpolatingDoubleTreeMap distanceToRPMMap = new InterpolatingDoubleTreeMap();
+  private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
+  private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
 
-  public ShooterSubsystem() {
-  this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
-  this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
-  this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
+  private ChassisSubsystem chassisSubsystem;
+  public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
+    this.chassisSubsystem = chassisSubsystem;
+    this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
+    this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
+    this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
-  this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
-  this.hoodCancoder.setPosition(Degrees.of(5));
+    this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
+    this.hoodCancoder.setPosition(Degrees.of(5));
 
-  this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
+    this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
 
-  this.hoodPID = new ProfiledPIDController(
-    ShooterConstants.kHoodP,
-    ShooterConstants.kHoodI,
-    ShooterConstants.kHoodD,
-    new Constraints(
-      ShooterConstants.kHoodMaxVel,
-      ShooterConstants.kHoodMaxAccel));
-  this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
+    this.hoodPID = new ProfiledPIDController(
+        ShooterConstants.kHoodP,
+        ShooterConstants.kHoodI,
+        ShooterConstants.kHoodD,
+        new Constraints(
+            ShooterConstants.kHoodMaxVel,
+            ShooterConstants.kHoodMaxAccel));
+    this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
 
+    this.turretPID = new ProfiledPIDController(
+        ShooterConstants.kTurretP,
+        ShooterConstants.kTurretI,
+        ShooterConstants.kTurretD,
+        new Constraints(
+            ShooterConstants.kTurretMaxVel,
+            ShooterConstants.kTurretMaxAccel));
+    this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
 
-  this.turretPID = new ProfiledPIDController(
-    ShooterConstants.kTurretP,
-    ShooterConstants.kTurretI,
-    ShooterConstants.kTurretD,
-    new Constraints(
-      ShooterConstants.kTurretMaxVel,
-      ShooterConstants.kTurretMaxAccel));
-  this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
-
-  this.hoodFF = new SimpleMotorFeedforward(
-    ShooterConstants.kHoodKS,
-    ShooterConstants.kHoodKV,
-    ShooterConstants.kHoodKA);
-  this.turretFF = new SimpleMotorFeedforward(
-    ShooterConstants.kTurretKS,
-    ShooterConstants.kTurretKV,
-    ShooterConstants.kTurretKA);
+    this.hoodFF = new SimpleMotorFeedforward(
+        ShooterConstants.kHoodKS,
+        ShooterConstants.kHoodKV,
+        ShooterConstants.kHoodKA);
+    this.turretFF = new SimpleMotorFeedforward(
+        ShooterConstants.kTurretKS,
+        ShooterConstants.kTurretKV,
+        ShooterConstants.kTurretKA);
 
     this.setHoodAngle(90);
-    this.setTurretAngle(45);
-    
+
     initializeMaps();
   }
-  
 
-  private static void initializeMaps(){
+  private static void initializeMaps() {
     // Example data points for distance to RPM mapping
     distanceToRPMMap.put(0.0, 0.0);
     distanceToRPMMap.put(0.0, 0.0);
@@ -108,99 +110,115 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param distance The distance to the target in meters
    * @return The corresponding RPM for the flywheel based on the distance
    */
-  public double getRPMForDistance(double distance){
+  public double getRPMForDistance(double distance) {
     return distanceToRPMMap.get(distance);
   }
-  
+
   /**
    * Returns the Time of Flight (TOF) value for a given distance.
+   * 
    * @param distance The distance to the target in meters
    * @return The corresponding TOF value for the given distance
    */
-  public double getTOFForDistance(double distance){
+  public double getTOFForDistance(double distance) {
     return distanceToTOF.get(distance);
   }
 
   /**
    * Returns the required pitch angle for a given distance.
+   * 
    * @param distance The distance to the target in meters
    * @return The corresponding pitch angle for the given distance
    */
-  public double getPitchForDistance(double distance){
+  public double getPitchForDistance(double distance) {
     return distanceToPitch.get(distance);
   }
 
-  public Angle getHoodAngleDegs(){
+  public Angle getHoodAngleDegs() {
     return this.hoodCancoder.getPosition().getValue();
   }
-  
-  public double getTurretAngleDegs(){
-    return this.turretMotor.getPosition().getValue().in(Degrees) * (18.0/100.0)*(1/9.0);
+
+  public double getTurretAngleDegs() {
+    return this.turretMotor.getPosition().getValue().in(Degrees) * (18.0 / 100.0) * (1 / 9.0);
   }
 
-  public void setTurretAngle(double deg){
+  public void setTurretAngle(double deg) {
     this.turretPID.setGoal(deg);
   }
-  public void setHoodAngle(double deg){
+
+  public void setHoodAngle(double deg) {
     this.hoodPID.setGoal(deg);
   }
 
-  public void setFlywheelRPM(double power){
-    this.flyWheelMotor.set(power);
+  public void setFlywheelRPM(double RPM) {
+    VelocityVoltage velocityVoltage = new VelocityVoltage(0);
+    this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM/60.0));
   }
 
-  public boolean getLimitSwitch(){
+  public boolean getLimitSwitch() {
     return this.limitSwitch.get();
   }
 
-  public double calculateAzimuthAngle(Pose2d robotPose,Translation3d target){
-    Translation2d turretPosition = robotPose.getTranslation();
+  public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
+    if (robotPose != null) {
 
-    Translation2d direction = target.toTranslation2d().minus(turretPosition);
+      Translation2d turretPosition = robotPose.getTranslation();
 
-    double fieldAngleDeg = direction.getAngle().getDegrees();
+      Translation2d direction = target.toTranslation2d().minus(turretPosition);
 
-    double turretAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
+      SmartDashboard.putNumber("direction x", direction.getX());
+      SmartDashboard.putNumber("direction y", direction.getY());
 
-    return MathUtil.inputModulus(turretAngleDeg, -180, 180);
+      double fieldAngleDeg = direction.getAngle().getDegrees();
+      SmartDashboard.putNumber("atan", fieldAngleDeg);
+
+      double turretAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
+      SmartDashboard.putNumber("turret angle deg", turretAngleDeg);
+
+      return MathUtil.inputModulus(turretAngleDeg, -180, 180);
+    } else{
+      return -1;
+    }
   }
 
-  public void aimAtTarget(Pose2d robotPose, Translation3d target){
-    double azimuth = calculateAzimuthAngle(robotPose, target);
+  public void aimAtTarget(Pose2d robotPose, Translation3d target) {
+    double azimuth = 90 - calculateAzimuthAngle(robotPose, target) ;
+    SmartDashboard.putNumber("calculated azimuth", azimuth);
     setTurretAngle(azimuth);
   }
 
   @Override
   public void periodic() {
-  // This method will be called once per scheduler run
-  
-  // Calculate PID output
-  double hoodPIDOutput = hoodPID.calculate(this.getHoodAngleDegs().in(Degrees));
-  double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
-  
-  // Calculate feedforward output using the setpoint velocity
-  double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
-  double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
-  
-  // Combine PID and feedforward outputs
-  this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-  this.turretMotor.set(turretPIDOutput + turretFFOutput);
+    // This method will be called once per scheduler run
 
-  SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
-  SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
+    // Calculate PID output
+    double hoodPIDOutput = hoodPID.calculate(this.getHoodAngleDegs().in(Degrees));
+    double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
 
-  SmartDashboard.putNumber("hood actual", this.getHoodAngleDegs().in(Degrees));
-  SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
+    // Calculate feedforward output using the setpoint velocity
+    double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
+    double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
-  SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
-  SmartDashboard.putNumber("hood FF output", hoodFFOutput);
+    // Combine PID and feedforward outputs
+    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
-  SmartDashboard.putNumber("turret PID output", turretPIDOutput);
-  SmartDashboard.putNumber("turret FF output", turretFFOutput);
+    SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
+    SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
-  if(getLimitSwitch()){
-    this.turretMotor.setPosition(0);
-  }
+    SmartDashboard.putNumber("hood actual", this.getHoodAngleDegs().in(Degrees));
+    SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
+
+    SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
+    SmartDashboard.putNumber("hood FF output", hoodFFOutput);
+
+    SmartDashboard.putNumber("turret PID output", turretPIDOutput);
+    SmartDashboard.putNumber("turret FF output", turretFFOutput);
+
+    if (getLimitSwitch()) {
+      this.turretMotor.setPosition(0);
+    }
+    SmartDashboard.putNumber("azimuth", this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
 
   }
 }
