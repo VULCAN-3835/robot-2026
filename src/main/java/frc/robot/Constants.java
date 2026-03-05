@@ -212,7 +212,7 @@ public final class Constants {
 
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
-    public static final double kHoodP = 0.002;
+    public static final double kHoodP = 0.003;
     public static final double kHoodI = 0.0;
     public static final double kHoodD = 0.00001;
 

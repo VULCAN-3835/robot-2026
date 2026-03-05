@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -31,6 +33,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX hoodMotor;
   private TalonFX flyWheelMotor;
 
+  private TalonFX elevatorMotor;
+
   private CANcoder hoodCancoder;
 
   private ProfiledPIDController hoodPID;
@@ -46,10 +50,13 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
 
   private ChassisSubsystem chassisSubsystem;
+
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
     this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
     this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
+    this.elevatorMotor = new TalonFX(41);
+
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
     this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
@@ -84,8 +91,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKV,
         ShooterConstants.kTurretKA);
 
-    this.setHoodAngle(90);
-
+    this.hoodPID.setGoal(190);
     initializeMaps();
   }
 
@@ -152,7 +158,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void setFlywheelRPM(double RPM) {
     VelocityVoltage velocityVoltage = new VelocityVoltage(0);
-    this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM/60.0));
+    this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
   }
 
   public boolean getLimitSwitch() {
@@ -176,15 +182,18 @@ public class ShooterSubsystem extends SubsystemBase {
       SmartDashboard.putNumber("turret angle deg", turretAngleDeg);
 
       return MathUtil.inputModulus(turretAngleDeg, -180, 180);
-    } else{
+    } else {
       return -1;
     }
   }
 
   public void aimAtTarget(Pose2d robotPose, Translation3d target) {
-    double azimuth = 90 - calculateAzimuthAngle(robotPose, target) ;
+    double azimuth = 105 - calculateAzimuthAngle(robotPose, target);
     SmartDashboard.putNumber("calculated azimuth", azimuth);
     setTurretAngle(azimuth);
+  }
+  public void bumpBallUp() {
+    this.elevatorMotor.setVoltage(4.5);
   }
 
   @Override
@@ -201,7 +210,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-    this.turretMotor.set(turretPIDOutput + turretFFOutput);
+    // this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
@@ -218,7 +227,10 @@ public class ShooterSubsystem extends SubsystemBase {
     if (getLimitSwitch()) {
       this.turretMotor.setPosition(0);
     }
-    SmartDashboard.putNumber("azimuth", this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+
+    SmartDashboard.putNumber("azimuth",
+        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
 
   }
 }

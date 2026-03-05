@@ -47,7 +47,6 @@ public class AtCamUtil {
         this.name = name;
         // this.cam = new PhotonCamera(NetworkTableInstance.getDefault(), name);
         this.cam = new PhotonCamera(name);
-        this.cam.setPipelineIndex(1);
         this.robotToCamera = robotToCamera;
         this.robotToCam2D = new Transform2d(this.robotToCamera.getX(), this.robotToCamera.getY(),
                 this.robotToCamera.getRotation().toRotation2d());
