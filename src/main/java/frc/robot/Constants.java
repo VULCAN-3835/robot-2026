@@ -17,6 +17,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -88,26 +89,25 @@ public final class Constants {
 
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
-    
+
     // public static final Translation3d hubTopCenter = new Translation3d(
-    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get() == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
-    //     AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
-    //     height);
-    private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-    public static Translation3d getHubTopCenter(){
-      int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue ? 26 : 10;
+    // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get()
+    // == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
+    // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth()
+    // / 2.0,
+    // height);
+    
+    private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout
+        .loadField(AprilTagFields.k2026RebuiltWelded);
+
+    public static Translation3d getHubTopCenter() {
+      int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue ? 26
+          : 10;
       return new Translation3d(
-        fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
-        fieldLayout.getFieldWidth() / 2.0,
-        height);
+          fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
+          fieldLayout.getFieldWidth() / 2.0,
+          height);
     }
-         
-
-  
-   
-
-
-
 
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
@@ -203,12 +203,19 @@ public final class Constants {
     public static final int kTurretMotorID = 61;
     public static final int kHoodMotorID = 60;
     public static final int kFlywheelMotorID = 62;
+    public static final int kElevatorMotorID = 41;
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
 
     // Digital input port for the limit switch
     public static final int kLimitSwitchID = 0;
+
+    // Gear ratios for the shooter subsystem
+    public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
+
+    // offset for the azimuth angle calculation, in degrees
+    public static final double kAzimuthOffset = 105;
 
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
@@ -236,6 +243,6 @@ public final class Constants {
     public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
     public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kTurretTolerance = 3.5;
-
   }
+
 }

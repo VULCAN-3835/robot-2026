@@ -45,7 +45,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private DigitalInput limitSwitch;
 
-  private static InterpolatingDoubleTreeMap distanceToRPMMap = new InterpolatingDoubleTreeMap();
+  private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
 
@@ -55,7 +55,7 @@ public class ShooterSubsystem extends SubsystemBase {
     this.chassisSubsystem = chassisSubsystem;
     this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
     this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
-    this.elevatorMotor = new TalonFX(41);
+    this.elevatorMotor = new TalonFX(ShooterConstants.kElevatorMotorID);
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
@@ -96,20 +96,23 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   private static void initializeMaps() {
-    // Example data points for distance to RPM mapping
-    distanceToRPMMap.put(0.0, 0.0);
-    distanceToRPMMap.put(0.0, 0.0);
-    distanceToRPMMap.put(0.0, 0.0);
+    // Example data points for distance to Voltage mapping
+    distanceToVoltageMap.put(2.5, 5.3);
+    distanceToVoltageMap.put(3.0, 5.5);
+    distanceToVoltageMap.put(3.5, 5.7);
+    distanceToVoltageMap.put(4.0, 6.0);
 
     // Example data points for distance to Time of Flight (TOF) mapping
+    //TODO: view vidoes of shooter and enter TOF
     distanceToTOF.put(0.0, 0.0);
     distanceToTOF.put(0.0, 0.0);
     distanceToTOF.put(0.0, 0.0);
 
     // Example data points for distance to Pitch mapping
-    distanceToPitch.put(0.0, 0.0);
-    distanceToPitch.put(0.0, 0.0);
-    distanceToPitch.put(0.0, 0.0);
+    distanceToPitch.put(2.5 , 140.0);
+    distanceToPitch.put(3.0, 165.0);
+    distanceToPitch.put(3.5, 190.0);
+    distanceToPitch.put(4.0, 235.0);
   }
 
   /**
@@ -117,7 +120,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * @return The corresponding RPM for the flywheel based on the distance
    */
   public double getRPMForDistance(double distance) {
-    return distanceToRPMMap.get(distance);
+    return distanceToVoltageMap.get(distance);
   }
 
   /**
@@ -145,7 +148,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public double getTurretAngleDegs() {
-    return this.turretMotor.getPosition().getValue().in(Degrees) * (18.0 / 100.0) * (1 / 9.0);
+    return this.turretMotor.getPosition().getValue().in(Degrees) * ShooterConstants.kTurretGearRatio;
   }
 
   public void setTurretAngle(double deg) {
@@ -188,7 +191,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void aimAtTarget(Pose2d robotPose, Translation3d target) {
-    double azimuth = 105 - calculateAzimuthAngle(robotPose, target);
+    double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
     SmartDashboard.putNumber("calculated azimuth", azimuth);
     setTurretAngle(azimuth);
   }
@@ -224,12 +227,21 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("turret PID output", turretPIDOutput);
     SmartDashboard.putNumber("turret FF output", turretFFOutput);
 
+    // Reset the turret encoder position to 0 when the limit switch is triggered
     if (getLimitSwitch()) {
       this.turretMotor.setPosition(0);
     }
 
-    SmartDashboard.putNumber("azimuth",
-        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    // Prevent the turret from moving past the limit switch in the negative direction
+    if (this.getTurretAngleDegs() <= 0 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0) {
+      this.turretMotor.set(0);
+    }
+    // Prevent the turret from moving past the maximum angle in the positive direction
+    if (this.getTurretAngleDegs() >= 225 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0) {
+      this.turretMotor.set(0);
+    }
+
+    SmartDashboard.putNumber("azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
     SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
 
   }
