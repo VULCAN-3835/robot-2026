@@ -5,11 +5,13 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.StorageConstants.StorageState;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.StorageSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -17,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -28,21 +31,22 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
-  // Replace with CommandPS4Controller or CommandJoystick if needed
+  // private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private StorageSubsystem storageSubsystem = new StorageSubsystem();
+
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandXboxController xboxControllerButton =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  private SendableChooser<Command> autoChooser = new SendableChooser<>();
+  // private SendableChooser<Command> autoChooser = new SendableChooser<>();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-     autoChooser = AutoBuilder.buildAutoChooser();
-    autoChooser.setDefaultOption("EMPTY", null);
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    //  autoChooser = AutoBuilder.buildAutoChooser();
+    // autoChooser.setDefaultOption("EMPTY", null);
+    // SmartDashboard.putData("Auto Chooser", autoChooser);
     // Configure the trigger bindings
     configureBindings();
   }
@@ -60,17 +64,19 @@ public class RobotContainer {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
+
+    // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
+    xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
+    xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
   }
   private void setUpContollers(boolean oneController) {
 
-    chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-        () -> xboxControllerDrive.getLeftY(),
-        () -> xboxControllerDrive.getLeftX(),
-        () -> xboxControllerDrive.getRightX()));
+    // chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
+    //     () -> xboxControllerDrive.getLeftY(),
+    //     () -> xboxControllerDrive.getLeftX(),
+    //     () -> xboxControllerDrive.getRightX()));
 
-    xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
+    // xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
 
     
 
@@ -94,6 +100,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return autoChooser.getSelected();
+    return null; // autoChooser.getSelected();
   }
 }

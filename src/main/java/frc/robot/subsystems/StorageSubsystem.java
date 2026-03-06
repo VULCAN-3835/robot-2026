@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -18,14 +20,16 @@ import frc.robot.Constants.StorageConstants.StorageState;
 public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
-  private TalonFX ElevatorMotor;
+  private TalonFX elevatorMotor;
 
   private StorageState state;
 
   public StorageSubsystem() {
 
     this.feedMotor = new TalonFX(StorageConstants.feedMotorID);
-    this.ElevatorMotor = new TalonFX(StorageConstants.elevatorMotorID);
+    this.elevatorMotor = new TalonFX(StorageConstants.elevatorMotorID);
+
+    // this.elevatorMotor.setControl(new Follower(feedMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     this.state = StorageState.REST;
 
   }
@@ -43,6 +47,9 @@ public class StorageSubsystem extends SubsystemBase {
 
   private void setFeedMotorPower(double power) {
     feedMotor.set(power);
+  }
+  public void setElevatorMotorPower(double power) {
+    elevatorMotor.set(power);
   }
 
   public Command setFeedMotorStateCMD(StorageState state) {
