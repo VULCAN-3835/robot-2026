@@ -91,7 +91,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKV,
         ShooterConstants.kTurretKA);
 
-    this.hoodPID.setGoal(190);
+    // this.hoodPID.setGoal(190);
     initializeMaps();
   }
 
@@ -212,7 +212,7 @@ public class ShooterSubsystem extends SubsystemBase {
     double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    // this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
     // this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);

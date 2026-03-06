@@ -9,6 +9,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.Turn90;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -63,12 +65,10 @@ public class RobotContainer {
   private void configureBindings() {
    
     // shooterSubsystem.setDefaultCommand(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()),shooterSubsystem));
-
-    // xboxControllerDrive.b().onTrue(new InstantCommand(()->shooterSubsystem.setFlywheelRPM(1000)));
-    // xboxControllerDrive.b().onFalse(new InstantCommand(()->shooterSubsystem.setFlywheelRPM(0)));
+    // xboxControllerDrive.a().onTrue(new InstantCommand(()->shooterSubsystem.bumpBallUp()));
 
     // xboxControllerDrive.a().onTrue(new Turn90(chassisSubsystem));
-    xboxControllerDrive.a().onTrue(new InstantCommand(()->shooterSubsystem.bumpBallUp()));
+    xboxControllerDrive.a().onTrue(new SequentialCommandGroup(new InstantCommand(()->chassisSubsystem.drive(-2,0,0, false),chassisSubsystem),new WaitCommand(2), new InstantCommand(()->chassisSubsystem.drive(0,0,0, false),chassisSubsystem)));
     setUpContollers(true);
   }
   private void setUpContollers(boolean oneController) {
