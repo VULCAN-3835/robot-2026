@@ -5,12 +5,18 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.IntakeConstants.intakeStates;
 import frc.robot.Constants.StorageConstants.StorageState;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.StorageSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -31,6 +37,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
+  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   // private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   private StorageSubsystem storageSubsystem = new StorageSubsystem();
 
@@ -63,6 +71,13 @@ public class RobotContainer {
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     
+
+    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
+    // cancelling on release.
+      m_driverController.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      m_driverController.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      m_driverController.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      m_driverController.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
