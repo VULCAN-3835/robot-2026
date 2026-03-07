@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -37,6 +38,8 @@ import frc.robot.subsystems.ShooterSubsystem;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
+  private StorageSubsystem storageSubsystem = new StorageSubsystem();
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -67,18 +70,21 @@ public class RobotContainer {
   private void configureBindings() {
    
     // shooterSubsystem.setDefaultCommand(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()),shooterSubsystem));
-    // xboxControllerDrive.a().onTrue(new InstantCommand(()->shooterSubsystem.bumpBallUp()));
+    xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
+    xboxControllerDrive.leftTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
+    
+    xboxControllerDrive.rightTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)));
+    xboxControllerDrive.rightTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.REST)));
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
+    xboxControllerDrive.x().onTrue(new ParallelCommandGroup(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))), new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub())))));
     setUpContollers(true);
   }
   private void setUpContollers(boolean oneController) {
 
-    // chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-    //     () -> xboxControllerDrive.getLeftY(),
-    //     () -> xboxControllerDrive.getLeftX(),
-    //     () -> xboxControllerDrive.getRightX()));
+    chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
+        () -> xboxControllerDrive.getLeftY(),
+        () -> xboxControllerDrive.getLeftX(),
+        () -> -xboxControllerDrive.getRightX()));
 
     xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
 

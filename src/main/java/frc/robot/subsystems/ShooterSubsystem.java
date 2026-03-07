@@ -91,7 +91,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKV,
         ShooterConstants.kTurretKA);
 
-    // this.hoodPID.setGoal(190);
+    this.hoodPID.setGoal(260);
     initializeMaps();
   }
 
@@ -112,14 +112,14 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToPitch.put(2.5 , 140.0);
     distanceToPitch.put(3.0, 165.0);
     distanceToPitch.put(3.5, 190.0);
-    distanceToPitch.put(4.0, 235.0);
+    distanceToPitch.put(4.0, 255.0);
   }
 
   /**
    * @param distance The distance to the target in meters
    * @return The corresponding RPM for the flywheel based on the distance
    */
-  public double getRPMForDistance(double distance) {
+  public double getVoltageForDistance(double distance) {
     return distanceToVoltageMap.get(distance);
   }
 
@@ -159,9 +159,10 @@ public class ShooterSubsystem extends SubsystemBase {
     this.hoodPID.setGoal(deg);
   }
 
-  public void setFlywheelRPM(double RPM) {
-    VelocityVoltage velocityVoltage = new VelocityVoltage(0);
-    this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
+  public void setFlywheelVoltage(double V) {
+    // VelocityVoltage velocityVoltage = new VelocityVoltage(0);
+    // this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
+    this.flyWheelMotor.setVoltage(V);
   }
 
   public boolean getLimitSwitch() {
@@ -212,7 +213,7 @@ public class ShooterSubsystem extends SubsystemBase {
     double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    // this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
     // this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
