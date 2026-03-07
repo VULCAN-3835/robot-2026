@@ -4,25 +4,35 @@
 
 package frc.robot;
 
+import java.util.function.IntFunction;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.util.FlippingUtil;
+import com.pathplanner.lib.util.GeometryUtil;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide
+ * numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants
+ * should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
+ * <p>
+ * It is advised to statically import this class (or one of its inner classes)
+ * wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -30,6 +40,7 @@ public final class Constants {
     public static final int kDriverControllerPort = 0;
     public static final double kDeadband = 0.1;
   }
+
   public static class ModuleConstants {
     public static final double kWheelDiameterMeters = Units.inchesToMeters(4); // Module wheel diameter in meters
     public static final double kWheelCircumference = kWheelDiameterMeters * Math.PI;
@@ -76,16 +87,27 @@ public final class Constants {
 
   public static class ChassisConstants {
 
-      public static final double width = Units.inchesToMeters(47.0);
-    public static final double height =
-        Units.inchesToMeters(72.0); // includes the catcher at the top
+    public static final double width = Units.inchesToMeters(47.0);
+    public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
 
-    public static final Translation3d hubTopCenter =
-        new Translation3d(
-            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(26).get().getX() + width / 2.0,
-            AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth() / 2.0,
-            height);
+    // public static final Translation3d hubTopCenter = new Translation3d(
+    // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get()
+    // == DriverStation.Alliance.Blue ? 26 : 10).get().getX() + width / 2.0,
+    // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth()
+    // / 2.0,
+    // height);
+    
+    private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout
+        .loadField(AprilTagFields.k2026RebuiltWelded);
 
+    public static Translation3d getHubTopCenter() {
+      int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue ? 26
+          : 10;
+      return new Translation3d(
+          fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
+          fieldLayout.getFieldWidth() / 2.0,
+          height);
+    }
 
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
@@ -112,7 +134,7 @@ public final class Constants {
     // public static final double kRightBackOffset = -0.228515625;
 
     public static final double kLeftFrontOffset = 0.113525390625;
-    public static final double kRightFrontOffset = -1.936279296875; 
+    public static final double kRightFrontOffset = -1.936279296875;
     public static final double kLeftBackOffset = 0.3056640625000002;
     public static final double kRightBackOffset = 0.12498866796875062;
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
@@ -140,19 +162,19 @@ public final class Constants {
     public static final double kMOI = 6.81;
 
     // Swerve Kinematics:
-    public static final SwerveDriveKinematics kDriveKinematics = new
-    SwerveDriveKinematics(
-    new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
-    new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
-    new Translation2d(-kWheelBase / 2,kTrackWidth / 2), 
-    new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
+    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+        new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
+        new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
+        new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+        new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
     );
 
-    // public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-    //     new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
-    //     new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
-    //     new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
-    //     new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
+    // public static final SwerveDriveKinematics kDriveKinematics = new
+    // SwerveDriveKinematics(
+    // new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
+    // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
+    // new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
+    // new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
     // );
 
     public static final RobotConfig DEFAUL_ROBOT_CONFIG = new RobotConfig(kMassKG, kMOI,
@@ -174,6 +196,55 @@ public final class Constants {
 
     }
   }
+
+  public static class ShooterConstants {
+
+    // TalonFX device IDs for the shooter subsystem
+    public static final int kTurretMotorID = 61;
+    public static final int kHoodMotorID = 60;
+    public static final int kFlywheelMotorID = 62;
+    public static final int kElevatorMotorID = 41;
+
+    // CANcoder device IDs for the shooter subsystem
+    public static final int kHoodCANcoderID = 59;
+
+    // Digital input port for the limit switch
+    public static final int kLimitSwitchID = 0;
+
+    // Gear ratios for the shooter subsystem
+    public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
+
+    // offset for the azimuth angle calculation, in degrees
+    public static final double kAzimuthOffset = 105;
+
+    // PID and feedforward constants for shooter subsystem
+    // Hood (angle) controller
+    public static final double kHoodP = 0.003;
+    public static final double kHoodI = 0.0;
+    public static final double kHoodD = 0.00001;
+
+    public static final double kHoodKS = 0.0;
+    public static final double kHoodKV = 0.0;
+    public static final double kHoodKA = 0.0;
+
+    public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
+    public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
+    public static final double kHoodTolerance = 2;
+
+    // Turret (angle) controller
+    public static final double kTurretP = 0.015;
+    public static final double kTurretI = 0.0;
+    public static final double kTurretD = 0;
+
+    public static final double kTurretKS = 0.0;
+    public static final double kTurretKV = 0.0;
+    public static final double kTurretKA = 0.001;
+
+    public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
+    public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
+    public static final double kTurretTolerance = 3.5;
+  }
+
 
   public static final class StorageConstants {
 

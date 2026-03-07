@@ -4,11 +4,13 @@
 
 package frc.robot;
 
+import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.StorageConstants.StorageState;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.Turn90;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.StorageSubsystem;
@@ -19,9 +21,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.ShooterSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -31,9 +37,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  // private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private StorageSubsystem storageSubsystem = new StorageSubsystem();
-
+  // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandXboxController xboxControllerButton =
@@ -61,22 +68,25 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+   
+    // shooterSubsystem.setDefaultCommand(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()),shooterSubsystem));
+    xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
+    xboxControllerDrive.leftTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
     
+    xboxControllerDrive.rightTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)));
+    xboxControllerDrive.rightTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.REST)));
 
-
-    // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
-    xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
-    xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
+    xboxControllerDrive.x().onTrue(new ParallelCommandGroup(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))), new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub())))));
+    setUpContollers(true);
   }
   private void setUpContollers(boolean oneController) {
 
-    // chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-    //     () -> xboxControllerDrive.getLeftY(),
-    //     () -> xboxControllerDrive.getLeftX(),
-    //     () -> xboxControllerDrive.getRightX()));
+    chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
+        () -> xboxControllerDrive.getLeftY(),
+        () -> xboxControllerDrive.getLeftX(),
+        () -> -xboxControllerDrive.getRightX()));
 
-    // xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
+    xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
 
     
 
@@ -85,9 +95,7 @@ public class RobotContainer {
   }
 
   private void configureButtonBinding(CommandXboxController cmdXboxController) {
-    // Here we will configure the button bindings
-
-    // uses
+  
 
 
   }

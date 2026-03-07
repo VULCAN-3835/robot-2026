@@ -309,7 +309,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @return The heading of the robot in degrees
    */
   public double getYaw() {
-    return -this.imu.getAngle();
+    return this.imu.getAngle();
   }
 
   /**
@@ -492,8 +492,8 @@ public class ChassisSubsystem extends SubsystemBase {
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
 
     double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("distance from target", LeftdistanceFromTraget);
-    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget)) {
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTraget);
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget) ) {
       last_timestamp = Timer.getFPGATimestamp();
 
       // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
@@ -504,7 +504,8 @@ public class ChassisSubsystem extends SubsystemBase {
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
-    SmartDashboard.putNumber("distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+
     if (this.rightCam.hasValidTarget(RightdistanceFromTraget)) {
       last_timestamp = Timer.getFPGATimestamp();
 
@@ -537,6 +538,10 @@ public class ChassisSubsystem extends SubsystemBase {
       swerve_modules[i].getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
       swerve_modules[i].getSteerMotor().setNeutralMode(NeutralModeValue.Brake);
     }
+  }
+
+  public double getDistanceFromHub() {
+    return this.distanceFromHub;
   }
 
   private void initHolonomicDriver() {
@@ -611,9 +616,10 @@ public class ChassisSubsystem extends SubsystemBase {
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = Math.sqrt(this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getSquaredDistance(ChassisConstants.hubTopCenter.toTranslation2d()));
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
+    SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
 
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
