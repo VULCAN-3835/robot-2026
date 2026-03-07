@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -24,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.Degrees;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -37,17 +40,24 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX rollerMotor;
 
   private ProfiledPIDController pidController;
+  private ArmFeedforward armFeedforward;
 
   private CANcoder armEncoder;
 
   private intakeStates target;
+  private double factor = 0.45;
+
 
   public IntakeSubsystem() {
 
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
     
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
-    
+
+    TalonFXConfiguration config = new TalonFXConfiguration();
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    this.armMotor.getConfigurator().apply(config);
+
     this.pidController = new ProfiledPIDController(
       IntakeConstants.kp,
       IntakeConstants.ki,
@@ -55,21 +65,30 @@ public class IntakeSubsystem extends SubsystemBase {
       new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
     );
     
-    //pidController.enableContinuousInput(IntakeConstants.intakePoint, IntakeConstants.restPoint);
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
+    this.armFeedforward = new ArmFeedforward(
+      IntakeConstants.kS,
+      IntakeConstants.kG,
+      IntakeConstants.kV,
+      IntakeConstants.kA
+    );
+
     // this.target = intakeStates.REST;
-    this.pidController.setGoal(IntakeConstants.restPoint);
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(IntakeConstants.restPoint));
+    this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
 
+    this.setArmState(intakeStates.REST);
   }
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees);
+    return armEncoder.getPosition().getValue().in(Degrees) * (18/32.0);
+  }
+  public boolean isAtSetpoint() {
+    return pidController.atGoal();
   }
 
   /**
@@ -110,16 +129,16 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param powered The desired state of the roller motors (powered or unpowered)
    */
   public void setRollerState(boolean powered) {
-    setRollerPower(powered ? IntakeConstants.intakePower : 0);
+    setRollerVoltage(powered ? IntakeConstants.intakePower : 0);
   }
 
   /**
    * set the power of the roller motors
    * 
-   * @param power The desired power of the roller motors
+   * @param voltage The desired power of the roller motors
    */
-  public void setRollerPower(double power) {
-    rollerMotor.set(power);
+  public void setRollerVoltage(double voltage) {
+    rollerMotor.setVoltage(voltage);
   }
 
   public SequentialCommandGroup toIntake() {
@@ -155,9 +174,46 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
-    // Simple PID control to move the arm to the target position
+    // PID output (in volts)
     double pidOutput = pidController.calculate(getArmAngleDegrees());
+
+    // Feedforward: convert encoder degrees to radians relative to horizontal
+    double angleRad = Math.toRadians(getArmAngleDegrees() - IntakeConstants.armHorizontalDeg);
+    double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
+    double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
+
     SmartDashboard.putNumber("pid output", pidOutput);
-    this.armMotor.set(pidOutput);
+    SmartDashboard.putNumber("ff output", ffOutput);
+    double totalOutput = pidOutput + ffOutput;
+
+    if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
+      factor = 0.7;
+    }
+
+    if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
+      factor = 0.4;
+    }
+
+    if (isAtSetpoint()) {
+      this.armMotor.setVoltage(0); 
+    }
+    else{
+      this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+    }
+
+    // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
+
+
+
+    // System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
+    //     Timer.getFPGATimestamp(),
+    //     getArmAngleDegrees(),
+    //     pidController.getGoal().position,
+    //     pidController.getSetpoint().position,
+    //     pidController.getSetpoint().velocity,
+    //     pidController.getPositionError(),
+    //     pidOutput,
+    //     ffOutput,
+    //     totalOutput);
   }
 }
