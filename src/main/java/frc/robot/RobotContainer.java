@@ -43,7 +43,6 @@ import frc.robot.subsystems.ShooterSubsystem;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
@@ -76,15 +75,11 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-      m_driverController.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
-      m_driverController.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
-      m_driverController.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
-      m_driverController.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
+      xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));

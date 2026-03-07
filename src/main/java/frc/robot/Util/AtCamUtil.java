@@ -42,6 +42,7 @@ public class AtCamUtil {
     private PhotonPoseEstimator photonPoseEstimator;
     private Rotation2d rot;
     private double lastTimeStamp = 0;
+
     public AtCamUtil(String name, Transform3d robotToCamera) {
         // constructing the camera
         this.name = name;
@@ -360,6 +361,7 @@ public class AtCamUtil {
         }
         this.lastTimeStamp = ePose.get().timestampSeconds;
         return ePose.get().estimatedPose.toPose2d();
+
     }
 
     private Pose2d translation3dToPose2d(Transform3d transform3d) {

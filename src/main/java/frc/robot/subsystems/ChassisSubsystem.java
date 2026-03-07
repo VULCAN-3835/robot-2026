@@ -493,7 +493,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
     double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
     SmartDashboard.putNumber("left distance from target", LeftdistanceFromTraget);
-    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget) ) {
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget) && leftVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
 
       // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
@@ -506,7 +506,7 @@ public class ChassisSubsystem extends SubsystemBase {
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
 
-    if (this.rightCam.hasValidTarget(RightdistanceFromTraget)) {
+    if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && rightVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
