@@ -78,8 +78,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
-
-    this.setArmState(intakeStates.REST);
   }
 
 
@@ -202,8 +200,6 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
-
-
 
     // System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
     //     Timer.getFPGATimestamp(),

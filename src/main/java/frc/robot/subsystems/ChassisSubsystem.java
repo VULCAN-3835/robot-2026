@@ -108,7 +108,7 @@ public class ChassisSubsystem extends SubsystemBase {
   private Field2d field;
 
   private double last_timestamp;
-  
+
   private double distanceFromHub;
 
   // The states of the modules
@@ -490,7 +490,7 @@ public class ChassisSubsystem extends SubsystemBase {
   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
-
+    double xyStdsLeft = (1 / Math.pow(leftCam.distanceFromTargetMeters(), 2));
     double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
     SmartDashboard.putNumber("left distance from target", LeftdistanceFromTraget);
     if (this.leftCam.hasValidTarget(LeftdistanceFromTraget) && leftVisionBotPose.getX() != 0.0) {
@@ -498,16 +498,19 @@ public class ChassisSubsystem extends SubsystemBase {
 
       // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
       // Units.degreesToRadians(degStds)));
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft, Units.degreesToRadians(6)));
       poseEstimator.addVisionMeasurement(leftVisionBotPose,
           this.leftCam.getCameraTimeStampSec());
     }
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
+    double xyStdsRight = (1 / Math.pow(rightCam.distanceFromTargetMeters(), 2));
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
 
     if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && rightVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight, Units.degreesToRadians(6)));
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
           this.rightCam.getCameraTimeStampSec());
@@ -612,11 +615,11 @@ public class ChassisSubsystem extends SubsystemBase {
     // System.out.println("[current_pose] " +
     // this.poseEstimator.getEstimatedPosition());
 
-
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
+        .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
     SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());

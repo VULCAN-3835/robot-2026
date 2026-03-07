@@ -91,22 +91,22 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKV,
         ShooterConstants.kTurretKA);
 
-    this.hoodPID.setGoal(260);
+    this.hoodPID.setGoal(190);
     initializeMaps();
   }
 
   private static void initializeMaps() {
     // Example data points for distance to Voltage mapping
-    distanceToVoltageMap.put(2.5, 5.3);
+    distanceToVoltageMap.put(2.5, 5.1);
     distanceToVoltageMap.put(3.0, 5.5);
-    distanceToVoltageMap.put(3.5, 5.7);
-    distanceToVoltageMap.put(4.0, 6.0);
+    distanceToVoltageMap.put(3.5, 5.5);
+    distanceToVoltageMap.put(4.0, 5.7);
 
     // Example data points for distance to Time of Flight (TOF) mapping
     //TODO: view vidoes of shooter and enter TOF
-    distanceToTOF.put(0.0, 0.0);
-    distanceToTOF.put(0.0, 0.0);
-    distanceToTOF.put(0.0, 0.0);
+    distanceToTOF.put(4.0, 1.2);
+    distanceToTOF.put(3.0,1.05);
+    distanceToTOF.put(2.0, 1.0);
 
     // Example data points for distance to Pitch mapping
     distanceToPitch.put(2.5 , 140.0);
@@ -213,7 +213,7 @@ public class ShooterSubsystem extends SubsystemBase {
     double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    // this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
     // this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
@@ -238,7 +238,7 @@ public class ShooterSubsystem extends SubsystemBase {
       this.turretMotor.set(0);
     }
     // Prevent the turret from moving past the maximum angle in the positive direction
-    if (this.getTurretAngleDegs() >= 225 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0) {
+    if (this.getTurretAngleDegs() >= 200 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0) {
       this.turretMotor.set(0);
     }
 

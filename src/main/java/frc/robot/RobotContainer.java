@@ -43,10 +43,12 @@ import frc.robot.subsystems.ShooterSubsystem;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  // private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private StorageSubsystem storageSubsystem = new StorageSubsystem();
+
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -76,25 +78,34 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-      xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
-      xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
-      xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
-      xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
+      // xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      // xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      // xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      // xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
     xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
     xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
    
-    // shooterSubsystem.setDefaultCommand(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()),shooterSubsystem));
     xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
     xboxControllerDrive.leftTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
     
-    xboxControllerDrive.rightTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)));
+    xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorPower(-0.7)),new WaitCommand(0.1),storageSubsystem.setFeedMotorStateCMD(StorageState.RELOAD)));
     xboxControllerDrive.rightTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.REST)));
 
-    xboxControllerDrive.x().onTrue(new ParallelCommandGroup(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))), new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub())))));
+    // xboxControllerDrive.x().whileTrue(new ParallelCommandGroup(
+    //   new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
+    //   new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
+    //   new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
+    // xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
+    // setUpContollers(true);
+
+    // xboxControllerDrive.x().onTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())));
+    xboxControllerDrive.y().whileTrue(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(5.7)));
+    xboxControllerDrive.y().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
     setUpContollers(true);
+
   }
   private void setUpContollers(boolean oneController) {
 
