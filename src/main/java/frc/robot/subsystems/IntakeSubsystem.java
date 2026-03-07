@@ -187,11 +187,11 @@ public class IntakeSubsystem extends SubsystemBase {
     double totalOutput = pidOutput + ffOutput;
 
     if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
-      factor = 0.45;
+      factor = 0.7;
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.3;
+      factor = 0.4;
     }
 
     if (isAtSetpoint()) {

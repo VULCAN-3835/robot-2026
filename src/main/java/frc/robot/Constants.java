@@ -28,7 +28,7 @@ public final class Constants {
 
     public static final double kArmGearRatio = 32.0/18.0;
 
-    public static final double restPoint = 85;
+    public static final double restPoint = 80;
     public static final double intakePoint = 10;
 
     public static final double kp = 0.08;
@@ -38,9 +38,9 @@ public final class Constants {
     public static final double kMaxAcceleration = 80;
 
     // ArmFeedforward constants
-    public static final double kS = 0;
-    public static final double kG = 1.8;
-    public static final double kV = 1.16;
+    public static final double kS = 1.5;
+    public static final double kG = 3;
+    public static final double kV = 0.5;
     public static final double kA = 3;
     public static final double armHorizontalDeg = 120;
 
