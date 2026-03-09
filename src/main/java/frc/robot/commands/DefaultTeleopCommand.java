@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -14,17 +15,22 @@ import frc.robot.subsystems.ChassisSubsystem;
 public class DefaultTeleopCommand extends Command {
   private final ChassisSubsystem chassisSubsystem;
   private final Supplier<Double> xVelocitySupplier, yVelocitySupplier, turningVelocitySupplier;
+  private final DoubleSupplier maxSpeedSupplier;
+  private final DoubleSupplier maxAngularSpeedSupplier;
   private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
   private boolean fieldOriented;
 
     /** Creates a new DefaultTeleopCommand. */
   public DefaultTeleopCommand(ChassisSubsystem chassisSubsystem, Supplier<Double> xVelocitySupplier,
-    Supplier<Double> yVelocitySupplier, Supplier<Double> turningVelocitySupplier) {
+    Supplier<Double> yVelocitySupplier, Supplier<Double> turningVelocitySupplier,
+    DoubleSupplier maxSpeedSupplier, DoubleSupplier maxAngularSpeedSupplier) {
 
     this.chassisSubsystem = chassisSubsystem;
     this.xVelocitySupplier = xVelocitySupplier;
     this.yVelocitySupplier = yVelocitySupplier;
     this.turningVelocitySupplier = turningVelocitySupplier;
+    this.maxSpeedSupplier = maxSpeedSupplier;
+    this.maxAngularSpeedSupplier = maxAngularSpeedSupplier;
 
     // Initilizing slew rate limiters for acceleration limitations
     this.xLimiter = new SlewRateLimiter(Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec);
@@ -54,9 +60,9 @@ public class DefaultTeleopCommand extends Command {
     turningVelocity = Math.abs(turningVelocity) > Constants.OperatorConstants.kDeadband ? turningVelocity : 0;
 
     // Calculate velocity using gains with constant acceleration and max speed
-    xVelocity = xLimiter.calculate(xVelocity) * Constants.ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
-    yVelocity = yLimiter.calculate(yVelocity) * Constants.ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
-    turningVelocity = turningLimiter.calculate(turningVelocity) * Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec;
+    xVelocity = xLimiter.calculate(xVelocity) * maxSpeedSupplier.getAsDouble();
+    yVelocity = yLimiter.calculate(yVelocity) * maxSpeedSupplier.getAsDouble();
+    turningVelocity = turningLimiter.calculate(turningVelocity) * maxAngularSpeedSupplier.getAsDouble();
 
     this.chassisSubsystem.drive(xVelocity, yVelocity, turningVelocity, fieldOriented);
   }

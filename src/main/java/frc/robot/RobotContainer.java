@@ -85,7 +85,7 @@ public class RobotContainer {
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
-    xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
+    xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorReloadPower())));
     xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
    
     xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
@@ -112,7 +112,9 @@ public class RobotContainer {
     chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
         () -> xboxControllerDrive.getLeftY(),
         () -> xboxControllerDrive.getLeftX(),
-        () -> -xboxControllerDrive.getRightX()));
+        () -> -xboxControllerDrive.getRightX(),
+        chassisSubsystem.getTeleDriveMaxSpeed(),
+        chassisSubsystem.getTeleDriveMaxAngularSpeed()));
 
     xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
 

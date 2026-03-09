@@ -12,6 +12,7 @@ import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import frc.lib.util.LoggedTunableNumber;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ChassisConstants;
 import edu.wpi.first.math.MathUtil;
@@ -51,6 +52,28 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private ChassisSubsystem chassisSubsystem;
 
+  // Hood tunable numbers
+  private final LoggedTunableNumber hoodP = new LoggedTunableNumber("Shooter/hoodP", ShooterConstants.kHoodP);
+  private final LoggedTunableNumber hoodI = new LoggedTunableNumber("Shooter/hoodI", ShooterConstants.kHoodI);
+  private final LoggedTunableNumber hoodD = new LoggedTunableNumber("Shooter/hoodD", ShooterConstants.kHoodD);
+  private final LoggedTunableNumber hoodKS = new LoggedTunableNumber("Shooter/hoodKS", ShooterConstants.kHoodKS);
+  private final LoggedTunableNumber hoodKV = new LoggedTunableNumber("Shooter/hoodKV", ShooterConstants.kHoodKV);
+  private final LoggedTunableNumber hoodKA = new LoggedTunableNumber("Shooter/hoodKA", ShooterConstants.kHoodKA);
+  private final LoggedTunableNumber hoodMaxVel = new LoggedTunableNumber("Shooter/hoodMaxVel", ShooterConstants.kHoodMaxVel);
+  private final LoggedTunableNumber hoodMaxAccel = new LoggedTunableNumber("Shooter/hoodMaxAccel", ShooterConstants.kHoodMaxAccel);
+  private final LoggedTunableNumber hoodTolerance = new LoggedTunableNumber("Shooter/hoodTolerance", ShooterConstants.kHoodTolerance);
+
+  // Turret tunable numbers
+  private final LoggedTunableNumber turretP = new LoggedTunableNumber("Shooter/turretP", ShooterConstants.kTurretP);
+  private final LoggedTunableNumber turretI = new LoggedTunableNumber("Shooter/turretI", ShooterConstants.kTurretI);
+  private final LoggedTunableNumber turretD = new LoggedTunableNumber("Shooter/turretD", ShooterConstants.kTurretD);
+  private final LoggedTunableNumber turretKS = new LoggedTunableNumber("Shooter/turretKS", ShooterConstants.kTurretKS);
+  private final LoggedTunableNumber turretKV = new LoggedTunableNumber("Shooter/turretKV", ShooterConstants.kTurretKV);
+  private final LoggedTunableNumber turretKA = new LoggedTunableNumber("Shooter/turretKA", ShooterConstants.kTurretKA);
+  private final LoggedTunableNumber turretMaxVel = new LoggedTunableNumber("Shooter/turretMaxVel", ShooterConstants.kTurretMaxVel);
+  private final LoggedTunableNumber turretMaxAccel = new LoggedTunableNumber("Shooter/turretMaxAccel", ShooterConstants.kTurretMaxAccel);
+  private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Shooter/turretTolerance", ShooterConstants.kTurretTolerance);
+
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
     this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
@@ -65,31 +88,31 @@ public class ShooterSubsystem extends SubsystemBase {
     this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
 
     this.hoodPID = new ProfiledPIDController(
-        ShooterConstants.kHoodP,
-        ShooterConstants.kHoodI,
-        ShooterConstants.kHoodD,
+        hoodP.get(),
+        hoodI.get(),
+        hoodD.get(),
         new Constraints(
-            ShooterConstants.kHoodMaxVel,
-            ShooterConstants.kHoodMaxAccel));
-    this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
+            hoodMaxVel.get(),
+            hoodMaxAccel.get()));
+    this.hoodPID.setTolerance(hoodTolerance.get());
 
     this.turretPID = new ProfiledPIDController(
-        ShooterConstants.kTurretP,
-        ShooterConstants.kTurretI,
-        ShooterConstants.kTurretD,
+        turretP.get(),
+        turretI.get(),
+        turretD.get(),
         new Constraints(
-            ShooterConstants.kTurretMaxVel,
-            ShooterConstants.kTurretMaxAccel));
-    this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
+            turretMaxVel.get(),
+            turretMaxAccel.get()));
+    this.turretPID.setTolerance(turretTolerance.get());
 
     this.hoodFF = new SimpleMotorFeedforward(
-        ShooterConstants.kHoodKS,
-        ShooterConstants.kHoodKV,
-        ShooterConstants.kHoodKA);
+        hoodKS.get(),
+        hoodKV.get(),
+        hoodKA.get());
     this.turretFF = new SimpleMotorFeedforward(
-        ShooterConstants.kTurretKS,
-        ShooterConstants.kTurretKV,
-        ShooterConstants.kTurretKA);
+        turretKS.get(),
+        turretKV.get(),
+        turretKA.get());
 
     this.hoodPID.setGoal(190);
     initializeMaps();
@@ -203,6 +226,42 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    // Update hood PID + constraints + tolerance if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          hoodPID.setPID(values[0], values[1], values[2]);
+          hoodPID.setConstraints(new Constraints(values[3], values[4]));
+          hoodPID.setTolerance(values[5]);
+        },
+        hoodP, hoodI, hoodD, hoodMaxVel, hoodMaxAccel, hoodTolerance);
+
+    // Update hood feedforward if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          hoodFF = new SimpleMotorFeedforward(values[0], values[1], values[2]);
+        },
+        hoodKS, hoodKV, hoodKA);
+
+    // Update turret PID + constraints + tolerance if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          turretPID.setPID(values[0], values[1], values[2]);
+          turretPID.setConstraints(new Constraints(values[3], values[4]));
+          turretPID.setTolerance(values[5]);
+        },
+        turretP, turretI, turretD, turretMaxVel, turretMaxAccel, turretTolerance);
+
+    // Update turret feedforward if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          turretFF = new SimpleMotorFeedforward(values[0], values[1], values[2]);
+        },
+        turretKS, turretKV, turretKA);
 
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngleDegs().in(Degrees));
