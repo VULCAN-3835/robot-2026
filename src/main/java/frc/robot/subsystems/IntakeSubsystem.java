@@ -31,6 +31,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 
+import frc.lib.util.LoggedTunableNumber;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 
@@ -47,6 +48,22 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates target;
   private double factor = 0.45;
 
+  private final LoggedTunableNumber armP = new LoggedTunableNumber("Intake/armP", IntakeConstants.kp);
+  private final LoggedTunableNumber armI = new LoggedTunableNumber("Intake/armI", IntakeConstants.ki);
+  private final LoggedTunableNumber armD = new LoggedTunableNumber("Intake/armD", IntakeConstants.kd);
+  private final LoggedTunableNumber armMaxVelocity = new LoggedTunableNumber("Intake/armMaxVelocity", IntakeConstants.kMaxVelocity);
+  private final LoggedTunableNumber armMaxAcceleration = new LoggedTunableNumber("Intake/armMaxAcceleration", IntakeConstants.kMaxAcceleration);
+  private final LoggedTunableNumber armKS = new LoggedTunableNumber("Intake/armKS", IntakeConstants.kS);
+  private final LoggedTunableNumber armKG = new LoggedTunableNumber("Intake/armKG", IntakeConstants.kG);
+  private final LoggedTunableNumber armKV = new LoggedTunableNumber("Intake/armKV", IntakeConstants.kV);
+  private final LoggedTunableNumber armKA = new LoggedTunableNumber("Intake/armKA", IntakeConstants.kA);
+  private final LoggedTunableNumber pidTolerance = new LoggedTunableNumber("Intake/pidTolerance", IntakeConstants.pidTolerance);
+  private final LoggedTunableNumber intakePower = new LoggedTunableNumber("Intake/intakePower", IntakeConstants.intakePower);
+  private final LoggedTunableNumber restPoint = new LoggedTunableNumber("Intake/restPoint", IntakeConstants.restPoint);
+  private final LoggedTunableNumber intakePoint = new LoggedTunableNumber("Intake/intakePoint", IntakeConstants.intakePoint);
+  private final LoggedTunableNumber armHorizontalDeg = new LoggedTunableNumber("Intake/armHorizontalDeg", IntakeConstants.armHorizontalDeg);
+  private final LoggedTunableNumber restFactor = new LoggedTunableNumber("Intake/restFactor", 0.7);
+  private final LoggedTunableNumber intakeFactor = new LoggedTunableNumber("Intake/intakeFactor", 0.4);
 
   public IntakeSubsystem() {
 
@@ -59,19 +76,19 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armMotor.getConfigurator().apply(config);
 
     this.pidController = new ProfiledPIDController(
-      IntakeConstants.kp,
-      IntakeConstants.ki,
-      IntakeConstants.kd,
-      new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
+      armP.get(),
+      armI.get(),
+      armD.get(),
+      new TrapezoidProfile.Constraints(armMaxVelocity.get(), armMaxAcceleration.get())
     );
-    
-    pidController.setTolerance(IntakeConstants.pidTolerance);
+
+    pidController.setTolerance(pidTolerance.get());
 
     this.armFeedforward = new ArmFeedforward(
-      IntakeConstants.kS,
-      IntakeConstants.kG,
-      IntakeConstants.kV,
-      IntakeConstants.kA
+      armKS.get(),
+      armKG.get(),
+      armKV.get(),
+      armKA.get()
     );
 
     // this.target = intakeStates.REST;
@@ -99,12 +116,12 @@ public class IntakeSubsystem extends SubsystemBase {
     switch (state) {
 
       case REST:
-        pidController.setGoal(IntakeConstants.restPoint);
+        pidController.setGoal(restPoint.get());
         target = intakeStates.REST;
         break;
 
       case INTAKE:
-        pidController.setGoal(IntakeConstants.intakePoint);
+        pidController.setGoal(intakePoint.get());
         target = intakeStates.INTAKE;
         break;
 
@@ -127,7 +144,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * @param powered The desired state of the roller motors (powered or unpowered)
    */
   public void setRollerState(boolean powered) {
-    setRollerVoltage(powered ? IntakeConstants.intakePower : 0);
+    setRollerVoltage(powered ? intakePower.get() : 0);
   }
 
   /**
@@ -167,8 +184,25 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
-    
+
+    // Update PID + constraints + tolerance if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          pidController.setPID(values[0], values[1], values[2]);
+          pidController.setConstraints(new TrapezoidProfile.Constraints(values[3], values[4]));
+          pidController.setTolerance(values[5]);
+        },
+        armP, armI, armD, armMaxVelocity, armMaxAcceleration, pidTolerance);
+
+    // Update arm feedforward if tunable values changed
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        values -> {
+          armFeedforward = new ArmFeedforward(values[0], values[1], values[2], values[3]);
+        },
+        armKS, armKG, armKV, armKA);
+
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
@@ -176,7 +210,7 @@ public class IntakeSubsystem extends SubsystemBase {
     double pidOutput = pidController.calculate(getArmAngleDegrees());
 
     // Feedforward: convert encoder degrees to radians relative to horizontal
-    double angleRad = Math.toRadians(getArmAngleDegrees() - IntakeConstants.armHorizontalDeg);
+    double angleRad = Math.toRadians(getArmAngleDegrees() - armHorizontalDeg.get());
     double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
     double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
 
@@ -184,12 +218,12 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("ff output", ffOutput);
     double totalOutput = pidOutput + ffOutput;
 
-    if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
-      factor = 0.7;
+    if (target == intakeStates.REST) {
+      factor = restFactor.get();
     }
 
-    if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.4;
+    if (target == intakeStates.INTAKE) {
+      factor = intakeFactor.get();
     }
 
     if (isAtSetpoint()) {

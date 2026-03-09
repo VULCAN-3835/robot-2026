@@ -57,6 +57,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.ModuleConstants;
+import frc.lib.util.LoggedTunableNumber;
 import frc.robot.Util.SwerveModule;
 import frc.robot.Util.AtCamUtil;
 import frc.robot.Util.LimelightUtil;
@@ -110,6 +111,25 @@ public class ChassisSubsystem extends SubsystemBase {
   private double last_timestamp;
 
   private double distanceFromHub;
+
+  // PathPlanner PID tunables (init-only, read at startup)
+  private final LoggedTunableNumber ppTranslationP = new LoggedTunableNumber("Chassis/ppTranslationP", 0.3);
+  private final LoggedTunableNumber ppTranslationI = new LoggedTunableNumber("Chassis/ppTranslationI", 0.0);
+  private final LoggedTunableNumber ppTranslationD = new LoggedTunableNumber("Chassis/ppTranslationD", 0.0);
+  private final LoggedTunableNumber ppRotationP = new LoggedTunableNumber("Chassis/ppRotationP", 0.5);
+  private final LoggedTunableNumber ppRotationI = new LoggedTunableNumber("Chassis/ppRotationI", 0.0);
+  private final LoggedTunableNumber ppRotationD = new LoggedTunableNumber("Chassis/ppRotationD", 0.0);
+
+  // Holonomic drive PID tunables (reconstructed on each driveTo call)
+  private final LoggedTunableNumber holonomicXP = new LoggedTunableNumber("Chassis/holonomicXP", 1.75);
+  private final LoggedTunableNumber holonomicYP = new LoggedTunableNumber("Chassis/holonomicYP", 1.75);
+  private final LoggedTunableNumber holonomicThetaP = new LoggedTunableNumber("Chassis/holonomicThetaP", 5.0);
+
+  // Teleop speed tunables
+  private final LoggedTunableNumber teleDriveMaxSpeed =
+      new LoggedTunableNumber("Chassis/teleDriveMaxSpeed", ChassisConstants.kTeleDriveMaxSpeedMetersPerSec);
+  private final LoggedTunableNumber teleDriveMaxAngularSpeed =
+      new LoggedTunableNumber("Chassis/teleDriveMaxAngularSpeed", ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec);
 
   // The states of the modules
   private SwerveModuleState[] swerveModuleStates = new SwerveModuleState[] {
@@ -198,8 +218,8 @@ public class ChassisSubsystem extends SubsystemBase {
         () -> ChassisConstants.kDriveKinematics.toChassisSpeeds(getModStates()),
         this::runVelc,
         new PPHolonomicDriveController(
-            new PIDConstants(0.3, 0, 0), // Translation PID
-            new PIDConstants(0.5, 0, 0) // Rotation PID
+            new PIDConstants(ppTranslationP.get(), ppTranslationI.get(), ppTranslationD.get()),
+            new PIDConstants(ppRotationP.get(), ppRotationI.get(), ppRotationD.get())
         ),
         ChassisConstants.getConfig(),
         () -> !(Robot.allianceColor == "BLUE"),
@@ -547,11 +567,19 @@ public class ChassisSubsystem extends SubsystemBase {
     return this.distanceFromHub;
   }
 
+  public LoggedTunableNumber getTeleDriveMaxSpeed() {
+    return teleDriveMaxSpeed;
+  }
+
+  public LoggedTunableNumber getTeleDriveMaxAngularSpeed() {
+    return teleDriveMaxAngularSpeed;
+  }
+
   private void initHolonomicDriver() {
     this.controller = new HolonomicDriveController(
-        new PIDController(1.75, 0, 0),
-        new PIDController(1.75, 0, 0),
-        new ProfiledPIDController(5, 0, 0,
+        new PIDController(holonomicXP.get(), 0, 0),
+        new PIDController(holonomicYP.get(), 0, 0),
+        new ProfiledPIDController(holonomicThetaP.get(), 0, 0,
             new TrapezoidProfile.Constraints(2, 2)));
 
     this.trajectoryConfig = new TrajectoryConfig(2, 2);

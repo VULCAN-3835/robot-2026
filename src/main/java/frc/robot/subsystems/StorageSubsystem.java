@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import frc.lib.util.LoggedTunableNumber;
 import frc.robot.Constants.StorageConstants;
 import frc.robot.Constants.StorageConstants.StorageState;
 
@@ -23,6 +24,11 @@ public class StorageSubsystem extends SubsystemBase {
   private TalonFX elevatorMotor;
 
   private StorageState state;
+
+  private final LoggedTunableNumber reloadPower =
+      new LoggedTunableNumber("Storage/reloadPower", StorageConstants.reloadPower);
+  private final LoggedTunableNumber elevatorPower =
+      new LoggedTunableNumber("Storage/elevatorPower", StorageConstants.elevatorPower);
 
   public StorageSubsystem() {
 
@@ -41,7 +47,7 @@ public class StorageSubsystem extends SubsystemBase {
         setFeedMotorPower(0);
         break;
       case RELOAD:
-        setFeedMotorPower(StorageConstants.reloadPower);
+        setFeedMotorPower(reloadPower.get());
     }
   }
 
@@ -50,6 +56,10 @@ public class StorageSubsystem extends SubsystemBase {
   }
   public void setElevatorMotorPower(double power) {
     elevatorMotor.set(power);
+  }
+
+  public void setElevatorReloadPower() {
+    elevatorMotor.set(elevatorPower.get());
   }
 
   public Command setFeedMotorStateCMD(StorageState state) {
