@@ -96,7 +96,7 @@ public final class Constants {
     // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getFieldWidth()
     // / 2.0,
     // height);
-    
+
     private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout
         .loadField(AprilTagFields.k2026RebuiltWelded);
 
@@ -245,7 +245,6 @@ public final class Constants {
     public static final double kTurretTolerance = 3.5;
   }
 
-
   public static final class StorageConstants {
 
     public static enum StorageState {
@@ -260,8 +259,11 @@ public final class Constants {
     public static final double elevatorPower = 0.4;
     public static final double reloadTime = 0;
   }
+
   public static final class IntakeConstants {
-    public static enum intakeStates {REST, INTAKE}
+    public static enum intakeStates {
+      REST, INTAKE
+    }
 
     public static final int armMotorID = 51;
     public static final int rollerMotorID = 50;
@@ -270,33 +272,33 @@ public final class Constants {
 
     public static final double intakePower = 3.5;
 
-    public static final double kArmGearRatio = 32.0/18.0;
+    public static final double kArmGearRatio = 1 / 2.0;
 
-    public static final double restPoint = 80;
-    public static final double intakePoint = 10;
+    public static final double restPoint = 90;
+    public static final double intakePoint = 0;
 
-    public static final double kp = 0.2;
+    public static final double kp = 0.04;
     public static final double ki = 0;
     public static final double kd = 0;
-    public static final double kMaxVelocity = 30;
-    public static final double kMaxAcceleration = 60;
+    public static final double kMaxVelocity = 100;
+    public static final double kMaxAcceleration = 200;
+
+    public static final double pidTolerance = 10;
 
     // ArmFeedforward constants
-    public static final double kS = 2;
+    public static final double kS = 1;
     public static final double kG = 3;
     public static final double kV = 0.5;
     public static final double kA = 3;
     public static final double armHorizontalDeg = 120;
 
-    public static final double pidTolerance = 8;
-
   }
-    
-    // Safe angle ranges (degrees) for barrier checks in periodic
-    // These are conservative defaults — update to match your physical limits.
-    public static final double kHoodMinAngleDeg = 0.0;
-    public static final double kHoodMaxAngleDeg = 60.0;
 
-    public static final double kTurretMinAngleDeg = -180.0;
-    public static final double kTurretMaxAngleDeg = 180.0;
+  // Safe angle ranges (degrees) for barrier checks in periodic
+  // These are conservative defaults — update to match your physical limits.
+  public static final double kHoodMinAngleDeg = 0.0;
+  public static final double kHoodMaxAngleDeg = 60.0;
+
+  public static final double kTurretMinAngleDeg = -180.0;
+  public static final double kTurretMaxAngleDeg = 180.0;
 }

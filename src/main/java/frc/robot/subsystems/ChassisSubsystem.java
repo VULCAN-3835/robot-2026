@@ -489,21 +489,18 @@ public class ChassisSubsystem extends SubsystemBase {
   /**
    * Update pose estimator using vision data from the At Cam
    */
-   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
+  private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
-
     double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
-    double xyStdsLeft = (1 / Math.pow(LeftdistanceFromTarget, 2));
     SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
-    if (this.leftCam.isMultiTag()) {
-      xyStdsLeft = (1 / Math.pow(LeftdistanceFromTarget, 2));
-    }
-    if (this.leftCam.hasValidTarget(LeftdistanceFromTarget) ) {
+
+    double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTarget)) {
       last_timestamp = Timer.getFPGATimestamp();
 
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft,
-      Units.degreesToRadians(6)));
+          Units.degreesToRadians(6)));
 
       poseEstimator.addVisionMeasurement(leftVisionBotPose,
           this.leftCam.getCameraTimeStampSec());
@@ -511,19 +508,18 @@ public class ChassisSubsystem extends SubsystemBase {
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
-    double xyStdsRight = (1 / Math.pow(RightdistanceFromTraget, 2));
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
 
+    double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
     if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && rightVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
-      
+
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight,
-      Units.degreesToRadians(6)));
+          Units.degreesToRadians(6)));
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
           this.rightCam.getCameraTimeStampSec());
     }
-  
 
     SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);

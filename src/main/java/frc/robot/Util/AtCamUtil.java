@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
 
 import javax.crypto.spec.OAEPParameterSpec;
 
@@ -371,6 +372,16 @@ public class AtCamUtil {
 
     public boolean isMultiTag() {
         return this.result.multitagResult.isPresent();
+    }
+    public double getTargetsDistanceAvg(){
+        double total = 0;
+        for(PhotonTrackedTarget target: this.result.getTargets()){
+            total += target.getBestCameraToTarget().getTranslation().getNorm();
+        }
+        return total/this.getTagCount();
+    }
+    public int getTagCount(){
+        return this.result.getTargets().size();
     }
 
     // public Pose2d updateResult() {

@@ -106,9 +106,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Example data points for distance to Time of Flight (TOF) mapping
     //TODO: view vidoes of shooter and enter TOF
-    distanceToTOF.put(4.0, 1.2);
-    distanceToTOF.put(3.0,1.05);
-    distanceToTOF.put(2.0, 1.0);
+    distanceToTOF.put(2.0, 0.98);
+    distanceToTOF.put(2.5, 1.001);
+    distanceToTOF.put(3.0,1.12);
+    distanceToTOF.put(3.25,1.15);
+    distanceToTOF.put(3.5,1.06);
+    distanceToTOF.put(4.0, 1.19);
 
     // Example data points for distance to Pitch mapping
     distanceToPitch.put(2.0 , 60.0);

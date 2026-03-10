@@ -43,7 +43,7 @@ import frc.robot.subsystems.ShooterSubsystem;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  // private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
   private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
@@ -78,10 +78,10 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-      // xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
-      // xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
-      // xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
-      // xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
+      xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));

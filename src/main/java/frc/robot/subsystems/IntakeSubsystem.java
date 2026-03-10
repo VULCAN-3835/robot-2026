@@ -32,7 +32,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 
@@ -61,7 +61,7 @@ public class IntakeSubsystem extends SubsystemBase {
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
 
     TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     this.armMotor.getConfigurator().apply(config);
 
     this.pidController = new ProfiledPIDController(
@@ -84,13 +84,13 @@ public class IntakeSubsystem extends SubsystemBase {
     // this.target = intakeStates.REST;
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
+    this.armEncoder.setPosition(Degrees.of(90));
   } 
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees) * (18/32.0);
+    return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
   }
   public boolean isAtSetpoint() {
     return pidController.atGoal();
@@ -177,6 +177,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
+    SmartDashboard.putNumber("arm ang radians", Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
     // PID output (in volts)
@@ -197,7 +198,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.8;
+      factor = 0.7;
     }
 
     if (isAtSetpoint()) {
