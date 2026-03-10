@@ -369,6 +369,10 @@ public class AtCamUtil {
         return new Pose2d(transform3d.getTranslation().toTranslation2d(), transform3d.getRotation().toRotation2d());
     }
 
+    public boolean isMultiTag() {
+        return this.result.multitagResult.isPresent();
+    }
+
     // public Pose2d updateResult() {
 
     // var results = this.cam.getAllUnreadResults();

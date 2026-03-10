@@ -26,6 +26,8 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.Degrees;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -47,9 +49,13 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates target;
   private double factor = 0.45;
 
+  private final LoggedNetworkNumber ks = new LoggedNetworkNumber("Intake/kS", IntakeConstants.kS);
+  
+  
 
   public IntakeSubsystem() {
 
+    
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
     
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
@@ -65,6 +71,7 @@ public class IntakeSubsystem extends SubsystemBase {
       new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
     );
     
+    
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
     this.armFeedforward = new ArmFeedforward(
@@ -78,7 +85,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
-  }
+  } 
 
 
   public double getArmAngleDegrees() {
@@ -182,6 +189,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("pid output", pidOutput);
     SmartDashboard.putNumber("ff output", ffOutput);
+    SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
     double totalOutput = pidOutput + ffOutput;
 
     if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
@@ -189,7 +197,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.4;
+      factor = 0.8;
     }
 
     if (isAtSetpoint()) {

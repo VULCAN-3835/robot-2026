@@ -91,16 +91,18 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKV,
         ShooterConstants.kTurretKA);
 
-    this.hoodPID.setGoal(190);
+    this.hoodPID.setGoal(0);
     initializeMaps();
   }
 
   private static void initializeMaps() {
     // Example data points for distance to Voltage mapping
-    distanceToVoltageMap.put(2.5, 5.1);
-    distanceToVoltageMap.put(3.0, 5.5);
-    distanceToVoltageMap.put(3.5, 5.5);
-    distanceToVoltageMap.put(4.0, 5.7);
+    distanceToVoltageMap.put(2.0, 5.0);
+    distanceToVoltageMap.put(2.5, 5.2);
+    distanceToVoltageMap.put(3.0, 5.4);
+    distanceToVoltageMap.put(3.25, 5.5);
+    distanceToVoltageMap.put(3.5, 5.6);
+    distanceToVoltageMap.put(4.0, 5.8);
 
     // Example data points for distance to Time of Flight (TOF) mapping
     //TODO: view vidoes of shooter and enter TOF
@@ -109,10 +111,12 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToTOF.put(2.0, 1.0);
 
     // Example data points for distance to Pitch mapping
-    distanceToPitch.put(2.5 , 140.0);
-    distanceToPitch.put(3.0, 165.0);
+    distanceToPitch.put(2.0 , 60.0);
+    distanceToPitch.put(2.5, 110.0);
+    distanceToPitch.put(3.0, 145.0);
+    distanceToPitch.put(3.25, 165.0);
     distanceToPitch.put(3.5, 190.0);
-    distanceToPitch.put(4.0, 255.0);
+    distanceToPitch.put(4.0, 220.0);
   }
 
   /**
@@ -213,8 +217,8 @@ public class ShooterSubsystem extends SubsystemBase {
     double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    // this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-    // this.turretMotor.set(turretPIDOutput + turretFFOutput);
+    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    this.turretMotor.set(turretPIDOutput + turretFFOutput);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);

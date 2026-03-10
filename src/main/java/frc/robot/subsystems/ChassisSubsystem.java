@@ -15,6 +15,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -70,6 +71,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import org.photonvision.PhotonUtils;
 
 public class ChassisSubsystem extends SubsystemBase {
@@ -309,7 +311,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @return The heading of the robot in degrees
    */
   public double getYaw() {
-    return this.imu.getAngle();
+    return -this.imu.getAngle();
   }
 
   /**
@@ -487,34 +489,45 @@ public class ChassisSubsystem extends SubsystemBase {
   /**
    * Update pose estimator using vision data from the At Cam
    */
-  private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
+   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
-    double xyStdsLeft = (1 / Math.pow(leftCam.distanceFromTargetMeters(), 2));
-    double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTraget);
-    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget) && leftVisionBotPose.getX() != 0.0) {
+
+    double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
+    double xyStdsLeft = (1 / Math.pow(LeftdistanceFromTarget, 2));
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
+    if (this.leftCam.isMultiTag()) {
+      xyStdsLeft = (1 / Math.pow(LeftdistanceFromTarget, 2));
+    }
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTarget) ) {
       last_timestamp = Timer.getFPGATimestamp();
 
-      // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
-      // Units.degreesToRadians(degStds)));
-      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft, Units.degreesToRadians(6)));
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft,
+      Units.degreesToRadians(6)));
+
       poseEstimator.addVisionMeasurement(leftVisionBotPose,
           this.leftCam.getCameraTimeStampSec());
     }
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
-    double xyStdsRight = (1 / Math.pow(rightCam.distanceFromTargetMeters(), 2));
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
+    double xyStdsRight = (1 / Math.pow(RightdistanceFromTraget, 2));
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
 
     if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && rightVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
-      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight, Units.degreesToRadians(6)));
+      
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight,
+      Units.degreesToRadians(6)));
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
           this.rightCam.getCameraTimeStampSec());
     }
+  
+
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+
   }
   // // if has 2 cams - this one is for limelight
   // // if (visionBotPoseSource.getX() != 0.0 &&
