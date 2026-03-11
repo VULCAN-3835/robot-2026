@@ -11,6 +11,7 @@ import frc.robot.Constants.StorageConstants.StorageState;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.ShootCMD;
 import frc.robot.commands.Turn90;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
@@ -105,6 +106,9 @@ public class RobotContainer {
       new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
     xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
     setUpContollers(true);
+
+    xboxControllerDrive.a().whileTrue(new ShootCMD(chassisSubsystem, shooterSubsystem));
+    xboxControllerDrive.a().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem));
 
     // xboxControllerDrive.x().onTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())));
     xboxControllerDrive.y().whileTrue(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(5.7)));

@@ -377,11 +377,14 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param speeds The desired chassisSpeeds object for module velocities
    */
   public void runVelc(ChassisSpeeds speeds) {
-    ChassisSpeeds discSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(ChassisSpeeds.discretize(speeds, 0.02),
-        getRotation2d());
+    System.out.print("in run velc");
+    // ChassisSpeeds discSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(ChassisSpeeds.discretize(speeds, 0.02),
+    //     getRotation2d());
+    ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     // ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.01);
 
     this.swerveModuleStates = ChassisConstants.kDriveKinematics.toSwerveModuleStates(discSpeeds);
+    // this.drive(speeds, false);
   }
 
   /**
@@ -484,6 +487,10 @@ public class ChassisSubsystem extends SubsystemBase {
    */
   public SwerveModuleState[] getModStates() {
     return this.swerveModuleStates;
+  }
+  public ChassisSpeeds getFieldRelativeSpeeds(){
+    ChassisSpeeds robotSpeeds = ChassisConstants.kDriveKinematics.toChassisSpeeds(getModStates());
+    return ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds, getRotation2d());
   }
 
   /**
@@ -596,18 +603,18 @@ public class ChassisSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    if (isAutonomous) {
+    // if (isAutonomous) {
 
-      State goalState = trajectory.get().sample(holonomicTimer.get());
+    //   State goalState = trajectory.get().sample(holonomicTimer.get());
 
-      ChassisSpeeds speeds = controller.calculate(getPose(), goalState.poseMeters, goalState.velocityMetersPerSecond,
-          holonomicSetPoint.getRotation());
-      drive(speeds, false);
-      if (Meters.of(currentPose2dHolonomic.minus(holonomicSetPoint).getTranslation()
-          .getDistance(holonomicSetPoint.getTranslation())).gt(Centimeters.of(0.5))) {
-        isAutonomous = false;
-      }
-    }
+    //   ChassisSpeeds speeds = controller.calculate(getPose(), goalState.poseMeters, goalState.velocityMetersPerSecond,
+    //       holonomicSetPoint.getRotation());
+    //   drive(speeds, false);
+    //   if (Meters.of(currentPose2dHolonomic.minus(holonomicSetPoint).getTranslation()
+    //       .getDistance(holonomicSetPoint.getTranslation())).gt(Centimeters.of(0.5))) {
+    //     isAutonomous = false;
+    //   }
+    // }
 
     setModuleStates(this.swerveModuleStates);
 

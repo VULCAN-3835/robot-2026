@@ -33,6 +33,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 
@@ -210,15 +211,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
     // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
-    // System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
-    //     Timer.getFPGATimestamp(),
-    //     getArmAngleDegrees(),
-    //     pidController.getGoal().position,
-    //     pidController.getSetpoint().position,
-    //     pidController.getSetpoint().velocity,
-    //     pidController.getPositionError(),
-    //     pidOutput,
-    //     ffOutput,
-    //     totalOutput);
+    if (this.getArmAngleDegrees()>50) {
+      Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
+    }
   }
 }
