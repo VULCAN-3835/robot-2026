@@ -105,7 +105,6 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToVoltageMap.put(4.0, 5.8);
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    //TODO: view vidoes of shooter and enter TOF
     distanceToTOF.put(2.0, 0.98);
     distanceToTOF.put(2.5, 1.001);
     distanceToTOF.put(3.0,1.12);
@@ -251,6 +250,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
     SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
-
+    SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
   }
 }

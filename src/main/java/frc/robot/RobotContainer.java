@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.StorageSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -49,20 +50,24 @@ public class RobotContainer {
   private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private StorageSubsystem storageSubsystem = new StorageSubsystem();
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandXboxController xboxControllerButton =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  // private SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private SendableChooser<Command> autoChooser = new SendableChooser<>();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    //  autoChooser = AutoBuilder.buildAutoChooser();
-    // autoChooser.setDefaultOption("EMPTY", null);
-    // SmartDashboard.putData("Auto Chooser", autoChooser);
+     autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser.setDefaultOption("EMPTY", null);
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+    NamedCommands.registerCommand("shoot",
+    new ParallelCommandGroup(
+      new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
     // Configure the trigger bindings
     configureBindings();
   }
@@ -136,6 +141,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return null; // autoChooser.getSelected();
+    return autoChooser.getSelected();
   }
 }
+

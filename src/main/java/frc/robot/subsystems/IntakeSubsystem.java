@@ -198,7 +198,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.7;
+      factor = 1;
     }
 
     if (isAtSetpoint()) {
