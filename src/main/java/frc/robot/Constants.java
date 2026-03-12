@@ -277,7 +277,7 @@ public final class Constants {
 
     public static final int armEncoderID = 52;
 
-    public static final double intakePower = 3.5;
+    public static final double intakePower = 5;
 
     public static final double kArmGearRatio = 1 / 2.0;
 

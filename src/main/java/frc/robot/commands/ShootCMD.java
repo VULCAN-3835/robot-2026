@@ -26,7 +26,7 @@ public class ShootCMD extends Command {
 
   private ChassisSubsystem chassisSubsystem;
   private ShooterSubsystem shooterSubsystem;
-  private final int ITERATIONS = 3;
+  private final int ITERATIONS = 10;
   private Translation3d target = Constants.ChassisConstants.getHubTopCenter();
   private static final double kLatencyMs = 30.0;
   private double prevVx = 0;
@@ -52,8 +52,10 @@ public class ShootCMD extends Command {
     Pose2d robotPose = chassisSubsystem.getPose();
     
     double dt = kLatencyMs / 1000.0;
-    double ax = (fieldSpeeds.vxMetersPerSecond - prevVx) / 0.02;
-    double ay = (fieldSpeeds.vyMetersPerSecond - prevVy) / 0.02;
+    double ay = chassisSubsystem.getGyro().getWorldLinearAccelY();
+    double ax = chassisSubsystem.getGyro().getWorldLinearAccelX();
+    // double ax = (fieldSpeeds.vxMetersPerSecond - prevVx) / 0.02;
+    // double ay = (fieldSpeeds.vyMetersPerSecond - prevVy) / 0.02;
 
     robotPose = new Pose2d(
         robotPose.getX() + fieldSpeeds.vxMetersPerSecond * dt + 0.5 * ax * dt * dt,
