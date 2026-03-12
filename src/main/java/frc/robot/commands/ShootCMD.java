@@ -25,7 +25,7 @@ public class ShootCMD extends Command {
 
   private ChassisSubsystem chassisSubsystem;
   private ShooterSubsystem shooterSubsystem;
-  private final int ITERATIONS = 2;
+  private final int ITERATIONS = 3;
   private Translation3d target = Constants.ChassisConstants.getHubTopCenter();
 
   public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
@@ -39,6 +39,7 @@ public class ShootCMD extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    Constants.ChassisConstants.kMaxDrivingVelocity = 2;
   }
 
   // Called every time the scheduler runs while the command is scheduled.

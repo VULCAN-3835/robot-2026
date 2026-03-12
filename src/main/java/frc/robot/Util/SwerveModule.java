@@ -254,7 +254,7 @@ public class SwerveModule {
      * @param desiredState the desired state for the module with it's speed being in MPS
     */
     private void setSpeed(SwerveModuleState desiredState) {
-        this.velocityController.Velocity = desiredState.speedMetersPerSecond* ModuleConstants.kWheelCircumference;
+        this.velocityController.Velocity = desiredState.speedMetersPerSecond/ ModuleConstants.kWheelCircumference;
         this.velocityController.FeedForward = this.driveFeedForward.calculate(desiredState.speedMetersPerSecond);
         this.driveMotor.setControl(this.velocityController);
     }
@@ -273,7 +273,7 @@ public class SwerveModule {
     */
     public double getVelocity() {
         this.m_driveVelocity.refresh();
-        return this.m_driveVelocity.getValue().in(RotationsPerSecond)/ ModuleConstants.kWheelCircumference;
+        return this.m_driveVelocity.getValue().in(RotationsPerSecond) * ModuleConstants.kWheelCircumference;
     }
 
     /**

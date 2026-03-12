@@ -107,8 +107,8 @@ public class RobotContainer {
     xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
     setUpContollers(true);
 
-    xboxControllerDrive.a().whileTrue(new ShootCMD(chassisSubsystem, shooterSubsystem));
-    xboxControllerDrive.a().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem));
+    xboxControllerDrive.a().whileTrue(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 1),new ShootCMD(chassisSubsystem, shooterSubsystem)));
+    xboxControllerDrive.a().toggleOnFalse(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 4.5),new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem),new InstantCommand(()->shooterSubsystem.setHoodAngle(0))));
 
     // xboxControllerDrive.x().onTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())));
     xboxControllerDrive.y().whileTrue(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(5.7)));

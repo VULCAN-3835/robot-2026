@@ -647,7 +647,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
     SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
-
+    SmartDashboard.putNumber("max velc chassis",ChassisConstants.kMaxDrivingVelocity);
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
     SmartDashboard.putNumber("ChassisSubsystem/Left Front Distance",
