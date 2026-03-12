@@ -54,8 +54,9 @@ public class ShootCMD extends Command {
     for(int i = 0; i< ITERATIONS; i++){
       predictedTarget = target.toTranslation2d().minus(
         new Translation2d(
-          fieldSpeeds.vyMetersPerSecond * tof,
-          fieldSpeeds.vxMetersPerSecond * tof
+          fieldSpeeds.vxMetersPerSecond * tof,
+          fieldSpeeds.vyMetersPerSecond * tof
+
         )
       );
       distance = turretPose.getTranslation().getDistance(predictedTarget);

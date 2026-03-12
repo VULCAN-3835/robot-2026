@@ -489,8 +489,16 @@ public class ChassisSubsystem extends SubsystemBase {
     return this.swerveModuleStates;
   }
   public ChassisSpeeds getFieldRelativeSpeeds(){
-    ChassisSpeeds robotSpeeds = ChassisConstants.kDriveKinematics.toChassisSpeeds(getModStates());
+    SwerveModuleState[] actualModuleStates = new SwerveModuleState[]{
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
+    };
+
+    ChassisSpeeds robotSpeeds = ChassisConstants.kDriveKinematics.toChassisSpeeds(actualModuleStates);
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds, getRotation2d());
+
   }
 
   /**

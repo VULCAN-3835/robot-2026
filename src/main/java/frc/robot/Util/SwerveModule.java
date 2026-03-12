@@ -7,6 +7,7 @@ package frc.robot.Util;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -272,7 +273,7 @@ public class SwerveModule {
     */
     public double getVelocity() {
         this.m_driveVelocity.refresh();
-        return this.m_driveVelocity.getValue().in(RPM)* ModuleConstants.kWheelCircumference;
+        return this.m_driveVelocity.getValue().in(RotationsPerSecond)/ ModuleConstants.kWheelCircumference;
     }
 
     /**

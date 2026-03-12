@@ -159,12 +159,15 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setTurretAngle(double deg) {
-    if(deg >=0 && deg<200)
+    if(deg >=ShooterConstants.kTurretLowLimit && deg<ShooterConstants.kTurretHighLimit)
     this.turretPID.setGoal(deg);
   }
 
   public void setHoodAngle(double deg) {
+    if (deg > ShooterConstants.kHoodLowLimit && deg < ShooterConstants.kHoodHighLimit) {
     this.hoodPID.setGoal(deg);
+      
+    }
   }
 
   public void setFlywheelVoltage(double V) {

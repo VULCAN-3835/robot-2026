@@ -217,8 +217,15 @@ public final class Constants {
     // offset for the azimuth angle calculation, in degrees
     public static final double kAzimuthOffset = 105;
 
+    public static final double kHoodLowLimit = 0;
+    public static final double kHoodHighLimit = 330;
+
+    public static final double kTurretLowLimit = 0;
+    public static final double kTurretHighLimit = 200;
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
+
+    
     public static final double kHoodP = 0.003;
     public static final double kHoodI = 0.0;
     public static final double kHoodD = 0.00001;
