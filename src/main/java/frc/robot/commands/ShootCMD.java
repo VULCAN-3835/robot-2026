@@ -7,9 +7,11 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.ChassisSubsystem;
@@ -43,6 +45,7 @@ public class ShootCMD extends Command {
   @Override
   public void execute() {
     Pose2d robotPose = chassisSubsystem.getPose();
+    Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3,0)),robotPose.getRotation());
     ChassisSpeeds fieldSpeeds = chassisSubsystem.getFieldRelativeSpeeds();
     Translation2d predictedTarget = Constants.ChassisConstants.getHubTopCenter().toTranslation2d();
     double distance = chassisSubsystem.getDistanceFromHub();
@@ -51,11 +54,11 @@ public class ShootCMD extends Command {
     for(int i = 0; i< ITERATIONS; i++){
       predictedTarget = target.toTranslation2d().minus(
         new Translation2d(
-          fieldSpeeds.vxMetersPerSecond * tof,
-          fieldSpeeds.vyMetersPerSecond * tof
+          fieldSpeeds.vyMetersPerSecond * tof,
+          fieldSpeeds.vxMetersPerSecond * tof
         )
       );
-      distance = robotPose.getTranslation().getDistance(predictedTarget);
+      distance = turretPose.getTranslation().getDistance(predictedTarget);
       tof = shooterSubsystem.getTOFForDistance(distance);
     }
 
@@ -65,9 +68,11 @@ public class ShootCMD extends Command {
       target.getZ()
     );
 
-    shooterSubsystem.aimAtTarget(robotPose, predictedTranslation3d);
+    shooterSubsystem.aimAtTarget(turretPose, predictedTranslation3d);
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
+    SmartDashboard.putNumber("vx", fieldSpeeds.vxMetersPerSecond);
+    SmartDashboard.putNumber("vy", fieldSpeeds.vyMetersPerSecond);
   }
 
   // Called once the command ends or is interrupted.
