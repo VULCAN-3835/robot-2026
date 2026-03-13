@@ -204,7 +204,10 @@ public class ChassisSubsystem extends SubsystemBase {
             new PIDConstants(5.0, 0, 0) // Rotation PID
         ),
         ChassisConstants.getConfig(),
-        () -> !(Robot.allianceColor == "BLUE"),
+        () -> {
+          var alliance = DriverStation.getAlliance();
+          return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+        },
         this);
 
     // Set up custom logging to add the current path to a field 2d widget
