@@ -26,11 +26,14 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.units.measure.Angle;
 import static edu.wpi.first.units.Units.Degrees;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-
+import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 
@@ -47,15 +50,19 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates target;
   private double factor = 0.45;
 
+  private final LoggedNetworkNumber ks = new LoggedNetworkNumber("Intake/kS", IntakeConstants.kS);
+  
+  
 
   public IntakeSubsystem() {
 
+    
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
     
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
 
     TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     this.armMotor.getConfigurator().apply(config);
 
     this.pidController = new ProfiledPIDController(
@@ -64,6 +71,7 @@ public class IntakeSubsystem extends SubsystemBase {
       IntakeConstants.kd,
       new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
     );
+    
     
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
@@ -77,15 +85,13 @@ public class IntakeSubsystem extends SubsystemBase {
     // this.target = intakeStates.REST;
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(90 * (32/18.0)));
-
-    this.setArmState(intakeStates.REST);
-  }
+    this.armEncoder.setPosition(Degrees.of(90));
+  } 
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees) * (18/32.0);
+    return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
   }
   public boolean isAtSetpoint() {
     return pidController.atGoal();
@@ -172,6 +178,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
+    SmartDashboard.putNumber("arm ang radians", Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
     // PID output (in volts)
@@ -184,6 +191,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("pid output", pidOutput);
     SmartDashboard.putNumber("ff output", ffOutput);
+    SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
     double totalOutput = pidOutput + ffOutput;
 
     if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
@@ -191,7 +199,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 0.4;
+      factor = 1;
     }
 
     if (isAtSetpoint()) {
@@ -203,17 +211,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
     // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
-
-
-    // System.out.printf("[T=%.3f] ang=%.1f goal=%.1f sp=%.1f spVel=%.1f err=%.1f pid=%.2f ff=%.2f out=%.2f%n",
-    //     Timer.getFPGATimestamp(),
-    //     getArmAngleDegrees(),
-    //     pidController.getGoal().position,
-    //     pidController.getSetpoint().position,
-    //     pidController.getSetpoint().velocity,
-    //     pidController.getPositionError(),
-    //     pidOutput,
-    //     ffOutput,
-    //     totalOutput);
+    if (this.getArmAngleDegrees()>50) {
+      Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
+    }
   }
 }

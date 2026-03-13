@@ -15,6 +15,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -70,6 +71,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import org.photonvision.PhotonUtils;
 
 public class ChassisSubsystem extends SubsystemBase {
@@ -108,7 +110,7 @@ public class ChassisSubsystem extends SubsystemBase {
   private Field2d field;
 
   private double last_timestamp;
-  
+
   private double distanceFromHub;
 
   // The states of the modules
@@ -198,8 +200,8 @@ public class ChassisSubsystem extends SubsystemBase {
         () -> ChassisConstants.kDriveKinematics.toChassisSpeeds(getModStates()),
         this::runVelc,
         new PPHolonomicDriveController(
-            new PIDConstants(0.3, 0, 0), // Translation PID
-            new PIDConstants(0.5, 0, 0) // Rotation PID
+            new PIDConstants(1.75, 0, 0), // Translation PID
+            new PIDConstants(5.0, 0, 0) // Rotation PID
         ),
         ChassisConstants.getConfig(),
         () -> !(Robot.allianceColor == "BLUE"),
@@ -375,11 +377,14 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param speeds The desired chassisSpeeds object for module velocities
    */
   public void runVelc(ChassisSpeeds speeds) {
-    ChassisSpeeds discSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(ChassisSpeeds.discretize(speeds, 0.02),
-        getRotation2d());
+    System.out.print("in run velc");
+    // ChassisSpeeds discSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(ChassisSpeeds.discretize(speeds, 0.02),
+    //     getRotation2d());
+    ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     // ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.01);
 
     this.swerveModuleStates = ChassisConstants.kDriveKinematics.toSwerveModuleStates(discSpeeds);
+    // this.drive(speeds, false);
   }
 
   /**
@@ -483,6 +488,18 @@ public class ChassisSubsystem extends SubsystemBase {
   public SwerveModuleState[] getModStates() {
     return this.swerveModuleStates;
   }
+  public ChassisSpeeds getFieldRelativeSpeeds(){
+    SwerveModuleState[] actualModuleStates = new SwerveModuleState[]{
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
+    };
+
+    ChassisSpeeds robotSpeeds = ChassisConstants.kDriveKinematics.toChassisSpeeds(actualModuleStates);
+    return ChassisSpeeds.fromRobotRelativeSpeeds(robotSpeeds, getRotation2d());
+
+  }
 
   /**
    * Update pose estimator using vision data from the At Cam
@@ -490,27 +507,38 @@ public class ChassisSubsystem extends SubsystemBase {
   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
+    double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
 
-    double LeftdistanceFromTraget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("distance from target", LeftdistanceFromTraget);
-    if (this.leftCam.hasValidTarget(LeftdistanceFromTraget)) {
+    double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTarget)) {
       last_timestamp = Timer.getFPGATimestamp();
 
-      // poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds,
-      // Units.degreesToRadians(degStds)));
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft,
+          Units.degreesToRadians(6)));
+
       poseEstimator.addVisionMeasurement(leftVisionBotPose,
           this.leftCam.getCameraTimeStampSec());
     }
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
-    SmartDashboard.putNumber("distance from target", RightdistanceFromTraget);
-    if (this.rightCam.hasValidTarget(RightdistanceFromTraget)) {
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+
+    double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
+    if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && rightVisionBotPose.getX() != 0.0) {
       last_timestamp = Timer.getFPGATimestamp();
+
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight,
+          Units.degreesToRadians(6)));
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
           this.rightCam.getCameraTimeStampSec());
     }
+
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+
   }
   // // if has 2 cams - this one is for limelight
   // // if (visionBotPoseSource.getX() != 0.0 &&
@@ -537,6 +565,10 @@ public class ChassisSubsystem extends SubsystemBase {
       swerve_modules[i].getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
       swerve_modules[i].getSteerMotor().setNeutralMode(NeutralModeValue.Brake);
     }
+  }
+
+  public double getDistanceFromHub() {
+    return this.distanceFromHub;
   }
 
   private void initHolonomicDriver() {
@@ -579,18 +611,18 @@ public class ChassisSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    if (isAutonomous) {
+    // if (isAutonomous) {
 
-      State goalState = trajectory.get().sample(holonomicTimer.get());
+    //   State goalState = trajectory.get().sample(holonomicTimer.get());
 
-      ChassisSpeeds speeds = controller.calculate(getPose(), goalState.poseMeters, goalState.velocityMetersPerSecond,
-          holonomicSetPoint.getRotation());
-      drive(speeds, false);
-      if (Meters.of(currentPose2dHolonomic.minus(holonomicSetPoint).getTranslation()
-          .getDistance(holonomicSetPoint.getTranslation())).gt(Centimeters.of(0.5))) {
-        isAutonomous = false;
-      }
-    }
+    //   ChassisSpeeds speeds = controller.calculate(getPose(), goalState.poseMeters, goalState.velocityMetersPerSecond,
+    //       holonomicSetPoint.getRotation());
+    //   drive(speeds, false);
+    //   if (Meters.of(currentPose2dHolonomic.minus(holonomicSetPoint).getTranslation()
+    //       .getDistance(holonomicSetPoint.getTranslation())).gt(Centimeters.of(0.5))) {
+    //     isAutonomous = false;
+    //   }
+    // }
 
     setModuleStates(this.swerveModuleStates);
 
@@ -607,14 +639,15 @@ public class ChassisSubsystem extends SubsystemBase {
     // System.out.println("[current_pose] " +
     // this.poseEstimator.getEstimatedPosition());
 
-
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = Math.sqrt(this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3,0)).getSquaredDistance(ChassisConstants.hubTopCenter.toTranslation2d()));
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
+        .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
-
+    SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
+    SmartDashboard.putNumber("max velc chassis",ChassisConstants.kMaxDrivingVelocity);
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
     SmartDashboard.putNumber("ChassisSubsystem/Left Front Distance",

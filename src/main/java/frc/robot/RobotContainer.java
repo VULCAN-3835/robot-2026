@@ -4,12 +4,15 @@
 
 package frc.robot;
 
+import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 import frc.robot.Constants.StorageConstants.StorageState;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.ShootCMD;
+import frc.robot.commands.Turn90;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -20,14 +23,19 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.StorageSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.ShooterSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -37,9 +45,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  // private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+
+  private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private StorageSubsystem storageSubsystem = new StorageSubsystem();
 
   private final CommandXboxController xboxControllerDrive =
@@ -47,14 +56,19 @@ public class RobotContainer {
   private final CommandXboxController xboxControllerButton =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  // private SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private SendableChooser<Command> autoChooser = new SendableChooser<>();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    //  autoChooser = AutoBuilder.buildAutoChooser();
-    // autoChooser.setDefaultOption("EMPTY", null);
-    // SmartDashboard.putData("Auto Chooser", autoChooser);
+     autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser.setDefaultOption("EMPTY", null);
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+    NamedCommands.registerCommand("shoot",
+    new ParallelCommandGroup(
+      new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
     // Configure the trigger bindings
     configureBindings();
   }
@@ -69,29 +83,47 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-      m_driverController.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
-      m_driverController.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
-      m_driverController.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
-      m_driverController.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
+      xboxControllerDrive.b().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+      xboxControllerDrive.a().onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)));
+      xboxControllerDrive.leftBumper().onTrue(new InstantCommand(()->intakeSubsystem.setRollerState(true)));
+      xboxControllerDrive.leftBumper().onFalse(new InstantCommand(()->intakeSubsystem.setRollerState(false)));
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
     xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
     xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
+   
+    xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
+    xboxControllerDrive.leftTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
+    
+    xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorPower(-0.7)),new WaitCommand(0.1),storageSubsystem.setFeedMotorStateCMD(StorageState.RELOAD)));
+    xboxControllerDrive.rightTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.REST)));
+
+    xboxControllerDrive.x().whileTrue(new ParallelCommandGroup(
+      new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
+    xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
+    setUpContollers(true);
+
+    xboxControllerDrive.a().whileTrue(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 1),new ShootCMD(chassisSubsystem, shooterSubsystem)));
+    xboxControllerDrive.a().toggleOnFalse(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 4.5),new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem),new InstantCommand(()->shooterSubsystem.setHoodAngle(0))));
+
+    // xboxControllerDrive.x().onTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())));
+    xboxControllerDrive.y().whileTrue(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(5.7)));
+    xboxControllerDrive.y().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
+    setUpContollers(true);
+
   }
   private void setUpContollers(boolean oneController) {
 
-    // chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-    //     () -> xboxControllerDrive.getLeftY(),
-    //     () -> xboxControllerDrive.getLeftX(),
-    //     () -> xboxControllerDrive.getRightX()));
+    chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
+        () -> xboxControllerDrive.getLeftY(),
+        () -> xboxControllerDrive.getLeftX(),
+        () -> -xboxControllerDrive.getRightX()));
 
-    // xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
+    xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
 
     
 
@@ -100,9 +132,7 @@ public class RobotContainer {
   }
 
   private void configureButtonBinding(CommandXboxController cmdXboxController) {
-    // Here we will configure the button bindings
-
-    // uses
+  
 
 
   }
@@ -115,6 +145,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return null; // autoChooser.getSelected();
+    return autoChooser.getSelected();
   }
 }
+

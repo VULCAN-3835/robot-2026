@@ -45,7 +45,7 @@ public class StorageSubsystem extends SubsystemBase {
     }
   }
 
-  private void setFeedMotorPower(double power) {
+  public void setFeedMotorPower(double power) {
     feedMotor.set(power);
   }
   public void setElevatorMotorPower(double power) {

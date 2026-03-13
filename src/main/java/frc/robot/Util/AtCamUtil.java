@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy;
 
 import javax.crypto.spec.OAEPParameterSpec;
 
@@ -42,12 +43,12 @@ public class AtCamUtil {
     private PhotonPoseEstimator photonPoseEstimator;
     private Rotation2d rot;
     private double lastTimeStamp = 0;
+
     public AtCamUtil(String name, Transform3d robotToCamera) {
         // constructing the camera
         this.name = name;
         // this.cam = new PhotonCamera(NetworkTableInstance.getDefault(), name);
         this.cam = new PhotonCamera(name);
-        this.cam.setPipelineIndex(1);
         this.robotToCamera = robotToCamera;
         this.robotToCam2D = new Transform2d(this.robotToCamera.getX(), this.robotToCamera.getY(),
                 this.robotToCamera.getRotation().toRotation2d());
@@ -361,11 +362,26 @@ public class AtCamUtil {
         }
         this.lastTimeStamp = ePose.get().timestampSeconds;
         return ePose.get().estimatedPose.toPose2d();
+
     }
 
     private Pose2d translation3dToPose2d(Transform3d transform3d) {
 
         return new Pose2d(transform3d.getTranslation().toTranslation2d(), transform3d.getRotation().toRotation2d());
+    }
+
+    public boolean isMultiTag() {
+        return this.result.multitagResult.isPresent();
+    }
+    public double getTargetsDistanceAvg(){
+        double total = 0;
+        for(PhotonTrackedTarget target: this.result.getTargets()){
+            total += target.getBestCameraToTarget().getTranslation().getNorm();
+        }
+        return total/this.getTagCount();
+    }
+    public int getTagCount(){
+        return this.result.getTargets().size();
     }
 
     // public Pose2d updateResult() {

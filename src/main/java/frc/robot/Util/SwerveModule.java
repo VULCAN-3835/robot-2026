@@ -7,6 +7,7 @@ package frc.robot.Util;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -196,7 +197,7 @@ public class SwerveModule {
         Angle angle_rot =
             BaseStatusSignal.getLatencyCompensatedValue(m_steerPosition, m_steerVelocity);
 
-        swervePosition.distanceMeters = -drive_rot.in(Rotations) * ModuleConstants.kWheelCircumference ; // Current module's drive position
+        swervePosition.distanceMeters = drive_rot.in(Rotations) * ModuleConstants.kWheelCircumference ; // Current module's drive position
         swervePosition.angle = Rotation2d.fromDegrees(angle_rot.in(Degrees)); // Current module's angle in Rotation2d
 
         return swervePosition;
@@ -253,7 +254,7 @@ public class SwerveModule {
      * @param desiredState the desired state for the module with it's speed being in MPS
     */
     private void setSpeed(SwerveModuleState desiredState) {
-        this.velocityController.Velocity = desiredState.speedMetersPerSecond* ModuleConstants.kWheelCircumference;
+        this.velocityController.Velocity = desiredState.speedMetersPerSecond/ ModuleConstants.kWheelCircumference;
         this.velocityController.FeedForward = this.driveFeedForward.calculate(desiredState.speedMetersPerSecond);
         this.driveMotor.setControl(this.velocityController);
     }
@@ -272,7 +273,7 @@ public class SwerveModule {
     */
     public double getVelocity() {
         this.m_driveVelocity.refresh();
-        return this.m_driveVelocity.getValue().in(RPM)* ModuleConstants.kWheelCircumference;
+        return this.m_driveVelocity.getValue().in(RotationsPerSecond) * ModuleConstants.kWheelCircumference;
     }
 
     /**
