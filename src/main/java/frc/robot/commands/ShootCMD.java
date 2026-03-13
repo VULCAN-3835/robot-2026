@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -31,6 +32,7 @@ public class ShootCMD extends Command {
   private static final double kLatencyMs = 30.0;
   private double prevVx = 0;
   private double prevVy = 0;
+  private boolean isBlue = DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
   public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.chassisSubsystem = chassisSubsystem;
@@ -76,16 +78,20 @@ public class ShootCMD extends Command {
     SmartDashboard.putNumber("log_ay", ay);
     
     Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3,0)),robotPose.getRotation());
+    
     Translation2d predictedTarget = Constants.ChassisConstants.getHubTopCenter().toTranslation2d();
     double distance = chassisSubsystem.getDistanceFromHub();
     double tof = shooterSubsystem.getTOFForDistance(distance);
 
+    // Invert velocity for red alliance - field coordinates are flipped
+    double vx = isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond;
+    double vy = isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond;
+
     for(int i = 0; i< ITERATIONS; i++){
       predictedTarget = target.toTranslation2d().minus(
         new Translation2d(
-          fieldSpeeds.vxMetersPerSecond * tof,
-          fieldSpeeds.vyMetersPerSecond * tof
-
+          vx * tof,
+          vy * tof
         )
       );
       distance = turretPose.getTranslation().getDistance(predictedTarget);
