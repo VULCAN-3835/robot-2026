@@ -380,14 +380,14 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param speeds The desired chassisSpeeds object for module velocities
    */
   public void runVelc(ChassisSpeeds speeds) {
-    System.out.print("in run velc");
-    // ChassisSpeeds discSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(ChassisSpeeds.discretize(speeds, 0.02),
-    //     getRotation2d());
+    System.out.println("[PathPlanner] runVelc called: vx=" + speeds.vxMetersPerSecond + 
+                      " vy=" + speeds.vyMetersPerSecond + " omega=" + speeds.omegaRadiansPerSecond);
+    
     ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-    // ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.01);
-
     this.swerveModuleStates = ChassisConstants.kDriveKinematics.toSwerveModuleStates(discSpeeds);
-    // this.drive(speeds, false);
+    
+    System.out.println("[PathPlanner] Set module states: FL=" + swerveModuleStates[0].speedMetersPerSecond +
+                      " FR=" + swerveModuleStates[1].speedMetersPerSecond);
   }
 
   /**
@@ -455,7 +455,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param pose The new pose2d of the robot
    */
   public void resetOdometry(Pose2d pose) {
-    System.out.println("resets");
+    System.out.println("[PathPlanner] resetOdometry called: " + pose);
     this.poseEstimator.resetPose(pose);
     // this.poseEstimator.resetPosition(getRotation2d().unaryMinus(),
     // getModPositions(), pose);
