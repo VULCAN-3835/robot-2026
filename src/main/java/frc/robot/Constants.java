@@ -100,11 +100,22 @@ public final class Constants {
     private static final AprilTagFieldLayout fieldLayout = AprilTagFieldLayout
         .loadField(AprilTagFields.k2026RebuiltWelded);
 
+    // public static Translation3d getHubTopCenter() {
+    // int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+    // == DriverStation.Alliance.Blue ? 26
+    // : 10;
+    // return new Translation3d(
+    // fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
+    // fieldLayout.getFieldWidth() / 2.0,
+    // height);
+    // }
     public static Translation3d getHubTopCenter() {
-      int tagID = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue ? 26
-          : 10;
+      boolean isBlue = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue;
+      int tagID = isBlue ? 26 : 10;
+      double xOffset = isBlue ? width / 2.0 : -width / 2.0;
+
       return new Translation3d(
-          fieldLayout.getTagPose(tagID).get().getX() + width / 2.0,
+          fieldLayout.getTagPose(tagID).get().getX() + xOffset,
           fieldLayout.getFieldWidth() / 2.0,
           height);
     }
@@ -225,7 +236,6 @@ public final class Constants {
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
 
-    
     public static final double kHoodP = 0.003;
     public static final double kHoodI = 0.0;
     public static final double kHoodD = 0.00001;
