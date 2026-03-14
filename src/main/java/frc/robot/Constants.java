@@ -204,7 +204,6 @@ public final class Constants {
         config = DEFAUL_ROBOT_CONFIG;
       }
       return config;
-
     }
   }
 
@@ -287,7 +286,8 @@ public final class Constants {
 
     public static final int armEncoderID = 52;
 
-    public static final double intakePower = 5;
+    //intake power in Voltage
+    public static final double intakePower = 4.25;
 
     public static final double kArmGearRatio = 1 / 2.0;
 

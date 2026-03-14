@@ -47,9 +47,9 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
-  private ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
-  private ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
-  private StorageSubsystem storageSubsystem = new StorageSubsystem();
+  private final ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
+  private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
+  private final StorageSubsystem storageSubsystem = new StorageSubsystem();
 
   private final CommandXboxController xboxControllerDrive =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -61,15 +61,28 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-     autoChooser = AutoBuilder.buildAutoChooser();
-    autoChooser.setDefaultOption("EMPTY", null);
-    SmartDashboard.putData("Auto Chooser", autoChooser);
     NamedCommands.registerCommand("shoot",
     new ParallelCommandGroup(
       new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
       new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
       new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
-    // Configure the trigger bindings
+    
+    NamedCommands.registerCommand("printStart", 
+      new InstantCommand(() -> System.out.println("[Auto] === PATH STARTING ===")));
+    NamedCommands.registerCommand("printEnd", 
+      new InstantCommand(() -> System.out.println("[Auto] === PATH ENDED ===")));
+    
+    try {
+      autoChooser = AutoBuilder.buildAutoChooser();
+    } catch (Exception e) {
+      System.err.println("[PathPlanner] ERROR building auto chooser: " + e.getMessage());
+      e.printStackTrace();
+      autoChooser = new SendableChooser<>();
+    }
+    
+    autoChooser.setDefaultOption("Do Nothing", new InstantCommand());
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+    
     configureBindings();
   }
 
@@ -108,7 +121,7 @@ public class RobotContainer {
     setUpContollers(true);
 
     xboxControllerDrive.a().whileTrue(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 1),new ShootCMD(chassisSubsystem, shooterSubsystem)));
-    xboxControllerDrive.a().toggleOnFalse(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 4.5),new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem),new InstantCommand(()->shooterSubsystem.setHoodAngle(0))));
+    xboxControllerDrive.a().toggleOnFalse(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 4.5),new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem),new InstantCommand(()->shooterSubsystem.setHoodAngle(0),shooterSubsystem)));
 
     // xboxControllerDrive.x().onTrue(new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())));
     xboxControllerDrive.y().whileTrue(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(5.7)));
@@ -144,7 +157,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
     return autoChooser.getSelected();
   }
 }

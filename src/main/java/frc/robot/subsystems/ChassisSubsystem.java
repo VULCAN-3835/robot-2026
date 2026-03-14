@@ -125,6 +125,7 @@ public class ChassisSubsystem extends SubsystemBase {
   SysIdRoutine routine;
 
   public ChassisSubsystem() {
+    System.out.println("[ChassisSubsystem] Constructor starting...");
 
     // Modules Initilization:
     this.swerve_modules[Wheels.LEFT_FRONT.ordinal()] = new SwerveModule(
@@ -193,24 +194,27 @@ public class ChassisSubsystem extends SubsystemBase {
         startingPos);
 
     this.distanceFromHub = 0;
-    // Configuring the controller for the path planner
-    AutoBuilder.configure(
-        this::getPose,
-        this::resetOdometry,
-        () -> ChassisConstants.kDriveKinematics.toChassisSpeeds(getModStates()),
-        this::runVelc,
-        new PPHolonomicDriveController(
-            new PIDConstants(1.75, 0, 0), // Translation PID
-            new PIDConstants(5.0, 0, 0) // Rotation PID
-        ),
-        ChassisConstants.getConfig(),
-        () -> {
-          var alliance = DriverStation.getAlliance();
-          return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
-        },
-        this);
+    try {
+      AutoBuilder.configure(
+          this::getPose,
+          this::resetOdometry,
+          this::getRobotRelativeSpeeds,
+          (speeds, feedforwards) -> runVelc(speeds),
+          new PPHolonomicDriveController(
+              new PIDConstants(5.0, 0.0, 0.0),
+              new PIDConstants(5.0, 0.0, 0.0)
+          ),
+          ChassisConstants.getConfig(),
+          () -> {
+            var alliance = DriverStation.getAlliance();
+            return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+          },
+          this);
+    } catch (Exception e) {
+      System.err.println("[PathPlanner] ERROR configuring AutoBuilder: " + e.getMessage());
+      e.printStackTrace();
+    }
 
-    // Set up custom logging to add the current path to a field 2d widget
     PathPlannerLogging.setLogActivePathCallback((poses) -> field.getObject("path").setPoses(poses));
     SmartDashboard.putData(field);
 
@@ -279,6 +283,8 @@ public class ChassisSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Robot Angle", () -> getYaw(), null);
       }
     });
+    
+    System.out.println("[ChassisSubsystem] Constructor completed");
   }
 
   /**
@@ -365,6 +371,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param fieldRelative Is field relative or not
    */
   public void drive(ChassisSpeeds chassisSpeeds, boolean fieldRelative) {
+    //kimi added debug
     // Makes a swerve module-state array from chassisSpeeds
     this.swerveModuleStates = Constants.ChassisConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, this.imu.getRotation2d())
@@ -375,19 +382,30 @@ public class ChassisSubsystem extends SubsystemBase {
   // }
 
   /**
+   * Gets the actual robot-relative chassis speeds based on measured module states
+   * @return Robot-relative ChassisSpeeds
+   */
+  public ChassisSpeeds getRobotRelativeSpeeds() {
+    SwerveModuleState[] actualModuleStates = new SwerveModuleState[]{
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),
+                            swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),
+                            swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),
+                            swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
+      new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),
+                            swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
+    };
+    return ChassisConstants.kDriveKinematics.toChassisSpeeds(actualModuleStates);
+  }
+
+  /**
    * Runs the robot following trajectory
    *
    * @param speeds The desired chassisSpeeds object for module velocities
    */
   public void runVelc(ChassisSpeeds speeds) {
-    System.out.println("[PathPlanner] runVelc called: vx=" + speeds.vxMetersPerSecond + 
-                      " vy=" + speeds.vyMetersPerSecond + " omega=" + speeds.omegaRadiansPerSecond);
-    
-    ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-    this.swerveModuleStates = ChassisConstants.kDriveKinematics.toSwerveModuleStates(discSpeeds);
-    
-    System.out.println("[PathPlanner] Set module states: FL=" + swerveModuleStates[0].speedMetersPerSecond +
-                      " FR=" + swerveModuleStates[1].speedMetersPerSecond);
+    drive(speeds, false);
   }
 
   /**
@@ -455,10 +473,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param pose The new pose2d of the robot
    */
   public void resetOdometry(Pose2d pose) {
-    System.out.println("[PathPlanner] resetOdometry called: " + pose);
     this.poseEstimator.resetPose(pose);
-    // this.poseEstimator.resetPosition(getRotation2d().unaryMinus(),
-    // getModPositions(), pose);
   }
 
   /**

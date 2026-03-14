@@ -54,8 +54,8 @@ public class ShootCMD extends Command {
     Pose2d robotPose = chassisSubsystem.getPose();
     
     double dt = kLatencyMs / 1000.0;
-    double ay = chassisSubsystem.getGyro().getWorldLinearAccelY();
-    double ax = chassisSubsystem.getGyro().getWorldLinearAccelX();
+    double ay = chassisSubsystem.getGyro().getWorldLinearAccelY() * 9.81;
+    double ax = chassisSubsystem.getGyro().getWorldLinearAccelX() * 9.81;
     // double ax = (fieldSpeeds.vxMetersPerSecond - prevVx) / 0.02;
     // double ay = (fieldSpeeds.vyMetersPerSecond - prevVy) / 0.02;
 
@@ -113,8 +113,9 @@ public class ShootCMD extends Command {
     shooterSubsystem.aimAtTarget(turretPose, predictedTranslation3d);
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
-    SmartDashboard.putNumber("vx", fieldSpeeds.vxMetersPerSecond);
-    SmartDashboard.putNumber("vy", fieldSpeeds.vyMetersPerSecond);
+    
+    SmartDashboard.putNumber("vx", isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond);
+    SmartDashboard.putNumber("vy", isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond);
   }
 
   // Called once the command ends or is interrupted.

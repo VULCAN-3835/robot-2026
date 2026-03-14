@@ -106,12 +106,12 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToVoltageMap.put(4.0, 5.8);
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    distanceToTOF.put(2.0, 0.98);
-    distanceToTOF.put(2.5, 1.001);
-    distanceToTOF.put(3.0, 1.12);
-    distanceToTOF.put(3.25, 1.15);
-    distanceToTOF.put(3.5, 1.06);
-    distanceToTOF.put(4.0, 1.19);
+    distanceToTOF.put(2.0, 0.98 + 0.15);
+    distanceToTOF.put(2.5, 1.001 + 0.15);
+    distanceToTOF.put(3.0, 1.12+ 0.15);
+    distanceToTOF.put(3.25, 1.15+ 0.15);
+    distanceToTOF.put(3.5, 1.06+ 0.15);
+    distanceToTOF.put(4.0, 1.19+ 0.15);
 
     // Example data points for distance to Pitch mapping
     distanceToPitch.put(2.0, 60.0);
@@ -164,7 +164,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setHoodAngle(double deg) {
-    if (deg > ShooterConstants.kHoodLowLimit && deg < ShooterConstants.kHoodHighLimit) {
+    if (deg >= ShooterConstants.kHoodLowLimit && deg <= ShooterConstants.kHoodHighLimit) {
     this.hoodPID.setGoal(deg);
       
     }
