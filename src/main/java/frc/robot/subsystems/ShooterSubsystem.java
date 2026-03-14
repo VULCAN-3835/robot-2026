@@ -108,12 +108,12 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToVoltageMap.put(4.0, 5.8);
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    distanceToTOF.put(2.0, 0.98 + 0.15);
-    distanceToTOF.put(2.5, 1.001 + 0.15);
-    distanceToTOF.put(3.0, 1.12 + 0.15);
-    distanceToTOF.put(3.25, 1.15 + 0.15);
-    distanceToTOF.put(3.5, 1.06 + 0.15);
-    distanceToTOF.put(4.0, 1.19 + 0.15);
+    distanceToTOF.put(2.0, 0.98);
+    distanceToTOF.put(2.5, 1.001);
+    distanceToTOF.put(3.0, 1.12);
+    distanceToTOF.put(3.25, 1.15);
+    distanceToTOF.put(3.5, 1.06);
+    distanceToTOF.put(4.0, 1.19);
 
     // Example data points for distance to Pitch mapping
     distanceToPitch.put(2.0, 60.0);
@@ -161,14 +161,14 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setTurretAngle(double deg) {
-    if (deg >= ShooterConstants.kTurretLowLimit && deg < ShooterConstants.kTurretHighLimit)
-      this.turretPID.setGoal(deg);
+    if(deg >=ShooterConstants.kTurretLowLimit && deg<ShooterConstants.kTurretHighLimit)
+    this.turretPID.setGoal(deg);
   }
 
   public void setHoodAngle(double deg) {
-    if (deg >= ShooterConstants.kHoodLowLimit && deg <= ShooterConstants.kHoodHighLimit) {
-      this.hoodPID.setGoal(deg);
-
+    if (deg > ShooterConstants.kHoodLowLimit && deg < ShooterConstants.kHoodHighLimit) {
+    this.hoodPID.setGoal(deg);
+      
     }
   }
 
@@ -253,22 +253,20 @@ public class ShooterSubsystem extends SubsystemBase {
     if (getLimitSwitch()) {
       this.turretMotor.setPosition(0);
     }
-    SmartDashboard.putBoolean("is at left limit", this.getTurretAngleDegs() <= 0);
-    SmartDashboard.putBoolean("is at right limit", this.getTurretAngleDegs() >= 200);
+    SmartDashboard.putBoolean("is at left limit",this.getTurretAngleDegs() <= 0 );
+    SmartDashboard.putBoolean("is at right limit",this.getTurretAngleDegs() >= 200);
 
-    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
-        && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
-        || (this.getTurretAngleDegs() >= 200 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
-    // Prevent the turret from moving past the limit switch in the negative
-    // direction
 
+    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0 )
+    ||(this.getTurretAngleDegs() >= 200 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
+    // Prevent the turret from moving past the limit switch in the negative direction
+    
     if (isAtYawLimit) {
       this.turretMotor.set(0);
     }
     SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
 
-    SmartDashboard.putNumber("azimuth",
-        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    SmartDashboard.putNumber("azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
     SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
     SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
   }
