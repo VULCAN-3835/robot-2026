@@ -25,6 +25,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -94,6 +95,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     this.hoodPID.setGoal(0);
     initializeMaps();
+    resetTurret();
   }
 
   private static void initializeMaps() {
@@ -178,6 +180,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public boolean getLimitSwitch() {
     return this.limitSwitch.get();
+  }
+
+  public void resetTurret() {
+    while (!getLimitSwitch()) {
+      this.turretMotor.set(0.1);
+    }
+    this.turretMotor.set(0);
   }
 
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
