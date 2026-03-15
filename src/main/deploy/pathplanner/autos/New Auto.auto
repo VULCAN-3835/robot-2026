@@ -1,5 +1,5 @@
 {
-  "version": "2026.1.2",
+  "version": "2025.0",
   "command": {
     "type": "sequential",
     "data": {
@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Simple Forward"
+            "pathName": "New Path"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
           }
         }
       ]

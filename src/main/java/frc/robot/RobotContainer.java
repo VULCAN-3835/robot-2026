@@ -65,12 +65,9 @@ public class RobotContainer {
     new ParallelCommandGroup(
       new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
       new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
-      new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
-    
-    NamedCommands.registerCommand("printStart", 
-      new InstantCommand(() -> System.out.println("[Auto] === PATH STARTING ===")));
-    NamedCommands.registerCommand("printEnd", 
-      new InstantCommand(() -> System.out.println("[Auto] === PATH ENDED ===")));
+      new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())),
+      new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),
+      new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
     
     try {
       autoChooser = AutoBuilder.buildAutoChooser();
