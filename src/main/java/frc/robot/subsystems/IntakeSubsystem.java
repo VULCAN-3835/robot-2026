@@ -85,13 +85,14 @@ public class IntakeSubsystem extends SubsystemBase {
     // this.target = intakeStates.REST;
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(90));
+    //this.armEncoder.setPosition(Degrees.of(90));
   } 
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
+    //return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
+    return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
   }
   public boolean isAtSetpoint() {
     return pidController.atGoal();
@@ -176,7 +177,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     
-    
+    SmartDashboard.putNumber("arm ang abs", this.armEncoder.getAbsolutePosition().getValueAsDouble());
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
     SmartDashboard.putNumber("arm ang radians", Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
