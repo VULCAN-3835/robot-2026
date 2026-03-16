@@ -147,8 +147,8 @@ public class IntakeSubsystem extends SubsystemBase {
     rollerMotor.setVoltage(voltage);
   }
 
-  public SequentialCommandGroup toIntake() {
-    return new SequentialCommandGroup(
+  public ParallelCommandGroup toIntake() {
+    return new ParallelCommandGroup(
 
     
       // 1. Starts rolling the rollers for intake
@@ -199,7 +199,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 1;
+      factor = 1.2;
     }
 
     if (isAtSetpoint()) {

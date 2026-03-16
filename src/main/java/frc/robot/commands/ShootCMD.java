@@ -44,6 +44,7 @@ public class ShootCMD extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 1.4;
     Constants.ChassisConstants.kMaxDrivingVelocity = 0.7;
   }
 
@@ -122,6 +123,9 @@ public class ShootCMD extends Command {
   @Override
   public void end(boolean interrupted) {
     shooterSubsystem.setFlywheelVoltage(0);
+    Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 9;
+    Constants.ChassisConstants.kMaxDrivingVelocity = 4.5;
+
   }
 
   // Returns true when the command should end.

@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -69,6 +70,23 @@ public class RobotContainer {
       new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),
       new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
     
+    NamedCommands.registerCommand("intake",new ParallelCommandGroup(
+      new InstantCommand(()->intakeSubsystem.setArmState(intakeStates.INTAKE)),
+      new InstantCommand(()->intakeSubsystem.setRollerVoltage(4.5))));
+
+    NamedCommands.registerCommand("shootMove",new ShootCMD(chassisSubsystem, shooterSubsystem));
+
+    NamedCommands.registerCommand("storage",
+      new RunCommand(() -> {
+        storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.elevatorPower);
+        storageSubsystem.setFeedMotorState(StorageState.RELOAD);
+      }, storageSubsystem));
+
+    NamedCommands.registerCommand("intakeUp",new ParallelCommandGroup(
+      new InstantCommand(()->intakeSubsystem.setArmState(intakeStates.INTAKE)),
+      new InstantCommand(()->intakeSubsystem.setRollerState(true))
+    ));
+    
     try {
       autoChooser = AutoBuilder.buildAutoChooser();
     } catch (Exception e) {
@@ -101,13 +119,13 @@ public class RobotContainer {
 
 
     // xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower)));
-    xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.reloadPower))));
-    xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
+    // xboxControllerDrive.leftTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.RELOAD)),new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.elevatorPower))));
+    // xboxControllerDrive.leftTrigger().whileFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
    
-    xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0.5)));
+    xboxControllerDrive.leftTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(Constants.StorageConstants.elevatorPower)));
     xboxControllerDrive.leftTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setElevatorMotorPower(0)));
     
-    xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(new InstantCommand(()->storageSubsystem.setFeedMotorPower(-0.7)),new WaitCommand(0.1),storageSubsystem.setFeedMotorStateCMD(StorageState.RELOAD)));
+    xboxControllerDrive.rightTrigger().whileTrue(new InstantCommand(()->storageSubsystem.setFeedMotorPower(Constants.StorageConstants.reloadPower)));
     xboxControllerDrive.rightTrigger().toggleOnFalse(new InstantCommand(()->storageSubsystem.setFeedMotorState(StorageState.REST)));
 
     xboxControllerDrive.x().whileTrue(new ParallelCommandGroup(
