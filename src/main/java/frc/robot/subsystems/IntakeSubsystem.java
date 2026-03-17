@@ -85,14 +85,14 @@ public class IntakeSubsystem extends SubsystemBase {
     // this.target = intakeStates.REST;
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    //this.armEncoder.setPosition(Degrees.of(90));
+    this.armEncoder.setPosition(Degrees.of(90));
   } 
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    //return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
-    return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
+    return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
+    // return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
   }
   public boolean isAtSetpoint() {
     return pidController.atGoal();
@@ -100,7 +100,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /**
    * sets the target based on the desired state
-   * 
+   *
    * @param state The desired state of the four bar
    */
   public void setArmState(intakeStates state) {
@@ -119,6 +119,16 @@ public class IntakeSubsystem extends SubsystemBase {
 
     }
 
+  }
+
+  /**
+   * Sets a custom goal position for the arm.
+   * Used by ShakeIntakeCMD to oscillate around a center point.
+   *
+   * @param goal The target angle in degrees
+   */
+  public void setArmGoal(double goal) {
+    pidController.setGoal(goal);
   }
 
   /**

@@ -13,13 +13,32 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 2.0
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "FeederToShootingZone"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shootMove"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "storage"
+                }
+              }
+            ]
           }
         }
       ]

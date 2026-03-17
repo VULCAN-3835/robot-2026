@@ -309,6 +309,10 @@ public final class Constants {
     public static final double kA = 3;
     public static final double armHorizontalDeg = 120;
 
+    // Shake command constants (for ShakeIntakeCMD)
+    public static final double shakeAmplitude = 10; // degrees to oscillate from center
+    public static final double shakePeriod = 0.5;   // seconds per half-cycle
+
   }
 
   // Safe angle ranges (degrees) for barrier checks in periodic
