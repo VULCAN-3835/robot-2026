@@ -5,16 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Right-Feeder"
-                }
-              }
-            ]
+            "pathName": "Right-Feeder"
           }
         },
         {
@@ -30,9 +23,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "intakeUp"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "shootMove"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "storage"
+                }
+              }
+            ]
           }
         }
       ]

@@ -201,8 +201,8 @@ public class ChassisSubsystem extends SubsystemBase {
           this::getRobotRelativeSpeeds,
           (speeds, feedforwards) -> runVelc(speeds),
           new PPHolonomicDriveController(
-              new PIDConstants(1.0, 0.0, 0.0),
-              new PIDConstants(1.0, 0.0, 0.0)
+              new PIDConstants(1.2, 0.0, 0.0),
+              new PIDConstants(2.0, 0.0, 0.0)
           ),
           ChassisConstants.getConfig(),
           () -> {

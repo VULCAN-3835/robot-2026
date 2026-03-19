@@ -156,7 +156,7 @@ public final class Constants {
     public static final boolean kRightBackInverted = true;
 
     public static double kMaxDrivingVelocity = 4.5;
-    public static double kTeleDriveMaxAccelerationUnitsPerSec = 9;
+    public static double kTeleDriveMaxAccelerationUnitsPerSec = 4;
     public static double kTeleDriveMaxSpeedMetersPerSec = kMaxDrivingVelocity;
     public static double kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
 
@@ -271,7 +271,7 @@ public final class Constants {
     public static final int feedMotorID = 40;
     public static final int elevatorMotorID = 41;
 
-    public static final double reloadPower = 0.35;
+    public static final double reloadPower = 0.15;
     public static final double elevatorPower = 0.7;
     public static final double reloadTime = 0;
   }
@@ -289,10 +289,10 @@ public final class Constants {
     //intake power in Voltage
     public static final double intakePower = 4.25;
 
-    public static final double kArmGearRatio = 1 / 2.0;
+    public static final double kArmGearRatio = 18/52.0;
 
-    public static final double restPoint = 90;
-    public static final double intakePoint = 0;
+    public static final double restPoint = 70;
+    public static final double intakePoint = 12;
 
     public static final double kp = 0.04;
     public static final double ki = 0;

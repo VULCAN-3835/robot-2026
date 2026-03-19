@@ -15,6 +15,12 @@
           "data": {
             "pathName": "Right-Neutral"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NuetralToShootingZone"
+          }
         }
       ]
     }
