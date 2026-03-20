@@ -50,9 +50,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private intakeStates target;
   private double factor = 0.45;
-
-  private final LoggedNetworkNumber ks = new LoggedNetworkNumber("Intake/kS", IntakeConstants.kS);
-  
+  private boolean manualMode = false;
+  private double manualPower = 0;  
   
 
   public IntakeSubsystem() {
@@ -83,13 +82,12 @@ public class IntakeSubsystem extends SubsystemBase {
       IntakeConstants.kA
     );
 
-    // this.target = intakeStates.REST;
 
+    //configuring cancoder
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = IntakeConstants.MagnetOffset;
     this.armEncoder.getConfigurator().apply(canConfig);
-    // this.armEncoder.setPosition(Degrees.of(90));
   } 
 
 
@@ -104,10 +102,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /**
    * sets the target based on the desired state
+   * Automatically disables manual mode to allow PID control.
    *
    * @param state The desired state of the four bar
    */
   public void setArmState(intakeStates state) {
+    disableManualMode();
 
     switch (state) {
 
@@ -128,20 +128,32 @@ public class IntakeSubsystem extends SubsystemBase {
   /**
    * Sets a custom goal position for the arm.
    * Used by ShakeIntakeCMD to oscillate around a center point.
+   * Automatically disables manual mode to allow PID control.
    *
    * @param goal The target angle in degrees
    */
   public void setArmGoal(double goal) {
+    disableManualMode();
     pidController.setGoal(goal);
   }
 
   /**
-   * sets the power of the arm motors
+   * sets the power of the arm motors (manual mode)
    * 
    * @param power The desired power of the arm motors
    */
   public void setArmPower(double power) {
+    manualMode = true;
+    manualPower = power;
     armMotor.set(power);
+  }
+
+  /**
+   * Disables manual mode and returns to PID control
+   */
+  public void disableManualMode() {
+    manualMode = false;
+    manualPower = 0;
   }
 
   /**
@@ -189,45 +201,49 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     
     SmartDashboard.putNumber("arm ang abs", this.armEncoder.getAbsolutePosition().getValueAsDouble());
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
     SmartDashboard.putNumber("arm ang radians", Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
-    // PID output (in volts)
-    double pidOutput = pidController.calculate(getArmAngleDegrees());
+    // If in manual mode, skip PID and use manual power
+    if (manualMode) {
+      this.armMotor.set(manualPower);
+    } else {
+      // PID output (in volts)
+      double pidOutput = pidController.calculate(getArmAngleDegrees());
 
-    // Feedforward: convert encoder degrees to radians relative to horizontal
-    double angleRad = Math.toRadians(getArmAngleDegrees() - IntakeConstants.armHorizontalDeg);
-    double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
-    double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
+      // Feedforward: convert encoder degrees to radians relative to horizontal
+      double angleRad = Math.toRadians(getArmAngleDegrees() - IntakeConstants.armHorizontalDeg);
+      double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
+      double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
 
-    SmartDashboard.putNumber("pid output", pidOutput);
-    SmartDashboard.putNumber("ff output", ffOutput);
-    SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
-    double totalOutput = pidOutput + ffOutput;
+      SmartDashboard.putNumber("pid output", pidOutput);
+      SmartDashboard.putNumber("ff output", ffOutput);
+      SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
+      double totalOutput = pidOutput + ffOutput;
 
-    if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
-      factor = 0.7;
+      if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
+        factor = 0.7;
+      }
+
+      if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
+        factor = 1.2;
+      }
+
+      if (isAtSetpoint()) {
+        this.armMotor.setVoltage(0); 
+      }
+      else{
+        this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
+      }
     }
-
-    if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-      factor = 1.2;
-    }
-
-    if (isAtSetpoint()) {
-      this.armMotor.setVoltage(0); 
-    }
-    else{
-      this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
-    }
-
-    // this.armMotor.setVoltage((pidOutput + IntakeConstants.kG *Math.cos(angleRad)) * 0.4); // scale down for safety and reduce power near horizontal to prevent tipping
 
     if (this.getArmAngleDegrees()>50) {
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
+    } else{
+      Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
     }
   }
 }

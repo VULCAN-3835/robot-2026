@@ -12,7 +12,6 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultTeleopCommand;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.ShakeIntakeCMD;
-import frc.robot.commands.ShakeIntakeCMDD;
 import frc.robot.commands.ShootCMD;
 import frc.robot.commands.StorageUpCMD;
 import frc.robot.commands.Turn90;
@@ -133,8 +132,7 @@ public class RobotContainer {
     //   new InstantCommand(()->shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()))));
     // xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0)));
     // setUpContollers(true);
-    xboxControllerDrive.x().whileTrue(new ShakeIntakeCMD(intakeSubsystem));
-    xboxControllerDrive.x().toggleOnFalse(new InstantCommand(()->intakeSubsystem.setArmState(intakeStates.REST),intakeSubsystem));
+    xboxControllerDrive.rightBumper().onTrue(new ShakeIntakeCMD(intakeSubsystem));
 
     xboxControllerDrive.a().whileTrue(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 1),new ShootCMD(chassisSubsystem, shooterSubsystem)));
     xboxControllerDrive.a().toggleOnFalse(new SequentialCommandGroup(new InstantCommand(()->Constants.ChassisConstants.kMaxDrivingVelocity = 4.5),new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(0),shooterSubsystem),new InstantCommand(()->shooterSubsystem.setHoodAngle(0),shooterSubsystem)));

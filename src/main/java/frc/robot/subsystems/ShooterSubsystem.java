@@ -281,11 +281,11 @@ public class ShooterSubsystem extends SubsystemBase {
       this.turretMotor.setPosition(0);
     }
     SmartDashboard.putBoolean("is at left limit",this.getTurretAngleDegs() <= 0 );
-    SmartDashboard.putBoolean("is at right limit",this.getTurretAngleDegs() >= 200);
+    SmartDashboard.putBoolean("is at right limit",this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
 
     this.isAtYawLimit = (this.getTurretAngleDegs() <= 0 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0 )
-    ||(this.getTurretAngleDegs() >= 200 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
+    ||(this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
     // Prevent the turret from moving past the limit switch in the negative direction
     
     if (isAtYawLimit) {
