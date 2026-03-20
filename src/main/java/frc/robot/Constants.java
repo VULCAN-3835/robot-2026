@@ -160,17 +160,17 @@ public final class Constants {
     public static double kTeleDriveMaxSpeedMetersPerSec = kMaxDrivingVelocity;
     public static double kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
 
-    // Distance between centers of right and left wheels on robot meters
-    public static final double kTrackWidth = 0.6357;
-    // Distance between front and back wheels on robot meters
-    public static final double kWheelBase = 0.6357;
-    // Distance between middle of robot to module wheel
-    public static final double kWheelRadius = 0.38205;
+    // Distance between centers of right and left wheels on robot meters (synced with PathPlanner settings.json robotTrackwidth)
+    public static final double kTrackWidth = 0.546;
+    // Distance between front and back wheels on robot meters (synced with PathPlanner module positions)
+    public static final double kWheelBase = 0.546;
+    // Drive wheel radius in meters (synced with PathPlanner settings.json driveWheelRadius)
+    public static final double kWheelRadius = 0.051;
 
-    // the mass of the robot in KG
-    public static final double kMassKG = 51;
-    // the moment of inertia of the robot
-    public static final double kMOI = 6.81;
+    // the mass of the robot in KG (synced with PathPlanner settings.json robotMass)
+    public static final double kMassKG = 53.0;
+    // the moment of inertia of the robot (synced with PathPlanner settings.json robotMOI)
+    public static final double kMOI = 4.3;
 
     // Swerve Kinematics:
     public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
@@ -217,6 +217,7 @@ public final class Constants {
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
+    public static final double MagnetOffset = 0.27;
 
     // Digital input port for the limit switch
     public static final int kLimitSwitchID = 0;
@@ -291,8 +292,8 @@ public final class Constants {
 
     public static final double kArmGearRatio = 18/52.0;
 
-    public static final double restPoint = 70;
-    public static final double intakePoint = 12;
+    public static final double restPoint = 90;
+    public static final double intakePoint = 0;
 
     public static final double kp = 0.04;
     public static final double ki = 0;
@@ -301,6 +302,7 @@ public final class Constants {
     public static final double kMaxAcceleration = 200;
 
     public static final double pidTolerance = 10;
+    public static final double MagnetOffset = 0.45;
 
     // ArmFeedforward constants
     public static final double kS = 1;

@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
@@ -85,14 +86,17 @@ public class IntakeSubsystem extends SubsystemBase {
     // this.target = intakeStates.REST;
 
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
-    this.armEncoder.setPosition(Degrees.of(90));
+    CANcoderConfiguration canConfig = new CANcoderConfiguration();
+    canConfig.MagnetSensor.MagnetOffset = IntakeConstants.MagnetOffset;
+    this.armEncoder.getConfigurator().apply(canConfig);
+    // this.armEncoder.setPosition(Degrees.of(90));
   } 
 
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
-    // return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
+    // return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
+    return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
   }
   public boolean isAtSetpoint() {
     return pidController.atGoal();

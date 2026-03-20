@@ -45,7 +45,7 @@ public class ShootCMD extends Command {
   @Override
   public void initialize() {
     Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 2;
-    Constants.ChassisConstants.kMaxDrivingVelocity = 0.7;
+    Constants.ChassisConstants.kMaxDrivingVelocity = 1.2;
   }
 
   // Called every time the scheduler runs while the command is scheduled.

@@ -52,6 +52,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private ChassisSubsystem chassisSubsystem;
   private boolean isAtYawLimit;
+  private boolean isTurretHomed = false;
+  private boolean shouldHomeTurret = true;
 
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
@@ -63,7 +65,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     
     this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
-
+    CANcoderConfiguration canConfig = new CANcoderConfiguration();
+    canConfig.MagnetSensor.MagnetOffset = ShooterConstants.MagnetOffset;
+    this.hoodCancoder.getConfigurator().apply(canConfig);
     this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
 
     this.hoodPID = new ProfiledPIDController(
@@ -216,6 +220,22 @@ public class ShooterSubsystem extends SubsystemBase {
     this.elevatorMotor.setVoltage(4.5);
   }
 
+  /**
+   * Sets whether the turret should automatically home at startup.
+   * @param shouldHome true to enable auto-homing, false to disable
+   */
+  public void setShouldHomeTurret(boolean shouldHome) {
+    this.shouldHomeTurret = shouldHome;
+  }
+
+  /**
+   * Returns whether the turret has completed homing.
+   * @return true if homing is complete
+   */
+  public boolean isTurretHomed() {
+    return isTurretHomed;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -230,12 +250,24 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-    this.turretMotor.set(turretPIDOutput  + turretFFOutput);
+    
+    // Auto-home turret at startup if enabled
+    if (shouldHomeTurret && !isTurretHomed) {
+      if (!getLimitSwitch()) {
+        this.turretMotor.setVoltage(-2.0);
+      } else {
+        this.turretMotor.setVoltage(0);
+        this.turretMotor.setPosition(0);
+        isTurretHomed = true;
+      }
+    } else {
+      this.turretMotor.set(turretPIDOutput + turretFFOutput);
+    }
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
-    SmartDashboard.putNumber("hood actual", this.getHoodAngleDegs());
+    SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
     SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
 
     SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
