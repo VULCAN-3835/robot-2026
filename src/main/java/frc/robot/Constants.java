@@ -44,7 +44,7 @@ public final class Constants {
   public static class ModuleConstants {
     public static final double kWheelDiameterMeters = Units.inchesToMeters(4); // Module wheel diameter in meters
     public static final double kWheelCircumference = kWheelDiameterMeters * Math.PI;
-    public static final double kDriveMotorGearRatio = 6.75; // Module drive motor gear ratio
+    public static final double kDriveMotorGearRatio = 5.27; // Module drive motor gear ratio
     public static final double kSteerMotorGearRatio = 12.8; // Module steer motor gear ratio
 
     public static double kFeedforwardGainSteer = 0.11; // The feed forward gain for the module steer control
@@ -226,7 +226,7 @@ public final class Constants {
     public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
 
     // offset for the azimuth angle calculation, in degrees
-    public static final double kAzimuthOffset = 105;
+    public static final double kAzimuthOffset = 108;
 
     public static final double kHoodLowLimit = 0;
     public static final double kHoodHighLimit = 330;

@@ -4,7 +4,11 @@
 
 package frc.robot.commands;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
+
+import com.pathplanner.lib.util.FlippingUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -33,6 +37,13 @@ public class ShootCMD extends Command {
   private double prevVx = 0;
   private double prevVy = 0;
   private boolean isBlue = DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
+  private Pose2d deliveryLeft = isBlue ? new Pose2d(1.6, 7.1, Rotation2d.kZero)
+      : FlippingUtil.flipFieldPose(new Pose2d(1.6, 7.1, Rotation2d.kZero));
+  private Pose2d deliveryRight = isBlue ? new Pose2d(1.5, 0.8, Rotation2d.kZero)
+      : FlippingUtil.flipFieldPose(new Pose2d(1.5, 0.8, Rotation2d.kZero));
+
+  private List<Pose2d> deliveryPoses = List.of(deliveryLeft,deliveryRight);
+
   public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.chassisSubsystem = chassisSubsystem;
@@ -53,7 +64,7 @@ public class ShootCMD extends Command {
   public void execute() {
     ChassisSpeeds fieldSpeeds = chassisSubsystem.getFieldRelativeSpeeds();
     Pose2d robotPose = chassisSubsystem.getPose();
-    
+
     double dt = kLatencyMs / 1000.0;
     double ay = chassisSubsystem.getGyro().getWorldLinearAccelY() * 9.81;
     double ax = chassisSubsystem.getGyro().getWorldLinearAccelX() * 9.81;
@@ -63,11 +74,10 @@ public class ShootCMD extends Command {
     robotPose = new Pose2d(
         robotPose.getX() + fieldSpeeds.vxMetersPerSecond * dt + 0.5 * ax * dt * dt,
         robotPose.getY() + fieldSpeeds.vyMetersPerSecond * dt + 0.5 * ay * dt * dt,
-        robotPose.getRotation()
-    );
+        robotPose.getRotation());
     prevVx = fieldSpeeds.vxMetersPerSecond;
     prevVy = fieldSpeeds.vyMetersPerSecond;
-    
+
     SmartDashboard.putNumber("log_predX", robotPose.getX());
     SmartDashboard.putNumber("log_predY", robotPose.getY());
     SmartDashboard.putNumber("log_actualX", chassisSubsystem.getPose().getX());
@@ -77,10 +87,19 @@ public class ShootCMD extends Command {
     SmartDashboard.putNumber("log_speed", Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond));
     SmartDashboard.putNumber("log_ax", ax);
     SmartDashboard.putNumber("log_ay", ay);
+
+    Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3, 0)),
+        robotPose.getRotation());
+    Translation2d predictedTarget;
+    if ((robotPose.getX() > 5 && isBlue) || (robotPose.getX() < 11 && !isBlue)) {
+      Pose2d nearest = robotPose.nearest(this.deliveryPoses);
+      predictedTarget = new Translation2d(nearest.getX(), nearest.getY());
+      target = new Translation3d(predictedTarget);
+    } else {
+      predictedTarget = Constants.ChassisConstants.getHubTopCenter().toTranslation2d();
+      target = Constants.ChassisConstants.getHubTopCenter();
+    }
     
-    Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3,0)),robotPose.getRotation());
-    
-    Translation2d predictedTarget = Constants.ChassisConstants.getHubTopCenter().toTranslation2d();
     double distance = chassisSubsystem.getDistanceFromHub();
     double tof = shooterSubsystem.getTOFForDistance(distance);
 
@@ -88,22 +107,19 @@ public class ShootCMD extends Command {
     double vx = isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond;
     double vy = isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond;
 
-    for(int i = 0; i< ITERATIONS; i++){
+    for (int i = 0; i < ITERATIONS; i++) {
       predictedTarget = target.toTranslation2d().minus(
-        new Translation2d(
-          vx * tof,
-          vy * tof
-        )
-      );
+          new Translation2d(
+              vx * tof,
+              vy * tof));
       distance = turretPose.getTranslation().getDistance(predictedTarget);
       tof = shooterSubsystem.getTOFForDistance(distance);
     }
 
     Translation3d predictedTranslation3d = new Translation3d(
-      predictedTarget.getX(),
-      predictedTarget.getY(),
-      target.getZ()
-    );
+        predictedTarget.getX(),
+        predictedTarget.getY(),
+        target.getZ());
 
     SmartDashboard.putNumber("log_targetX", predictedTarget.getX());
     SmartDashboard.putNumber("log_targetY", predictedTarget.getY());
@@ -114,7 +130,7 @@ public class ShootCMD extends Command {
     shooterSubsystem.aimAtTarget(turretPose, predictedTranslation3d);
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
-    
+
     SmartDashboard.putNumber("vx", isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond);
     SmartDashboard.putNumber("vy", isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond);
   }

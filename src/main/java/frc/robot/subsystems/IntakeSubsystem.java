@@ -240,7 +240,7 @@ public class IntakeSubsystem extends SubsystemBase {
       }
     }
 
-    if (this.getArmAngleDegrees()>50) {
+    if (this.getArmAngleDegrees()<50) {
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
     } else{
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;

@@ -90,6 +90,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
   private AtCamUtil leftCam;
   private AtCamUtil rightCam;
+  private LimelightUtil limelightFuel;
 
   // An array of the four swerve Modules
   private SwerveModule[] swerve_modules = new SwerveModule[4];
@@ -187,6 +188,10 @@ public class ChassisSubsystem extends SubsystemBase {
             Constants.ChassisConstants.kDriveKinematics.getModules()[1].getY(), 0.22,
             new Rotation3d(0, Math.toRadians(20), Math.toRadians(-30))));
 
+    // Initialize Limelight for fuel detection
+    // TODO: Update Transform3d with actual mounting position (X, Y, Z in meters, and rotation)
+    this.limelightFuel = new LimelightUtil("limelight-fuel");
+
     // Initilizing a pose estimator
     this.poseEstimator = new SwerveDrivePoseEstimator(ChassisConstants.kDriveKinematics,
         getRotation2d().unaryMinus(),
@@ -201,8 +206,8 @@ public class ChassisSubsystem extends SubsystemBase {
           this::getRobotRelativeSpeeds,
           (speeds, feedforwards) -> runVelc(speeds),
           new PPHolonomicDriveController(
-              new PIDConstants(3.0, 0.0, 0.05),
-              new PIDConstants(2.5, 0.0, 0.2)
+              new PIDConstants(3.0, 0.05, 0.05),
+              new PIDConstants(2.5, 0.05, 0.2)
           ),
           ChassisConstants.getConfig(),
           () -> {
@@ -312,6 +317,10 @@ public class ChassisSubsystem extends SubsystemBase {
 
   public AtCamUtil getRightCam() {
     return this.rightCam;
+  }
+
+  public LimelightUtil getLimelightFuel() {
+    return this.limelightFuel;
   }
 
   /**
@@ -554,8 +563,27 @@ public class ChassisSubsystem extends SubsystemBase {
           this.rightCam.getCameraTimeStampSec());
     }
 
+    // Update pose estimator with Limelight-fuel data
+    Pose2d limelightFuelPose = this.limelightFuel.getPoseFromCamera();
+    double limelightFuelDistance = this.limelightFuel.distanceFromTargetMeters();
+    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
+
+    if (this.limelightFuel.hasValidTarget() && limelightFuelDistance < 3.3) {
+      last_timestamp = Timer.getFPGATimestamp();
+
+      // Calculate standard deviation based on distance (closer = more accurate)
+      double xyStdsLimelight = 0.5 * Math.pow(limelightFuelDistance, 2);
+
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLimelight, xyStdsLimelight,
+          Units.degreesToRadians(6)));
+
+      poseEstimator.addVisionMeasurement(limelightFuelPose,
+          Timer.getFPGATimestamp() - this.limelightFuel.getCameraTimeStampSec());
+    }
+
     SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
     SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
 
   }
   // // if has 2 cams - this one is for limelight
