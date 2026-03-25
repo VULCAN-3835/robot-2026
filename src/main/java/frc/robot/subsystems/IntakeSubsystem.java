@@ -165,6 +165,10 @@ public class IntakeSubsystem extends SubsystemBase {
     setRollerVoltage(powered ? IntakeConstants.intakePower : 0);
   }
 
+  public Command setMidPoint(){
+    return new InstantCommand(()->this.setArmGoal(48));
+  }
+
   /**
    * set the power of the roller motors
    * 

@@ -38,9 +38,9 @@ public class ShootCMD extends Command {
   private double prevVy = 0;
   private boolean isBlue = DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
   private Pose2d deliveryLeft = isBlue ? new Pose2d(1.6, 7.1, Rotation2d.kZero)
-      : FlippingUtil.flipFieldPose(new Pose2d(1.6, 7.1, Rotation2d.kZero));
+      : FlippingUtil.flipFieldPose(new Pose2d(2.6, 7.1, Rotation2d.kZero));
   private Pose2d deliveryRight = isBlue ? new Pose2d(1.5, 0.8, Rotation2d.kZero)
-      : FlippingUtil.flipFieldPose(new Pose2d(1.5, 0.8, Rotation2d.kZero));
+      : FlippingUtil.flipFieldPose(new Pose2d(2.5, 0.8, Rotation2d.kZero));
 
   private List<Pose2d> deliveryPoses = List.of(deliveryLeft,deliveryRight);
 
