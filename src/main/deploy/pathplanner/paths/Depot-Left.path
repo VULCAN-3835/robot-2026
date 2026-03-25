@@ -28,7 +28,12 @@
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.407017543859651,
+      "rotationDegrees": -29.33814279894946
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
@@ -48,7 +53,7 @@
   "eventMarkers": [
     {
       "name": "shootMove",
-      "waypointRelativePos": 0.08416389811738544,
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",

@@ -51,51 +51,50 @@ public class IntakeSubsystem extends SubsystemBase {
   private intakeStates target;
   private double factor = 0.45;
   private boolean manualMode = false;
-  private double manualPower = 0;  
-  
+  private double manualPower = 0;
 
   public IntakeSubsystem() {
 
-    
     this.armMotor = new TalonFX(IntakeConstants.armMotorID);
-    
+
     this.rollerMotor = new TalonFX(IntakeConstants.rollerMotorID);
 
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     this.armMotor.getConfigurator().apply(config);
 
+    TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+    rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
+    this.rollerMotor.getConfigurator().apply(rollerConfig);
+
     this.pidController = new ProfiledPIDController(
-      IntakeConstants.kp,
-      IntakeConstants.ki,
-      IntakeConstants.kd,
-      new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration)
-    );
-    
-    
+        IntakeConstants.kp,
+        IntakeConstants.ki,
+        IntakeConstants.kd,
+        new TrapezoidProfile.Constraints(IntakeConstants.kMaxVelocity, IntakeConstants.kMaxAcceleration));
+
     pidController.setTolerance(IntakeConstants.pidTolerance);
 
     this.armFeedforward = new ArmFeedforward(
-      IntakeConstants.kS,
-      IntakeConstants.kG,
-      IntakeConstants.kV,
-      IntakeConstants.kA
-    );
+        IntakeConstants.kS,
+        IntakeConstants.kG,
+        IntakeConstants.kV,
+        IntakeConstants.kA);
 
-
-    //configuring cancoder
+    // configuring cancoder
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = IntakeConstants.MagnetOffset;
     this.armEncoder.getConfigurator().apply(canConfig);
-  } 
-
+  }
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    // return armEncoder.getPosition().getValue().in(Degrees) * IntakeConstants.kArmGearRatio + 40;
+    // return armEncoder.getPosition().getValue().in(Degrees) *
+    // IntakeConstants.kArmGearRatio + 40;
     return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
   }
+
   public boolean isAtSetpoint() {
     return pidController.atGoal();
   }
@@ -165,8 +164,8 @@ public class IntakeSubsystem extends SubsystemBase {
     setRollerVoltage(powered ? IntakeConstants.intakePower : 0);
   }
 
-  public Command setMidPoint(){
-    return new InstantCommand(()->this.setArmGoal(48));
+  public Command setMidPoint() {
+    return new InstantCommand(() -> this.setArmGoal(55));
   }
 
   /**
@@ -181,12 +180,11 @@ public class IntakeSubsystem extends SubsystemBase {
   public ParallelCommandGroup toIntake() {
     return new ParallelCommandGroup(
 
-    
-      // 1. Starts rolling the rollers for intake
-      new InstantCommand(() -> setRollerState(true)),
+        // 1. Starts rolling the rollers for intake
+        new InstantCommand(() -> setRollerState(true)),
 
-      // 2. Sets the arm down to the intake position
-      new InstantCommand(() -> setArmState(intakeStates.INTAKE))
+        // 2. Sets the arm down to the intake position
+        new InstantCommand(() -> setArmState(intakeStates.INTAKE))
 
     );
   }
@@ -194,21 +192,22 @@ public class IntakeSubsystem extends SubsystemBase {
   public SequentialCommandGroup toRest() {
     return new SequentialCommandGroup(
 
-      // 1. Returns the arm into its rest position
-      new InstantCommand(() -> setArmState(intakeStates.REST)),
+        // 1. Returns the arm into its rest position
+        new InstantCommand(() -> setArmState(intakeStates.REST)),
 
-      // 2. Stops rolling the rollers
-      new InstantCommand(() -> setRollerState(false))
+        // 2. Stops rolling the rollers
+        new InstantCommand(() -> setRollerState(false))
 
     );
   }
 
   @Override
   public void periodic() {
-    
+
     SmartDashboard.putNumber("arm ang abs", this.armEncoder.getAbsolutePosition().getValueAsDouble());
     SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
-    SmartDashboard.putNumber("arm ang radians", Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
+    SmartDashboard.putNumber("arm ang radians",
+        Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
     SmartDashboard.putNumber("arm target", pidController.getGoal().position);
 
     // If in manual mode, skip PID and use manual power
@@ -237,16 +236,15 @@ public class IntakeSubsystem extends SubsystemBase {
       }
 
       if (isAtSetpoint()) {
-        this.armMotor.setVoltage(0); 
-      }
-      else{
+        this.armMotor.setVoltage(0);
+      } else {
         this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
       }
     }
 
-    if (this.getArmAngleDegrees()<50) {
+    if (this.getArmAngleDegrees() < 50) {
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
-    } else{
+    } else {
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
     }
   }

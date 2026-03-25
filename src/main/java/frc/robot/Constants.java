@@ -226,7 +226,7 @@ public final class Constants {
     public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
 
     // offset for the azimuth angle calculation, in degrees
-    public static final double kAzimuthOffset = 100;
+    public static final double kAzimuthOffset = 110;
 
     public static final double kHoodLowLimit = 0;
     public static final double kHoodHighLimit = 360;
@@ -288,12 +288,12 @@ public final class Constants {
     public static final int armEncoderID = 52;
 
     //intake power in Voltage
-    public static final double intakePower = 5.25;
+    public static final double intakePower = 7;
 
     public static final double kArmGearRatio = 18/52.0;
 
     public static final double restPoint = 90;
-    public static final double intakePoint = 0;
+    public static final double intakePoint = 5;
 
     public static final double kp = 0.04;
     public static final double ki = 0;

@@ -62,7 +62,7 @@
     {
       "name": "shootMove",
       "waypointRelativePos": 0,
-      "endWaypointRelativePos": 0.8062015503876063,
+      "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
