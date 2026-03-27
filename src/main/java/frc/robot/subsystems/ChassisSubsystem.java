@@ -26,6 +26,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -542,7 +543,7 @@ public class ChassisSubsystem extends SubsystemBase {
       last_timestamp = Timer.getFPGATimestamp();
 
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft,
-          Units.degreesToRadians(6)));
+          Units.degreesToRadians(15)));
 
       poseEstimator.addVisionMeasurement(leftVisionBotPose,
           this.leftCam.getCameraTimeStampSec());
@@ -557,7 +558,7 @@ public class ChassisSubsystem extends SubsystemBase {
       last_timestamp = Timer.getFPGATimestamp();
 
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight,
-          Units.degreesToRadians(6)));
+          Units.degreesToRadians(15)));
 
       poseEstimator.addVisionMeasurement(rightVisionBotPose,
           this.rightCam.getCameraTimeStampSec());
@@ -575,7 +576,7 @@ public class ChassisSubsystem extends SubsystemBase {
       double xyStdsLimelight = 0.5 * Math.pow(limelightFuelDistance, 2);
 
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLimelight, xyStdsLimelight,
-          Units.degreesToRadians(6)));
+          Units.degreesToRadians(15)));
 
       poseEstimator.addVisionMeasurement(limelightFuelPose,
           Timer.getFPGATimestamp() - this.limelightFuel.getCameraTimeStampSec());
@@ -690,6 +691,12 @@ public class ChassisSubsystem extends SubsystemBase {
 
     this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
+
+    // Pose2d currentPose = this.poseEstimator.getEstimatedPosition();
+    // Translation2d turretFieldPos = currentPose.transformBy(
+    // new Transform2d(new Translation2d(-0.3,0),Rotation2d.kZero)).getTranslation();
+    // this.distanceFromHub = turretFieldPos.getDistance(
+    // ChassisConstants.getHubTopCenter().toTranslation2d());
 
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
     SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());

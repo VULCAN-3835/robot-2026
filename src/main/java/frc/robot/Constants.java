@@ -144,10 +144,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = 0.113525390625;
-    public static final double kRightFrontOffset = -1.936279296875;
-    public static final double kLeftBackOffset = 0.3056640625000002;
-    public static final double kRightBackOffset = 0.12498866796875062;
+    public static final double kLeftFrontOffset = 0.06468065039062498; //0.113525390625 
+    public static final double kRightFrontOffset =0.06396484375; //1.936279296875
+    public static final double kLeftBackOffset = 0.3056640625000002; //0.3056640625000002 
+    public static final double kRightBackOffset = 0.12308379296874918; //0.12498866796875062 
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
@@ -217,7 +217,7 @@ public final class Constants {
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
-    public static final double MagnetOffset = 0.27;
+    public static final double MagnetOffset = 0.13;
 
     // Digital input port for the limit switch
     public static final int kLimitSwitchID = 0;
@@ -226,7 +226,7 @@ public final class Constants {
     public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
 
     // offset for the azimuth angle calculation, in degrees
-    public static final double kAzimuthOffset = 110;
+    public static final double kAzimuthOffset = 105;
 
     public static final double kHoodLowLimit = 0;
     public static final double kHoodHighLimit = 360;
@@ -272,7 +272,7 @@ public final class Constants {
     public static final int feedMotorID = 40;
     public static final int elevatorMotorID = 41;
 
-    public static final double reloadPower = 0.85;
+    public static final double reloadPower = 0.5;
     public static final double elevatorPower = 0.7;
     public static final double reloadTime = 0;
   }
@@ -288,12 +288,12 @@ public final class Constants {
     public static final int armEncoderID = 52;
 
     //intake power in Voltage
-    public static final double intakePower = 7;
+    public static final double intakePower = 5;
 
     public static final double kArmGearRatio = 18/52.0;
 
     public static final double restPoint = 90;
-    public static final double intakePoint = 5;
+    public static final double intakePoint = 20;
 
     public static final double kp = 0.04;
     public static final double ki = 0;
@@ -306,7 +306,7 @@ public final class Constants {
 
     // ArmFeedforward constants
     public static final double kS = 1;
-    public static final double kG = 3;
+    public static final double kG = 2.5;
     public static final double kV = 0.5;
     public static final double kA = 3;
     public static final double armHorizontalDeg = 120;

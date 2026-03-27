@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.654,
-        "y": 5.535
+        "x": 2.444,
+        "y": 5.175
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.7466025641025653,
-        "y": 5.616435897435898
+        "x": 2.000986693908415,
+        "y": 5.37148692540001
       },
       "isLocked": false,
       "linkedName": null
@@ -20,15 +20,20 @@
         "y": 5.965
       },
       "prevControl": {
-        "x": 1.5607179487179486,
-        "y": 6.081282051282051
+        "x": 1.0105871426545074,
+        "y": 5.897045406414726
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.06140350877192815,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [
     {
       "name": "Constraints Zone",
@@ -61,7 +66,7 @@
   "eventMarkers": [
     {
       "name": "shootMove",
-      "waypointRelativePos": 0,
+      "waypointRelativePos": 0.1749723145071903,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -98,7 +103,7 @@
   "folder": "Depots",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -60.09937885461654
   },
   "useDefaultConstraints": true
 }

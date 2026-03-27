@@ -83,6 +83,9 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    // Cancel all running commands (including default teleop drive) before starting auto
+    CommandScheduler.getInstance().cancelAll();
+    
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();

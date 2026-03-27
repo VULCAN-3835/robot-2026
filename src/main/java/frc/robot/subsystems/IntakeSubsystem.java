@@ -86,6 +86,7 @@ public class IntakeSubsystem extends SubsystemBase {
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = IntakeConstants.MagnetOffset;
     this.armEncoder.getConfigurator().apply(canConfig);
+    this.pidController.setGoal(IntakeConstants.restPoint);
   }
 
   public double getArmAngleDegrees() {
@@ -232,7 +233,7 @@ public class IntakeSubsystem extends SubsystemBase {
       }
 
       if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-        factor = 1.2;
+        factor = 1.5;
       }
 
       if (isAtSetpoint()) {

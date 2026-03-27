@@ -83,8 +83,7 @@ public class RobotContainer {
         new InstantCommand(() -> intakeSubsystem.setRollerVoltage(Constants.IntakeConstants.intakePower))));
 
     NamedCommands.registerCommand("shootMove",
-        new ParallelCommandGroup(new ShootCMD(chassisSubsystem, shooterSubsystem),
-            storageSubsystem.runStorage()));
+        new ParallelCommandGroup(new ShootDelayCMD(shooterSubsystem, storageSubsystem, chassisSubsystem)));
 
     NamedCommands.registerCommand("storage", new StorageUpCMD(storageSubsystem));
 
@@ -193,8 +192,8 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return new PathPlannerAuto("Left-Nuetral-Depot");
-    return new PathPlannerAuto("Left-Depot");
+    return new PathPlannerAuto("Left-Nuetral-Depot");
+    // return new PathPlannerAuto("Left-Depot");
     
   }
 }

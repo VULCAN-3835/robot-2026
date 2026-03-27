@@ -12,6 +12,7 @@ import com.pathplanner.lib.util.FlippingUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -42,7 +43,7 @@ public class ShootCMD extends Command {
   private Pose2d deliveryRight = isBlue ? new Pose2d(1.5, 0.8, Rotation2d.kZero)
       : FlippingUtil.flipFieldPose(new Pose2d(2.5, 0.8, Rotation2d.kZero));
 
-  private List<Pose2d> deliveryPoses = List.of(deliveryLeft,deliveryRight);
+  private List<Pose2d> deliveryPoses = List.of(deliveryLeft, deliveryRight);
 
   public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -90,6 +91,7 @@ public class ShootCMD extends Command {
 
     Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3, 0)),
         robotPose.getRotation());
+    // Pose2d turretPose = robotPose.transformBy(new Transform2d(new Translation2d(-0.3,0),Rotation2d.kZero));
     Translation2d predictedTarget;
     if ((robotPose.getX() > 5 && isBlue) || (robotPose.getX() < 11 && !isBlue)) {
       Pose2d nearest = robotPose.nearest(this.deliveryPoses);
@@ -99,13 +101,14 @@ public class ShootCMD extends Command {
       predictedTarget = Constants.ChassisConstants.getHubTopCenter().toTranslation2d();
       target = Constants.ChassisConstants.getHubTopCenter();
     }
-    
+
     double distance = chassisSubsystem.getDistanceFromHub();
     double tof = shooterSubsystem.getTOFForDistance(distance);
 
     // Invert velocity for red alliance - field coordinates are flipped
     double vx = isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond;
     double vy = isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond;
+    
 
     for (int i = 0; i < ITERATIONS; i++) {
       predictedTarget = target.toTranslation2d().minus(
