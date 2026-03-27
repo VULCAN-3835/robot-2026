@@ -260,6 +260,20 @@ public final class Constants {
     public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
     public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kTurretTolerance = 3.5;
+
+    
+  // 2026 REBUILT Field dimensions (Rebuilt Welded)
+  public static final double kFieldLength = 16.459; // meters (54ft)
+  public static final double kFieldWidth = 8.231;   // meters (27ft)
+  public static final double kFieldCenterX = kFieldLength / 2;
+
+  // 2026 REBUILT Field Trench Zone
+  // The trench is the center lane that runs the length of the field
+  // Blue trench zone (red is mirrored)
+  public static final double kTrenchBlueMinX = 5.5;
+  public static final double kTrenchBlueMaxX = 11.0;
+  public static final double kTrenchBlueMinY = 2.5;
+  public static final double kTrenchBlueMaxY = 5.7;
   }
 
   public static final class StorageConstants {
@@ -324,4 +338,37 @@ public final class Constants {
 
   public static final double kTurretMinAngleDeg = -180.0;
   public static final double kTurretMaxAngleDeg = 180.0;
+
+  // 2026 REBUILT Field dimensions
+  public static final double kFieldLength = 16.459; // meters (54ft)
+  public static final double kFieldWidth = 8.231;   // meters (27ft)
+  public static final double kFieldCenterX = kFieldLength / 2;
+
+  // 2026 REBUILT Welded Field - Trench Zones
+  // The field has 4 trench lanes where robots approach the reef
+  public static final class TrenchZones {
+    // Blue trench X bounds (near blue alliance station)
+    public static final double kBlueMinX = 5.5;
+    public static final double kBlueMaxX = 11.0;
+
+    // Red trench X bounds (near red alliance station, mirrored)
+    public static final double kRedMinX = 5.459;
+    public static final double kRedMaxX = 10.959;
+
+    // Lane 1 - Left side (Y: 0 - 2.1)
+    public static final double kLane1MinY = 0.0;
+    public static final double kLane1MaxY = 2.1;
+
+    // Lane 2 - Center-left (Y: 2.1 - 4.1)
+    public static final double kLane2MinY = 2.1;
+    public static final double kLane2MaxY = 4.1;
+
+    // Lane 3 - Center-right (Y: 4.1 - 6.1)
+    public static final double kLane3MinY = 4.1;
+    public static final double kLane3MaxY = 6.1;
+
+    // Lane 4 - Right side (Y: 6.1 - 8.231)
+    public static final double kLane4MinY = 6.1;
+    public static final double kLane4MaxY = 8.231;
+  }
 }

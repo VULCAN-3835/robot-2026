@@ -14,11 +14,14 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.Robot;
+import frc.robot.Constants;
 import frc.robot.Constants.ChassisConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -27,6 +30,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.TrenchZones;
 
 public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
@@ -255,9 +259,50 @@ public class ShooterSubsystem extends SubsystemBase {
     return isTurretHomed;
   }
 
+  /**
+   * Checks if the robot is currently in any of the 4 trench zones of the 2026 REBUILT field.
+   * Automatically checks based on alliance color.
+   * 
+   * @return true if the robot is in any trench lane, false otherwise
+   */
+  public boolean isInTrench() {
+
+    Pose2d robotPose = chassisSubsystem.getPose();
+    double minX, maxX;
+
+    if (Robot.isBlue) {
+      minX = Constants.TrenchZones.kBlueMinX;
+      maxX = Constants.TrenchZones.kBlueMaxX;
+    } else {
+      minX = Constants.TrenchZones.kRedMinX;
+      maxX = Constants.TrenchZones.kRedMaxX;
+    }
+
+    double robotX = robotPose.getX();
+    double robotY = robotPose.getY();
+
+    // Check if within X bounds of trenches
+    if (robotX < minX || robotX > maxX) {
+      return false;
+    }
+
+    // Check all 4 lanes - Y coordinates are the same for both alliances
+    boolean inLane1 = robotY >= Constants.TrenchZones.kLane1MinY && robotY <= Constants.TrenchZones.kLane1MaxY;
+    boolean inLane2 = robotY >= Constants.TrenchZones.kLane2MinY && robotY <= Constants.TrenchZones.kLane2MaxY;
+    boolean inLane3 = robotY >= Constants.TrenchZones.kLane3MinY && robotY <= Constants.TrenchZones.kLane3MaxY;
+    boolean inLane4 = robotY >= Constants.TrenchZones.kLane4MinY && robotY <= Constants.TrenchZones.kLane4MaxY;
+
+    return inLane1 || inLane2 || inLane3 || inLane4;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    // Check if robot is in trench zone - if so, set hood to 0
+    if (isInTrench()) {
+      this.hoodPID.setGoal(0);
+    }
 
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
