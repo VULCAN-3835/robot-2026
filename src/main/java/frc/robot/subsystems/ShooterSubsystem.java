@@ -5,23 +5,19 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
-import frc.robot.Robot;
-import frc.robot.Constants;
+
 import frc.robot.Constants.ChassisConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -30,7 +26,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.TrenchZones;
 
 public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
@@ -38,7 +33,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX hoodMotor;
   private TalonFX flyWheelMotor;
 
-  private TalonFX elevatorMotor;
 
   private CANcoder hoodCancoder;
 
@@ -67,7 +61,6 @@ public class ShooterSubsystem extends SubsystemBase {
     this.chassisSubsystem = chassisSubsystem;
     this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
     this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
-    this.elevatorMotor = new TalonFX(ShooterConstants.kElevatorMotorID);
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
@@ -246,10 +239,6 @@ public class ShooterSubsystem extends SubsystemBase {
     setTurretAngle(azimuth);
   }
 
-  public void bumpBallUp() {
-    this.elevatorMotor.setVoltage(4.5);
-  }
-
   /**
    * Sets whether the turret should automatically home at startup.
    * 
@@ -274,34 +263,10 @@ public class ShooterSubsystem extends SubsystemBase {
    * 
    * @return true if the robot is in any trench lane, false otherwise
    */
+
+  //TODO: make it work, or in periodic or in default command.
   public boolean isInTrench() {
-
     Pose2d robotPose = chassisSubsystem.getPose();
-    double minX, maxX;
-
-    if (Robot.isBlue) {
-      minX = Constants.TrenchZones.kBlueMinX;
-      maxX = Constants.TrenchZones.kBlueMaxX;
-    } else {
-      minX = Constants.TrenchZones.kRedMinX;
-      maxX = Constants.TrenchZones.kRedMaxX;
-    }
-
-    double robotX = robotPose.getX();
-    double robotY = robotPose.getY();
-
-    // Check if within X bounds of trenches
-    // if (robotX < minX || robotX > maxX) {
-    //   return false;
-    // }
-
-    // Check all 4 lanes - Y coordinates are the same for both alliances
-    boolean inLane1 = robotY >= Constants.TrenchZones.kLane1MinY && robotY <= Constants.TrenchZones.kLane1MaxY;
-    boolean inLane2 = robotY >= Constants.TrenchZones.kLane2MinY && robotY <= Constants.TrenchZones.kLane2MaxY;
-    boolean inLane3 = robotY >= Constants.TrenchZones.kLane3MinY && robotY <= Constants.TrenchZones.kLane3MaxY;
-    boolean inLane4 = robotY >= Constants.TrenchZones.kLane4MinY && robotY <= Constants.TrenchZones.kLane4MaxY;
-
-    //return inLane1 || inLane2 || inLane3 || inLane4;
     return (robotPose.getX() > 4.3 && robotPose.getX()<5) || (robotPose.getX() <12.3 && robotPose.getX()>11.6);
   }
 
@@ -321,7 +286,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Calculate feedforward output using the setpoint velocity
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
-    double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);

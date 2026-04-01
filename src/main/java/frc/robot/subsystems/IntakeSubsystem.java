@@ -8,31 +8,22 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.CANcoder;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Timer;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
-import edu.wpi.first.units.measure.Angle;
-import static edu.wpi.first.units.Units.Degrees;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
@@ -91,8 +82,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public double getArmAngleDegrees() {
     armEncoder.getPosition().refresh();
-    // return armEncoder.getPosition().getValue().in(Degrees) *
-    // IntakeConstants.kArmGearRatio + 40;
     return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
   }
 
@@ -166,7 +155,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setMidPoint() {
-    return new InstantCommand(() -> this.setArmGoal(77));
+    return new InstantCommand(() -> this.setArmGoal(IntakeConstants.midPoint));
   }
 
   /**
@@ -244,6 +233,7 @@ public class IntakeSubsystem extends SubsystemBase {
       }
     }
 
+    // Adjust the robot's max angular speed based on the arm's angle to prevent breaking it
     if (this.getArmAngleDegrees() < 50) {
       Constants.ChassisConstants.kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI;
     } else {

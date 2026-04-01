@@ -15,29 +15,19 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.HolonomicDriveController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.Trajectory.State;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 
@@ -52,28 +42,21 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.ModuleConstants;
 import frc.robot.Util.SwerveModule;
 import frc.robot.Util.AtCamUtil;
 import frc.robot.Util.LimelightUtil;
 
-import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
-import java.lang.reflect.Field;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-import org.photonvision.PhotonUtils;
+
+
 
 public class ChassisSubsystem extends SubsystemBase {
   // An enum with the names of the wheel modules
@@ -81,13 +64,7 @@ public class ChassisSubsystem extends SubsystemBase {
     LEFT_FRONT, RIGHT_FRONT, RIGHT_BACK, LEFT_BACK
   }
 
-  private HolonomicDriveController controller;
-  private Optional<Trajectory> trajectory;
-  private TrajectoryConfig trajectoryConfig;
-  private Timer holonomicTimer;
-  private boolean isAutonomous;
-  private Pose2d currentPose2dHolonomic;
-  private Pose2d holonomicSetPoint;
+ 
 
   private AtCamUtil leftCam;
   private AtCamUtil rightCam;
@@ -171,26 +148,24 @@ public class ChassisSubsystem extends SubsystemBase {
     // Field initlization
     field = new Field2d();
 
-    this.isAutonomous = false;
-
     // Update swerve position and heading at build
     updateSwervePositions();
     zeroHeading();
 
     // X+ ->forward Y+ ->left Z+ -> up
     // translation in meters rotation in radians
-    this.leftCam = new AtCamUtil("Camera-left",
+    // uses swerve drive kinematics because the cameras are mounted on top of the
+    // modules
+    this.leftCam = new AtCamUtil(ChassisConstants.leftCamName,
         new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[0].getX(),
-            Constants.ChassisConstants.kDriveKinematics.getModules()[0].getY(), 0.22,
-            new Rotation3d(0, Math.toRadians(20), Math.toRadians(30))));
-
-    this.rightCam = new AtCamUtil("Camera-right",
+            Constants.ChassisConstants.kDriveKinematics.getModules()[0].getY(), ChassisConstants.leftCamHeight,
+            new Rotation3d(0, ChassisConstants.leftCamPitch, ChassisConstants.leftCamYaw)));
+    this.rightCam = new AtCamUtil(ChassisConstants.rightCamName,
         new Transform3d(Constants.ChassisConstants.kDriveKinematics.getModules()[1].getX(),
-            Constants.ChassisConstants.kDriveKinematics.getModules()[1].getY(), 0.22,
-            new Rotation3d(0, Math.toRadians(20), Math.toRadians(-30))));
+            Constants.ChassisConstants.kDriveKinematics.getModules()[1].getY(), ChassisConstants.rightCamHeight,
+            new Rotation3d(0, ChassisConstants.rightCamPitch, ChassisConstants.rightCamYaw)));
 
     // Initialize Limelight for fuel detection
-    // TODO: Update Transform3d with actual mounting position (X, Y, Z in meters, and rotation)
     this.limelightFuel = new LimelightUtil("limelight-fuel");
 
     // Initilizing a pose estimator
@@ -199,7 +174,9 @@ public class ChassisSubsystem extends SubsystemBase {
         this.swerve_positions,
         startingPos);
 
+    // Resets distance from hub
     this.distanceFromHub = 0;
+
     try {
       AutoBuilder.configure(
           this::getPose,
@@ -208,8 +185,7 @@ public class ChassisSubsystem extends SubsystemBase {
           (speeds, feedforwards) -> runVelc(speeds),
           new PPHolonomicDriveController(
               new PIDConstants(3.0, 0.05, 0.05),
-              new PIDConstants(2.5, 0.05, 0.2)
-          ),
+              new PIDConstants(2.5, 0.05, 0.2)),
           ChassisConstants.getConfig(),
           () -> {
             var alliance = DriverStation.getAlliance();
@@ -217,7 +193,6 @@ public class ChassisSubsystem extends SubsystemBase {
           },
           this);
     } catch (Exception e) {
-      System.err.println("[PathPlanner] ERROR configuring AutoBuilder: " + e.getMessage());
       e.printStackTrace();
     }
 
@@ -289,7 +264,7 @@ public class ChassisSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Robot Angle", () -> getYaw(), null);
       }
     });
-    
+
     System.out.println("[ChassisSubsystem] Constructor completed");
   }
 
@@ -381,7 +356,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @param fieldRelative Is field relative or not
    */
   public void drive(ChassisSpeeds chassisSpeeds, boolean fieldRelative) {
-    //kimi added debug
+    // kimi added debug
     // Makes a swerve module-state array from chassisSpeeds
     this.swerveModuleStates = Constants.ChassisConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, this.imu.getRotation2d())
@@ -393,18 +368,19 @@ public class ChassisSubsystem extends SubsystemBase {
 
   /**
    * Gets the actual robot-relative chassis speeds based on measured module states
+   * 
    * @return Robot-relative ChassisSpeeds
    */
   public ChassisSpeeds getRobotRelativeSpeeds() {
-    SwerveModuleState[] actualModuleStates = new SwerveModuleState[]{
-      new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),
-                            swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),
-                            swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),
-                            swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),
-                            swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
+    SwerveModuleState[] actualModuleStates = new SwerveModuleState[] {
+        new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),
+            swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),
+            swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),
+            swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),
+            swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
     };
     return ChassisConstants.kDriveKinematics.toChassisSpeeds(actualModuleStates);
   }
@@ -516,12 +492,17 @@ public class ChassisSubsystem extends SubsystemBase {
   public SwerveModuleState[] getModStates() {
     return this.swerveModuleStates;
   }
-  public ChassisSpeeds getFieldRelativeSpeeds(){
-    SwerveModuleState[] actualModuleStates = new SwerveModuleState[]{
-      new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
-      new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
+
+  public ChassisSpeeds getFieldRelativeSpeeds() {
+    SwerveModuleState[] actualModuleStates = new SwerveModuleState[] {
+        new SwerveModuleState(swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity(),
+            swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity(),
+            swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity(),
+            swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle),
+        new SwerveModuleState(swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity(),
+            swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle)
     };
 
     ChassisSpeeds robotSpeeds = ChassisConstants.kDriveKinematics.toChassisSpeeds(actualModuleStates);
@@ -618,35 +599,6 @@ public class ChassisSubsystem extends SubsystemBase {
     return this.distanceFromHub;
   }
 
-  private void initHolonomicDriver() {
-    this.controller = new HolonomicDriveController(
-        new PIDController(1.75, 0, 0),
-        new PIDController(1.75, 0, 0),
-        new ProfiledPIDController(5, 0, 0,
-            new TrapezoidProfile.Constraints(2, 2)));
-
-    this.trajectoryConfig = new TrajectoryConfig(2, 2);
-    this.trajectory = Optional.of(new Trajectory());
-    this.holonomicTimer = new Timer();
-  }
-
-  public void driveTo(Pose2d pose2d) {
-    initHolonomicDriver();
-    this.holonomicTimer.reset();
-    this.holonomicTimer.start();
-    this.isAutonomous = true;
-    currentPose2dHolonomic = new Pose2d(this.getPose().getTranslation(),
-        pose2d.getTranslation().minus(getPose().getTranslation()).getAngle());
-    holonomicSetPoint = new Pose2d(pose2d.getTranslation(),
-        pose2d.getTranslation().minus(getPose().getTranslation()).getAngle());
-
-    trajectory = Optional.ofNullable(TrajectoryGenerator.generateTrajectory(
-        List.of(currentPose2dHolonomic, holonomicSetPoint), trajectoryConfig));
-  }
-
-  public InstantCommand driveToPose2d(Pose2d pose2d) {
-    return new InstantCommand(() -> driveTo(pose2d));
-  }
 
   // Chassis SysID to use this paste it in the configureXboxBinding method in
   // robotContainer
@@ -658,33 +610,12 @@ public class ChassisSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    // if (isAutonomous) {
-
-    //   State goalState = trajectory.get().sample(holonomicTimer.get());
-
-    //   ChassisSpeeds speeds = controller.calculate(getPose(), goalState.poseMeters, goalState.velocityMetersPerSecond,
-    //       holonomicSetPoint.getRotation());
-    //   drive(speeds, false);
-    //   if (Meters.of(currentPose2dHolonomic.minus(holonomicSetPoint).getTranslation()
-    //       .getDistance(holonomicSetPoint.getTranslation())).gt(Centimeters.of(0.5))) {
-    //     isAutonomous = false;
-    //   }
-    // }
-
     setModuleStates(this.swerveModuleStates);
 
     updateSwervePositions();
-    // updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.poseEstimator.update(getRotation2d(), getModPositions());
 
-    // var test =
-    // this.leftCam.updateResult(this.poseEstimator.getEstimatedPosition());
-    // SmartDashboard.putString("yarin test", test.toString());
-    // this.field.setRobotPose(test);
-
     SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
-    // System.out.println("[current_pose] " +
-    // this.poseEstimator.getEstimatedPosition());
 
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
@@ -692,15 +623,9 @@ public class ChassisSubsystem extends SubsystemBase {
     this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
-    // Pose2d currentPose = this.poseEstimator.getEstimatedPosition();
-    // Translation2d turretFieldPos = currentPose.transformBy(
-    // new Transform2d(new Translation2d(-0.3,0),Rotation2d.kZero)).getTranslation();
-    // this.distanceFromHub = turretFieldPos.getDistance(
-    // ChassisConstants.getHubTopCenter().toTranslation2d());
-
     SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
     SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
-    SmartDashboard.putNumber("max velc chassis",ChassisConstants.kMaxDrivingVelocity);
+    SmartDashboard.putNumber("max velc chassis", ChassisConstants.kMaxDrivingVelocity);
     SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
     SmartDashboard.putNumber("ChassisSubsystem/Left Front Distance",

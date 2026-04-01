@@ -4,20 +4,17 @@
 
 package frc.robot;
 
-import java.util.function.IntFunction;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.util.FlippingUtil;
-import com.pathplanner.lib.util.GeometryUtil;
+
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -89,6 +86,17 @@ public final class Constants {
 
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
+
+    public static final String leftCamName = "Camera-left";
+    public static final String rightCamName = "Camera-right";
+
+    public static final double leftCamHeight = 0.22; // meters, height of the left camera from the ground
+    public static final double rightCamHeight = 0.22; // meters, height of the right camera from the ground
+
+    public static final double leftCamPitch = Math.toRadians(20); // radians, pitch angle of the left camera
+    public static final double rightCamPitch = Math.toRadians(20); // radians, pitch angle of the right camera
+    public static final double leftCamYaw = Math.toRadians(30); // radians, yaw angle of the left camera
+    public static final double rightCamYaw = Math.toRadians(-30); // radians, yaw angle of the right camera
 
     // public static final Translation3d hubTopCenter = new Translation3d(
     // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get()
@@ -308,6 +316,7 @@ public final class Constants {
 
     public static final double restPoint = 110;
     public static final double intakePoint = 27;
+    public static final double midPoint = 77;
 
     public static final double kp = 0.04;
     public static final double ki = 0;
