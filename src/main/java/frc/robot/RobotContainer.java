@@ -81,6 +81,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("intake", new ParallelCommandGroup(
         new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
         new InstantCommand(() -> intakeSubsystem.setRollerVoltage(Constants.IntakeConstants.intakePower))));
+    NamedCommands.registerCommand("close shooter", new ParallelCommandGroup(
+        new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(0), shooterSubsystem),
+        new InstantCommand(() -> shooterSubsystem.setHoodAngle(0)),
+        storageSubsystem.stopStorage()));
 
     NamedCommands.registerCommand("shootMove",
         new ParallelCommandGroup(new ShootDelayCMD(shooterSubsystem, storageSubsystem, chassisSubsystem)));
@@ -166,6 +170,14 @@ public class RobotContainer {
         new InstantCommand(() -> xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0)),
         new InstantCommand(() -> intakeSubsystem.setRollerState(false))));
 
+    xboxControllerDrive.povUp().onTrue(new InstantCommand(()->shooterSubsystem.scaleUpVoltage()));
+    xboxControllerDrive.povDown().onTrue(new InstantCommand(()->shooterSubsystem.scaleDownVoltage()));
+
+    xboxControllerDrive.leftBumper().whileTrue(new ParallelCommandGroup(
+      new InstantCommand(()->shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
+      new InstantCommand(()->shooterSubsystem.setTurretAngle(Constants.ShooterConstants.kAzimuthOffset))));
+
     setUpContollers(true);
 
   }
@@ -192,8 +204,9 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return new PathPlannerAuto("Left-Nuetral-Depot");
+    // return new PathPlannerAuto("Left-Nuetral-Depot");
     // return new PathPlannerAuto("Left-Depot");
+    return new PathPlannerAuto("Depot-Nuetral");
     
   }
 }

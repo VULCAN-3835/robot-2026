@@ -166,7 +166,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setMidPoint() {
-    return new InstantCommand(() -> this.setArmGoal(55));
+    return new InstantCommand(() -> this.setArmGoal(77));
   }
 
   /**
@@ -226,7 +226,6 @@ public class IntakeSubsystem extends SubsystemBase {
       SmartDashboard.putNumber("pid output", pidOutput);
       SmartDashboard.putNumber("ff output", ffOutput);
       SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
-      double totalOutput = pidOutput + ffOutput;
 
       if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
         factor = 0.7;
@@ -234,7 +233,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
       if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
         factor = 1.5;
+        pidOutput *=1.2;
       }
+      double totalOutput = pidOutput + ffOutput;
 
       if (isAtSetpoint()) {
         this.armMotor.setVoltage(0);

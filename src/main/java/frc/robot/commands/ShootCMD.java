@@ -142,7 +142,7 @@ public class ShootCMD extends Command {
   @Override
   public void end(boolean interrupted) {
     shooterSubsystem.setFlywheelVoltage(0);
-    Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 4;
+    Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 5;
     Constants.ChassisConstants.kMaxDrivingVelocity = 4.5;
 
   }

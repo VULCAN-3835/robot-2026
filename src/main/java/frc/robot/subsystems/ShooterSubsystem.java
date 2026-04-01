@@ -53,8 +53,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
-  private static double angOffSetMap = 30;
-  private static double voltageOffSetMap = 0;
+  private static double angOffSetMap = 40;
+  private static double voltageOffSetMap = -0.2;
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
@@ -145,6 +145,15 @@ public class ShooterSubsystem extends SubsystemBase {
     distanceToPitch.put(3.5, 300.0 + angOffSetMap);
     distanceToPitch.put(3.75, 320.0 + angOffSetMap);
     distanceToPitch.put(4.0, 330.0 + angOffSetMap);
+  }
+
+  public static void scaleUpVoltage(){
+    voltageOffSetMap += 0.1;
+    initializeMaps();
+  }
+  public static void scaleDownVoltage(){
+    voltageOffSetMap-=0.1;
+    initializeMaps();
   }
 
   /**
@@ -282,9 +291,9 @@ public class ShooterSubsystem extends SubsystemBase {
     double robotY = robotPose.getY();
 
     // Check if within X bounds of trenches
-    if (robotX < minX || robotX > maxX) {
-      return false;
-    }
+    // if (robotX < minX || robotX > maxX) {
+    //   return false;
+    // }
 
     // Check all 4 lanes - Y coordinates are the same for both alliances
     boolean inLane1 = robotY >= Constants.TrenchZones.kLane1MinY && robotY <= Constants.TrenchZones.kLane1MaxY;
@@ -292,7 +301,8 @@ public class ShooterSubsystem extends SubsystemBase {
     boolean inLane3 = robotY >= Constants.TrenchZones.kLane3MinY && robotY <= Constants.TrenchZones.kLane3MaxY;
     boolean inLane4 = robotY >= Constants.TrenchZones.kLane4MinY && robotY <= Constants.TrenchZones.kLane4MaxY;
 
-    return inLane1 || inLane2 || inLane3 || inLane4;
+    //return inLane1 || inLane2 || inLane3 || inLane4;
+    return (robotPose.getX() > 4.3 && robotPose.getX()<5) || (robotPose.getX() <12.3 && robotPose.getX()>11.6);
   }
 
   @Override
@@ -306,7 +316,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
-    double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
+    // double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
+    double turretPIDOutput = 0;
 
     // Calculate feedforward output using the setpoint velocity
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
@@ -325,7 +336,7 @@ public class ShooterSubsystem extends SubsystemBase {
         isTurretHomed = true;
       }
     } else {
-      this.turretMotor.set(turretPIDOutput + turretFFOutput);
+      // this.turretMotor.set(turretPIDOutput + turretFFOutput);
     }
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
@@ -338,7 +349,6 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("hood FF output", hoodFFOutput);
 
     SmartDashboard.putNumber("turret PID output", turretPIDOutput);
-    SmartDashboard.putNumber("turret FF output", turretFFOutput);
 
     // Reset the turret encoder position to 0 when the limit switch is triggered
     if (getLimitSwitch()) {
@@ -354,9 +364,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // Prevent the turret from moving past the limit switch in the negative
     // direction
 
-    if (isAtYawLimit) {
-      // this.turretMotor.set(0);
-    }
+    
     SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
 
     SmartDashboard.putNumber("azimuth",

@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5508917814804688,
-        "y": 6.306061397366597
+        "x": 2.9093974358974375,
+        "y": 4.895487179487179
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.7,
-        "y": 7.419
+        "x": 3.9675641025641033,
+        "y": 7.349038461538462
       },
       "prevControl": {
-        "x": 3.421038461538463,
-        "y": 7.418807692307692
+        "x": 2.0140256410256416,
+        "y": 8.18626923076923
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,8 +30,12 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.407017543859651,
+      "waypointRelativePos": 0.1964912280701824,
       "rotationDegrees": -29.33814279894946
+    },
+    {
+      "waypointRelativePos": 0.5157894736842124,
+      "rotationDegrees": -21.62222550163882
     }
   ],
   "constraintZones": [
@@ -53,19 +57,32 @@
   "eventMarkers": [
     {
       "name": "shootMove",
-      "waypointRelativePos": 0.0,
+      "waypointRelativePos": 0.3964562569213722,
       "endWaypointRelativePos": null,
       "command": {
-        "type": "named",
+        "type": "deadline",
         "data": {
-          "name": "shootMove"
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "shootMove"
+              }
+            },
+            {
+              "type": "wait",
+              "data": {
+                "waitTime": 4.0
+              }
+            }
+          ]
         }
       }
     }
   ],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 180.0,
     "maxAngularAcceleration": 180.0,
     "nominalVoltage": 12.0,
@@ -73,7 +90,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -1.21887523513129
   },
   "reversed": false,
   "folder": "Depots",

@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.000986693908415,
-        "y": 5.37148692540001
+        "x": 2.222315125772376,
+        "y": 5.290567367966405
       },
       "isLocked": false,
       "linkedName": null
@@ -20,8 +20,8 @@
         "y": 5.965
       },
       "prevControl": {
-        "x": 1.0105871426545074,
-        "y": 5.897045406414726
+        "x": 2.215236774093472,
+        "y": 5.252175754986808
       },
       "nextControl": null,
       "isLocked": false,
@@ -35,19 +35,6 @@
     }
   ],
   "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7995570321151736,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 0.5,
-        "maxAcceleration": 1.0,
-        "maxAngularVelocity": 180.0,
-        "maxAngularAcceleration": 180.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    },
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 7.814929259275516e-16,
@@ -65,17 +52,6 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "shootMove",
-      "waypointRelativePos": 0.1749723145071903,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "shootMove"
-        }
-      }
-    },
-    {
       "name": "intake",
       "waypointRelativePos": 0.841638981173878,
       "endWaypointRelativePos": null,
@@ -89,7 +65,7 @@
   ],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 180.0,
     "maxAngularAcceleration": 180.0,
     "nominalVoltage": 12.0,

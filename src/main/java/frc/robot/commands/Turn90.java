@@ -33,13 +33,13 @@ public class Turn90 extends Command {
   @Override
   public void execute() {
     double output = this.pidController.calculate(chassisSubsystem.getYaw());
-    chassisSubsystem.drive(0, 0, output, false);
+    chassisSubsystem.drive(0, 0, output, true);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    chassisSubsystem.drive(0,0,0, false);
+    chassisSubsystem.drive(0,0,0, true);
   }
 
   // Returns true when the command should end.

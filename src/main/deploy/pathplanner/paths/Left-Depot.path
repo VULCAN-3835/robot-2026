@@ -78,18 +78,29 @@
     {
       "name": "shootMove",
       "waypointRelativePos": 0.11074197120708189,
-      "endWaypointRelativePos": 1.0,
+      "endWaypointRelativePos": 1.0055370985603644,
       "command": {
         "type": "named",
         "data": {
           "name": "shootMove"
         }
       }
+    },
+    {
+      "name": "",
+      "waypointRelativePos": 1.01,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "close shooter"
+        }
+      }
     }
   ],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 180.0,
     "maxAngularAcceleration": 180.0,
     "nominalVoltage": 12.0,
