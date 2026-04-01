@@ -282,7 +282,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
     // double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
-    double turretPIDOutput = 0;
+    double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
 
     // Calculate feedforward output using the setpoint velocity
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
@@ -300,7 +300,7 @@ public class ShooterSubsystem extends SubsystemBase {
         isTurretHomed = true;
       }
     } else {
-      // this.turretMotor.set(turretPIDOutput + turretFFOutput);
+      this.turretMotor.set(turretPIDOutput);
     }
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
