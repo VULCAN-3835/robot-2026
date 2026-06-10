@@ -25,7 +25,7 @@ Command-based Java robot using WPILib 2026 with swerve drive and shooter mechani
 - **Motors:** CTRE TalonFX (CAN)
 - **Encoders:** CTRE CANcoder
 - **Gyro:** NavX-MXP (SPI)
-- **Vision:** 2x PhotonVision cameras
+- **Vision:** 2x PhotonVision cameras OV 9281
 - **Drive:** MK4i Swerve Modules
 
 ## Project Structure
@@ -44,7 +44,6 @@ src/main/java/frc/robot/
 - **Field-relative swerve** with vision-corrected odometry
 - **Autonomous path following** via PathPlanner
 - **Dynamic shooter aiming** based on robot pose
-- **SysID routines** for drive characterization
 
 ## Requirements
 
@@ -54,4 +53,5 @@ src/main/java/frc/robot/
 - PathPlannerLib
 
 ---
-*Team FRC 2026*
+*Team Vulcan 3835 FRC 2026*
+*Tichon Hadash Tel Aviv*
