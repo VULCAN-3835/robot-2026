@@ -5,14 +5,14 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import com.ctre.phoenix6.controls.ControlRequest;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
+
 import frc.robot.Constants.ChassisConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -33,7 +33,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private TalonFX hoodMotor;
   private TalonFX flyWheelMotor;
 
-  private TalonFX elevatorMotor;
 
   private CANcoder hoodCancoder;
 
@@ -48,21 +47,27 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
+  private static double angOffSetMap = 0;//40;
+  private static double voltageOffSetMap = -0.1;
+  private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
   private boolean isAtYawLimit;
+  private boolean isTurretHomed = false;
+  private boolean shouldHomeTurret = true;
+  
 
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
     this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
     this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
-    this.elevatorMotor = new TalonFX(ShooterConstants.kElevatorMotorID);
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
     this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
-    this.hoodCancoder.setPosition(Degrees.of(5));
-
+    CANcoderConfiguration canConfig = new CANcoderConfiguration();
+    canConfig.MagnetSensor.MagnetOffset = ShooterConstants.MagnetOffset;
+    this.hoodCancoder.getConfigurator().apply(canConfig);
     this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
 
     this.hoodPID = new ProfiledPIDController(
@@ -93,33 +98,55 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kTurretKA);
 
     this.hoodPID.setGoal(0);
+    this.hoodCancoder.setPosition(this.getHoodAngleDegs() / 360);
     initializeMaps();
   }
 
   private static void initializeMaps() {
     // Example data points for distance to Voltage mapping
-    distanceToVoltageMap.put(2.0, 5.0);
-    distanceToVoltageMap.put(2.5, 5.2);
-    distanceToVoltageMap.put(3.0, 5.4);
-    distanceToVoltageMap.put(3.25, 5.5);
-    distanceToVoltageMap.put(3.5, 5.6);
-    distanceToVoltageMap.put(4.0, 5.8);
+    distanceToVoltageMap.put(1.5, 4.8 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.0, 4.9 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.25, 5.0 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.5, 5.1 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.75, 5.2 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.0, 5.3 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.25, 5.4 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.5, 5.5 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.75, 5.6 + voltageOffSetMap);
+    distanceToVoltageMap.put(4.0, 5.7 + voltageOffSetMap);
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    distanceToTOF.put(2.0, 0.98);
-    distanceToTOF.put(2.5, 1.001);
-    distanceToTOF.put(3.0, 1.12);
-    distanceToTOF.put(3.25, 1.15);
-    distanceToTOF.put(3.5, 1.06);
-    distanceToTOF.put(4.0, 1.19);
+    distanceToTOF.put(1.5, 1.1 + TOFOffset);
+    distanceToTOF.put(2.0, 1.1 + TOFOffset);
+    distanceToTOF.put(2.25, 1.1 +TOFOffset);
+    distanceToTOF.put(2.5, 1.1 + TOFOffset);
+    distanceToTOF.put(2.75, 1.1 + TOFOffset);
+    distanceToTOF.put(3.0, 1.1 + TOFOffset);
+    distanceToTOF.put(3.25, 1.1 + TOFOffset);
+    distanceToTOF.put(3.5, 1.1 + TOFOffset);
+    distanceToTOF.put(3.75, 1.1 + TOFOffset);
+    distanceToTOF.put(4.0, 1.1 + TOFOffset);
 
     // Example data points for distance to Pitch mapping
-    distanceToPitch.put(2.0, 60.0);
-    distanceToPitch.put(2.5, 110.0);
-    distanceToPitch.put(3.0, 145.0);
-    distanceToPitch.put(3.25, 165.0);
-    distanceToPitch.put(3.5, 190.0);
-    distanceToPitch.put(4.0, 220.0);
+    distanceToPitch.put(1.5, 70.0 + angOffSetMap);
+    distanceToPitch.put(2.0, 130.0 + angOffSetMap);
+    distanceToPitch.put(2.25, 160.0 + angOffSetMap);
+    distanceToPitch.put(2.5, 200.0 + angOffSetMap);
+    distanceToPitch.put(2.75, 230.0 + angOffSetMap);
+    distanceToPitch.put(3.0, 260.0 + angOffSetMap);
+    distanceToPitch.put(3.25, 290.0 + angOffSetMap);
+    distanceToPitch.put(3.5, 300.0 + angOffSetMap);
+    distanceToPitch.put(3.75, 320.0 + angOffSetMap);
+    distanceToPitch.put(4.0, 330.0 + angOffSetMap);
+  }
+
+  public static void scaleUpVoltage(){
+    voltageOffSetMap += 0.1;
+    initializeMaps();
+  }
+  public static void scaleDownVoltage(){
+    voltageOffSetMap-=0.1;
+    initializeMaps();
   }
 
   /**
@@ -150,8 +177,12 @@ public class ShooterSubsystem extends SubsystemBase {
     return distanceToPitch.get(distance);
   }
 
-  public Angle getHoodAngleDegs() {
+  public Angle getHoodAngle() {
     return this.hoodCancoder.getPosition().getValue();
+  }
+
+  public double getHoodAngleDegs() {
+    return this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
   }
 
   public double getTurretAngleDegs() {
@@ -159,14 +190,14 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setTurretAngle(double deg) {
-    if(deg >=ShooterConstants.kTurretLowLimit && deg<ShooterConstants.kTurretHighLimit)
-    this.turretPID.setGoal(deg);
+    if (deg >= ShooterConstants.kTurretLowLimit && deg < ShooterConstants.kTurretHighLimit)
+      this.turretPID.setGoal(deg);
   }
 
   public void setHoodAngle(double deg) {
-    if (deg > ShooterConstants.kHoodLowLimit && deg < ShooterConstants.kHoodHighLimit) {
-    this.hoodPID.setGoal(deg);
-      
+    if (deg >= ShooterConstants.kHoodLowLimit && deg <= ShooterConstants.kHoodHighLimit) {
+      this.hoodPID.setGoal(deg);
+
     }
   }
 
@@ -208,57 +239,103 @@ public class ShooterSubsystem extends SubsystemBase {
     setTurretAngle(azimuth);
   }
 
-  public void bumpBallUp() {
-    this.elevatorMotor.setVoltage(4.5);
+  /**
+   * Sets whether the turret should automatically home at startup.
+   * 
+   * @param shouldHome true to enable auto-homing, false to disable
+   */
+  public void setShouldHomeTurret(boolean shouldHome) {
+    this.shouldHomeTurret = shouldHome;
+  }
+
+  /**
+   * Returns whether the turret has completed homing.
+   * 
+   * @return true if homing is complete
+   */
+  public boolean isTurretHomed() {
+    return isTurretHomed;
+  }
+
+  /**
+   * Checks if the robot is currently in any of the 4 trench zones of the 2026 REBUILT field.
+   * Automatically checks based on alliance color.
+   * 
+   * @return true if the robot is in any trench lane, false otherwise
+   */
+
+  //TODO: make it work, or in periodic or in default command.
+  public boolean isInTrench() {
+    Pose2d robotPose = chassisSubsystem.getPose();
+    return (robotPose.getX() > 4.3 && robotPose.getX()<5) || (robotPose.getX() <12.3 && robotPose.getX()>11.6);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
 
+    // Check if robot is in trench zone - if so, set hood to 0
+    if (isInTrench()) {
+      this.hoodPID.setGoal(0);
+    }
+
     // Calculate PID output
-    double hoodPIDOutput = hoodPID.calculate(this.getHoodAngleDegs().in(Degrees));
+    double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
+    // double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
     double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
 
     // Calculate feedforward output using the setpoint velocity
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
-    double turretFFOutput = turretFF.calculate(turretPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-    this.turretMotor.set(turretPIDOutput + turretFFOutput);
+
+    // Auto-home turret at startup if enabled
+    if (shouldHomeTurret && !isTurretHomed) {
+      if (!getLimitSwitch()) {
+        this.turretMotor.setVoltage(-1);
+      } else {
+        this.turretMotor.setVoltage(0);
+        this.turretMotor.setPosition(0);
+        isTurretHomed = true;
+      }
+    } else {
+      this.turretMotor.set(turretPIDOutput);
+    }
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
-    SmartDashboard.putNumber("hood actual", this.getHoodAngleDegs().in(Degrees));
+    SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
     SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
 
     SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
     SmartDashboard.putNumber("hood FF output", hoodFFOutput);
 
     SmartDashboard.putNumber("turret PID output", turretPIDOutput);
-    SmartDashboard.putNumber("turret FF output", turretFFOutput);
 
     // Reset the turret encoder position to 0 when the limit switch is triggered
     if (getLimitSwitch()) {
       this.turretMotor.setPosition(0);
     }
-    SmartDashboard.putBoolean("is at left limit",this.getTurretAngleDegs() <= 0 );
-    SmartDashboard.putBoolean("is at right limit",this.getTurretAngleDegs() >= 200);
+    SmartDashboard.putBoolean("is at left limit", this.getTurretAngleDegs() <= 0);
+    SmartDashboard.putBoolean("is at right limit", this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
+    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
+        && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
+        || (this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit
+            && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
+    // Prevent the turret from moving past the limit switch in the negative
+    // direction
 
-    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0 )
-    ||(this.getTurretAngleDegs() >= 200 && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
-    // Prevent the turret from moving past the limit switch in the negative direction
     
-    if (isAtYawLimit) {
-      this.turretMotor.set(0);
-    }
     SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
 
-    SmartDashboard.putNumber("azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    SmartDashboard.putNumber("azimuth",
+        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
     SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
     SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
+
+    SmartDashboard.putNumber("hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
   }
 }

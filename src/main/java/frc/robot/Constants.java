@@ -4,20 +4,17 @@
 
 package frc.robot;
 
-import java.util.function.IntFunction;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.util.FlippingUtil;
-import com.pathplanner.lib.util.GeometryUtil;
+
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -44,7 +41,7 @@ public final class Constants {
   public static class ModuleConstants {
     public static final double kWheelDiameterMeters = Units.inchesToMeters(4); // Module wheel diameter in meters
     public static final double kWheelCircumference = kWheelDiameterMeters * Math.PI;
-    public static final double kDriveMotorGearRatio = 6.75; // Module drive motor gear ratio
+    public static final double kDriveMotorGearRatio = 5.27; // Module drive motor gear ratio
     public static final double kSteerMotorGearRatio = 12.8; // Module steer motor gear ratio
 
     public static double kFeedforwardGainSteer = 0.11; // The feed forward gain for the module steer control
@@ -89,6 +86,17 @@ public final class Constants {
 
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height = Units.inchesToMeters(72.0); // includes the catcher at the top
+
+    public static final String leftCamName = "Camera-left";
+    public static final String rightCamName = "Camera-right";
+
+    public static final double leftCamHeight = 0.22; // meters, height of the left camera from the ground
+    public static final double rightCamHeight = 0.22; // meters, height of the right camera from the ground
+
+    public static final double leftCamPitch = Math.toRadians(20); // radians, pitch angle of the left camera
+    public static final double rightCamPitch = Math.toRadians(20); // radians, pitch angle of the right camera
+    public static final double leftCamYaw = Math.toRadians(30); // radians, yaw angle of the left camera
+    public static final double rightCamYaw = Math.toRadians(-30); // radians, yaw angle of the right camera
 
     // public static final Translation3d hubTopCenter = new Translation3d(
     // AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded).getTagPose(DriverStation.getAlliance().get()
@@ -144,10 +152,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = 0.113525390625;
-    public static final double kRightFrontOffset = -1.936279296875;
-    public static final double kLeftBackOffset = 0.3056640625000002;
-    public static final double kRightBackOffset = 0.12498866796875062;
+    public static final double kLeftFrontOffset = 0.06468065039062498; //0.113525390625 
+    public static final double kRightFrontOffset =0.06396484375; //1.936279296875
+    public static final double kLeftBackOffset = 0.3056640625000002; //0.3056640625000002 
+    public static final double kRightBackOffset = 0.12308379296874918; //0.12498866796875062 
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
@@ -156,21 +164,21 @@ public final class Constants {
     public static final boolean kRightBackInverted = true;
 
     public static double kMaxDrivingVelocity = 4.5;
-    public static double kTeleDriveMaxAccelerationUnitsPerSec = 9;
+    public static double kTeleDriveMaxAccelerationUnitsPerSec = 5;
     public static double kTeleDriveMaxSpeedMetersPerSec = kMaxDrivingVelocity;
     public static double kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
 
-    // Distance between centers of right and left wheels on robot meters
-    public static final double kTrackWidth = 0.6357;
-    // Distance between front and back wheels on robot meters
-    public static final double kWheelBase = 0.6357;
-    // Distance between middle of robot to module wheel
-    public static final double kWheelRadius = 0.38205;
+    // Distance between centers of right and left wheels on robot meters (synced with PathPlanner settings.json robotTrackwidth)
+    public static final double kTrackWidth = 0.546;
+    // Distance between front and back wheels on robot meters (synced with PathPlanner module positions)
+    public static final double kWheelBase = 0.546;
+    // Drive wheel radius in meters (synced with PathPlanner settings.json driveWheelRadius)
+    public static final double kWheelRadius = 0.051;
 
-    // the mass of the robot in KG
-    public static final double kMassKG = 51;
-    // the moment of inertia of the robot
-    public static final double kMOI = 6.81;
+    // the mass of the robot in KG (synced with PathPlanner settings.json robotMass)
+    public static final double kMassKG = 53.0;
+    // the moment of inertia of the robot (synced with PathPlanner settings.json robotMOI)
+    public static final double kMOI = 4.3;
 
     // Swerve Kinematics:
     public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
@@ -204,7 +212,6 @@ public final class Constants {
         config = DEFAUL_ROBOT_CONFIG;
       }
       return config;
-
     }
   }
 
@@ -218,6 +225,7 @@ public final class Constants {
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
+    public static final double MagnetOffset = 0.13;
 
     // Digital input port for the limit switch
     public static final int kLimitSwitchID = 0;
@@ -229,7 +237,7 @@ public final class Constants {
     public static final double kAzimuthOffset = 105;
 
     public static final double kHoodLowLimit = 0;
-    public static final double kHoodHighLimit = 330;
+    public static final double kHoodHighLimit = 360;
 
     public static final double kTurretLowLimit = 0;
     public static final double kTurretHighLimit = 200;
@@ -260,6 +268,20 @@ public final class Constants {
     public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
     public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kTurretTolerance = 3.5;
+
+    
+  // 2026 REBUILT Field dimensions (Rebuilt Welded)
+  public static final double kFieldLength = 16.459; // meters (54ft)
+  public static final double kFieldWidth = 8.231;   // meters (27ft)
+  public static final double kFieldCenterX = kFieldLength / 2;
+
+  // 2026 REBUILT Field Trench Zone
+  // The trench is the center lane that runs the length of the field
+  // Blue trench zone (red is mirrored)
+  public static final double kTrenchBlueMinX = 5.5;
+  public static final double kTrenchBlueMaxX = 11.0;
+  public static final double kTrenchBlueMinY = 2.5;
+  public static final double kTrenchBlueMaxY = 5.7;
   }
 
   public static final class StorageConstants {
@@ -272,8 +294,8 @@ public final class Constants {
     public static final int feedMotorID = 40;
     public static final int elevatorMotorID = 41;
 
-    public static final double reloadPower = 0.7;
-    public static final double elevatorPower = 0.4;
+    public static final double reloadPower = 0.5;
+    public static final double elevatorPower = 0.6;
     public static final double reloadTime = 0;
   }
 
@@ -287,12 +309,14 @@ public final class Constants {
 
     public static final int armEncoderID = 52;
 
+    //intake power in Voltage
     public static final double intakePower = 5;
 
-    public static final double kArmGearRatio = 1 / 2.0;
+    public static final double kArmGearRatio = 18/52.0;
 
-    public static final double restPoint = 90;
-    public static final double intakePoint = 0;
+    public static final double restPoint = 110;
+    public static final double intakePoint = 27;
+    public static final double midPoint = 77;
 
     public static final double kp = 0.04;
     public static final double ki = 0;
@@ -301,13 +325,18 @@ public final class Constants {
     public static final double kMaxAcceleration = 200;
 
     public static final double pidTolerance = 10;
+    public static final double MagnetOffset = 0.45;
 
     // ArmFeedforward constants
     public static final double kS = 1;
-    public static final double kG = 3;
+    public static final double kG = 2.5;
     public static final double kV = 0.5;
     public static final double kA = 3;
     public static final double armHorizontalDeg = 120;
+
+    // Shake command constants (for ShakeIntakeCMD)
+    public static final double shakeAmplitude = 10; // degrees to oscillate from center
+    public static final double shakePeriod = 0.5;   // seconds per half-cycle
 
   }
 
@@ -318,4 +347,37 @@ public final class Constants {
 
   public static final double kTurretMinAngleDeg = -180.0;
   public static final double kTurretMaxAngleDeg = 180.0;
+
+  // 2026 REBUILT Field dimensions
+  public static final double kFieldLength = 16.459; // meters (54ft)
+  public static final double kFieldWidth = 8.231;   // meters (27ft)
+  public static final double kFieldCenterX = kFieldLength / 2;
+
+  // 2026 REBUILT Welded Field - Trench Zones
+  // The field has 4 trench lanes where robots approach the reef
+  public static final class TrenchZones {
+    // Blue trench X bounds (near blue alliance station)
+    public static final double kBlueMinX = 5.5;
+    public static final double kBlueMaxX = 11.0;
+
+    // Red trench X bounds (near red alliance station, mirrored)
+    public static final double kRedMinX = 5.459;
+    public static final double kRedMaxX = 10.959;
+
+    // Lane 1 - Left side (Y: 0 - 2.1)
+    public static final double kLane1MinY = 0.0;
+    public static final double kLane1MaxY = 2.1;
+
+    // Lane 2 - Center-left (Y: 2.1 - 4.1)
+    public static final double kLane2MinY = 2.1;
+    public static final double kLane2MaxY = 4.1;
+
+    // Lane 3 - Center-right (Y: 4.1 - 6.1)
+    public static final double kLane3MinY = 4.1;
+    public static final double kLane3MaxY = 6.1;
+
+    // Lane 4 - Right side (Y: 6.1 - 8.231)
+    public static final double kLane4MinY = 6.1;
+    public static final double kLane4MaxY = 8.231;
+  }
 }

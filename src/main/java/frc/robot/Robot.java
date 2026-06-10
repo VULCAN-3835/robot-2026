@@ -22,6 +22,7 @@ public class Robot extends TimedRobot {
   private final RobotContainer m_robotContainer;
   public static String allianceColor;
   public static boolean isOurTransition;
+  public static boolean isBlue;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -58,8 +59,10 @@ public class Robot extends TimedRobot {
     if (DriverStation.getAlliance().isPresent()) {
       if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
         allianceColor = "BLUE";
+        isBlue = true;
       } else if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
         allianceColor = "RED";
+        isBlue = false;
       }
     }
 
@@ -83,11 +86,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    // Cancel all running commands (including default teleop drive) before starting auto
+    CommandScheduler.getInstance().cancelAll();
+    
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
-    // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(m_autonomousCommand);
+      m_autonomousCommand.schedule();
     }
   }
 
