@@ -47,8 +47,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
-  private static double angOffSetMap = 40;
-  private static double voltageOffSetMap = -0.2;
+  private static double angOffSetMap = 0;//40;
+  private static double voltageOffSetMap = -0.1;
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
@@ -293,7 +293,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // Auto-home turret at startup if enabled
     if (shouldHomeTurret && !isTurretHomed) {
       if (!getLimitSwitch()) {
-        this.turretMotor.setVoltage(-3.5);
+        this.turretMotor.setVoltage(-1);
       } else {
         this.turretMotor.setVoltage(0);
         this.turretMotor.setPosition(0);
