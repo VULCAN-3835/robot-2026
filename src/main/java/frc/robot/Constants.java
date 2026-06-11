@@ -218,17 +218,15 @@ public final class Constants {
   public static class ShooterConstants {
 
     // TalonFX device IDs for the shooter subsystem
-    public static final int kTurretMotorID = 61;
     public static final int kHoodMotorID = 60;
-    public static final int kFlywheelMotorID = 62;
+    public static final int kFlywheelMotor1ID = 62;
+    public static final int kFlywheelMotor2ID = 62; // TODO: change ids
+    public static final int kFlywheelMotor3ID = 62;
     public static final int kElevatorMotorID = 41;
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
     public static final double MagnetOffset = 0.13;
-
-    // Digital input port for the limit switch
-    public static final int kLimitSwitchID = 0;
 
     // Gear ratios for the shooter subsystem
     public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
@@ -292,7 +290,8 @@ public final class Constants {
 
     // CAN IDs for storage subsystem motors
     public static final int feedMotorID = 40;
-    public static final int elevatorMotorID = 41;
+    public static final int elevatorMotor1ID = 41;
+    public static final int elevatorMotor2ID = 41; // TODO: change ids
 
     public static final double reloadPower = 0.5;
     public static final double elevatorPower = 0.6;

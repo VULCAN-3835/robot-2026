@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
@@ -58,8 +60,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
-    this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
-    this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
+    this.flyWheelMotor1 = new TalonFX(ShooterConstants.kFlywheelMotor1ID);
+    this.flyWheelMotor2 = new TalonFX(ShooterConstants.kFlywheelMotor2ID);
+    this.flyWheelMotor3 = new TalonFX(ShooterConstants.kFlywheelMotor3ID);
+    
+    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, null));
+    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
+
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
@@ -67,7 +74,6 @@ public class ShooterSubsystem extends SubsystemBase {
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = ShooterConstants.MagnetOffset;
     this.hoodCancoder.getConfigurator().apply(canConfig);
-    this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
 
     this.hoodPID = new ProfiledPIDController(
         ShooterConstants.kHoodP,
@@ -185,7 +191,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public double getTurretAngleDegs() {
-    return this.turretMotor.getPosition().getValue().in(Degrees) * ShooterConstants.kTurretGearRatio;
+    return chassisSubsystem.getYaw();
   }
 
   public void setTurretAngle(double deg) {
@@ -203,11 +209,7 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setFlywheelVoltage(double V) {
     // VelocityVoltage velocityVoltage = new VelocityVoltage(0);
     // this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
-    this.flyWheelMotor.setVoltage(V);
-  }
-
-  public boolean getLimitSwitch() {
-    return this.limitSwitch.get();
+    this.flyWheelMotor1.setVoltage(V);
   }
 
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
@@ -289,18 +291,20 @@ public class ShooterSubsystem extends SubsystemBase {
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
 
-    // Auto-home turret at startup if enabled
-    if (shouldHomeTurret && !isTurretHomed) {
-      if (!getLimitSwitch()) {
-        this.turretMotor.setVoltage(-1);
-      } else {
-        this.turretMotor.setVoltage(0);
-        this.turretMotor.setPosition(0);
-        isTurretHomed = true;
-      }
-    } else {
-      this.turretMotor.set(turretPIDOutput);
-    }
+    // // Auto-home turret at startup if enabled
+    // if (shouldHomeTurret && !isTurretHomed) {
+    //   if (!getLimitSwitch()) {
+    //     this.turretMotor.setVoltage(-1);
+    //   } else {
+    //     this.turretMotor.setVoltage(0);
+    //     this.turretMotor.setPosition(0);
+    //     isTurretHomed = true;
+    //   }
+    // } else {
+    //   this.turretMotor.set(turretPIDOutput);
+    // }
+
+    // TODO: use aimAtTarget to change the chassis angle towards the hub
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
@@ -313,17 +317,17 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("turret PID output", turretPIDOutput);
 
-    // Reset the turret encoder position to 0 when the limit switch is triggered
-    if (getLimitSwitch()) {
-      this.turretMotor.setPosition(0);
-    }
+    // // Reset the turret encoder position to 0 when the limit switch is triggered
+    // if (getLimitSwitch()) {
+    //   this.turretMotor.setPosition(0);
+    // }
     SmartDashboard.putBoolean("is at left limit", this.getTurretAngleDegs() <= 0);
     SmartDashboard.putBoolean("is at right limit", this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
-    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
-        && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
-        || (this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit
-            && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
+    // this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
+    //     && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
+    //     || (this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit
+    //         && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
     // Prevent the turret from moving past the limit switch in the negative
     // direction
 
@@ -332,7 +336,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("azimuth",
         this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
-    SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
+    SmartDashboard.putNumber("flywheel RPS", flyWheelMotor1.getVelocity().getValue().in(RotationsPerSecond));
     SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
 
     SmartDashboard.putNumber("hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
