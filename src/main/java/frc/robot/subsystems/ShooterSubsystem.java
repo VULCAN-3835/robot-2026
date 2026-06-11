@@ -29,9 +29,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
-  private TalonFX turretMotor;
   private TalonFX hoodMotor;
-  private TalonFX flyWheelMotor;
+  private TalonFX flyWheelMotor1;
+  private TalonFX flyWheelMotor2;
+  private TalonFX flyWheelMotor3;
 
 
   private CANcoder hoodCancoder;
@@ -41,8 +42,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private SimpleMotorFeedforward hoodFF;
   private SimpleMotorFeedforward turretFF;
-
-  private DigitalInput limitSwitch;
 
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();

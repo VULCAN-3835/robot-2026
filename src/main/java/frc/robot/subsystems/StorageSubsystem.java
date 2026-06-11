@@ -20,7 +20,8 @@ import frc.robot.Constants.StorageConstants.StorageState;
 public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
-  private TalonFX elevatorMotor;
+  private TalonFX elevatorMotor1;
+  private TalonFX elevatorMotor2;
 
   private StorageState state;
 
