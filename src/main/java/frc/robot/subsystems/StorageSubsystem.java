@@ -6,7 +6,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
-
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -32,7 +32,7 @@ public class StorageSubsystem extends SubsystemBase {
     this.elevatorMotor1 = new TalonFX(StorageConstants.elevatorMotor1ID);
     this.elevatorMotor2 = new TalonFX(StorageConstants.elevatorMotor2ID);
 
-    this.elevatorMotor2.setControl(new Follower(StorageConstants.elevatorMotor1ID, null));
+    this.elevatorMotor2.setControl(new Follower(StorageConstants.elevatorMotor1ID, MotorAlignmentValue.Aligned));
 
     // this.elevatorMotor.setControl(new Follower(feedMotor.getDeviceID(),
     // MotorAlignmentValue.Opposed));

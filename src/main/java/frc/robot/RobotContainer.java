@@ -11,6 +11,7 @@ import frc.robot.commands.DefaultTeleopCommand;
 
 import frc.robot.commands.ShootDelayCMD;
 import frc.robot.commands.StorageUpCMD;
+import frc.robot.commands.SetChassisAngleCMD;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -66,9 +67,7 @@ public class RobotContainer {
                 .setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
             new InstantCommand(() -> shooterSubsystem
                 .setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
-            new InstantCommand(
-                () -> shooterSubsystem.aimAtTarget(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter())),
-            storageSubsystem.runStorage()));
+            new SetChassisAngleCMD(chassisSubsystem, shooterSubsystem)));
 
     NamedCommands.registerCommand("intake", new ParallelCommandGroup(
         new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),

@@ -16,6 +16,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
 
 import frc.robot.Constants.ChassisConstants;
+import frc.robot.commands.SetChassisAngleCMD;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -40,7 +41,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private CANcoder hoodCancoder;
 
   private ProfiledPIDController hoodPID;
-  private ProfiledPIDController turretPID;
 
   private SimpleMotorFeedforward hoodFF;
   private SimpleMotorFeedforward turretFF;
@@ -64,8 +64,8 @@ public class ShooterSubsystem extends SubsystemBase {
     this.flyWheelMotor2 = new TalonFX(ShooterConstants.kFlywheelMotor2ID);
     this.flyWheelMotor3 = new TalonFX(ShooterConstants.kFlywheelMotor3ID);
     
-    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, null));
-    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
+    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Aligned));
+    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Aligned));
 
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
@@ -83,15 +83,6 @@ public class ShooterSubsystem extends SubsystemBase {
             ShooterConstants.kHoodMaxVel,
             ShooterConstants.kHoodMaxAccel));
     this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
-
-    this.turretPID = new ProfiledPIDController(
-        ShooterConstants.kTurretP,
-        ShooterConstants.kTurretI,
-        ShooterConstants.kTurretD,
-        new Constraints(
-            ShooterConstants.kTurretMaxVel,
-            ShooterConstants.kTurretMaxAccel));
-    this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
 
     this.hoodFF = new SimpleMotorFeedforward(
         ShooterConstants.kHoodKS,
@@ -190,13 +181,8 @@ public class ShooterSubsystem extends SubsystemBase {
     return this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
   }
 
-  public double getTurretAngleDegs() {
+  public double getChassisAngleDegs() {
     return chassisSubsystem.getYaw();
-  }
-
-  public void setTurretAngle(double deg) {
-    if (deg >= ShooterConstants.kTurretLowLimit && deg < ShooterConstants.kTurretHighLimit)
-      this.turretPID.setGoal(deg);
   }
 
   public void setHoodAngle(double deg) {
@@ -234,10 +220,11 @@ public class ShooterSubsystem extends SubsystemBase {
     }
   }
 
-  public void aimAtTarget(Pose2d robotPose, Translation3d target) {
+  public double getAzimuth(Pose2d robotPose, Translation3d target) {
     double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
     SmartDashboard.putNumber("calculated azimuth", azimuth);
-    setTurretAngle(azimuth);
+
+    return azimuth;
   }
 
   /**
@@ -282,8 +269,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
-    // double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
-    double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
 
     // Calculate feedforward output using the setpoint velocity
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
@@ -291,45 +276,21 @@ public class ShooterSubsystem extends SubsystemBase {
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
 
-    // // Auto-home turret at startup if enabled
-    // if (shouldHomeTurret && !isTurretHomed) {
-    //   if (!getLimitSwitch()) {
-    //     this.turretMotor.setVoltage(-1);
-    //   } else {
-    //     this.turretMotor.setVoltage(0);
-    //     this.turretMotor.setPosition(0);
-    //     isTurretHomed = true;
-    //   }
-    // } else {
-    //   this.turretMotor.set(turretPIDOutput);
-    // }
-
-    // TODO: use aimAtTarget to change the chassis angle towards the hub
+    new SetChassisAngleCMD(chassisSubsystem, this);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
-    SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
+    // SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
     SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
-    SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
+    SmartDashboard.putNumber("turret actual", this.getChassisAngleDegs());
 
     SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
     SmartDashboard.putNumber("hood FF output", hoodFFOutput);
 
-    SmartDashboard.putNumber("turret PID output", turretPIDOutput);
+    // SmartDashboard.putNumber("turret PID output", turretPIDOutput);
 
-    // // Reset the turret encoder position to 0 when the limit switch is triggered
-    // if (getLimitSwitch()) {
-    //   this.turretMotor.setPosition(0);
-    // }
-    SmartDashboard.putBoolean("is at left limit", this.getTurretAngleDegs() <= 0);
-    SmartDashboard.putBoolean("is at right limit", this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit);
-
-    // this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
-    //     && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
-    //     || (this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit
-    //         && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
-    // Prevent the turret from moving past the limit switch in the negative
-    // direction
+    SmartDashboard.putBoolean("is at left limit", this.getChassisAngleDegs() <= 0);
+    SmartDashboard.putBoolean("is at right limit", this.getChassisAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
     
     SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
