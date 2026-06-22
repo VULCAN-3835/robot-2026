@@ -201,9 +201,9 @@ public class ShooterSubsystem extends SubsystemBase {
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
     if (robotPose != null) {
 
-      Translation2d turretPosition = robotPose.getTranslation();
+      Translation2d chassisPosition = robotPose.getTranslation();
 
-      Translation2d direction = target.toTranslation2d().minus(turretPosition);
+      Translation2d direction = target.toTranslation2d().minus(chassisPosition);
 
       SmartDashboard.putNumber("direction x", direction.getX());
       SmartDashboard.putNumber("direction y", direction.getY());
@@ -211,10 +211,10 @@ public class ShooterSubsystem extends SubsystemBase {
       double fieldAngleDeg = direction.getAngle().getDegrees();
       SmartDashboard.putNumber("atan", fieldAngleDeg);
 
-      double turretAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
-      SmartDashboard.putNumber("turret angle deg", turretAngleDeg);
+      double chassisAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
+      SmartDashboard.putNumber("chassis angle deg", chassisAngleDeg);
 
-      return MathUtil.inputModulus(turretAngleDeg, -180, 180);
+      return MathUtil.inputModulus(chassisAngleDeg, -180, 180);
     } else {
       return -1;
     }
@@ -275,8 +275,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
-
-    new SetChassisAngleCMD(chassisSubsystem, this);
 
     SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
     // SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);

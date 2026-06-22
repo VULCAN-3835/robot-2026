@@ -31,6 +31,7 @@ public class SetChassisAngleCMD extends Command {
             ShooterConstants.kTurretMaxVel,
             ShooterConstants.kTurretMaxAccel));
     this.pidController.setTolerance(ShooterConstants.kTurretTolerance);
+    pidController.enableContinuousInput(-180, 180);
 
     addRequirements(chassisSubsystem);
   }
@@ -38,12 +39,14 @@ public class SetChassisAngleCMD extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    this.pidController.setGoal(this.shooterSubsystem.getAzimuth(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    this.pidController.setGoal(this.shooterSubsystem.getAzimuth(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+
     double output = this.pidController.calculate(chassisSubsystem.getYaw());
     chassisSubsystem.drive(0, 0, output, true);
   }
