@@ -43,7 +43,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private ProfiledPIDController hoodPID;
 
   private SimpleMotorFeedforward hoodFF;
-  private SimpleMotorFeedforward turretFF;
 
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
@@ -53,9 +52,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
-  private boolean isAtYawLimit;
-  private boolean isTurretHomed = false;
-  private boolean shouldHomeTurret = true;
   
 
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
@@ -88,10 +84,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kHoodKS,
         ShooterConstants.kHoodKV,
         ShooterConstants.kHoodKA);
-    this.turretFF = new SimpleMotorFeedforward(
-        ShooterConstants.kTurretKS,
-        ShooterConstants.kTurretKV,
-        ShooterConstants.kTurretKA);
+
 
     this.hoodPID.setGoal(0);
     this.hoodCancoder.setPosition(this.getHoodAngleDegs() / 360);
@@ -218,7 +211,7 @@ public class ShooterSubsystem extends SubsystemBase {
     } else {
       return -1;
     }
-  }
+  } 
 
   public double getAzimuth(Pose2d robotPose, Translation3d target) {
     double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
@@ -232,18 +225,14 @@ public class ShooterSubsystem extends SubsystemBase {
    * 
    * @param shouldHome true to enable auto-homing, false to disable
    */
-  public void setShouldHomeTurret(boolean shouldHome) {
-    this.shouldHomeTurret = shouldHome;
-  }
+
 
   /**
    * Returns whether the turret has completed homing.
    * 
    * @return true if homing is complete
    */
-  public boolean isTurretHomed() {
-    return isTurretHomed;
-  }
+
 
   /**
    * Checks if the robot is currently in any of the 4 trench zones of the 2026 REBUILT field.
@@ -291,7 +280,6 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putBoolean("is at right limit", this.getChassisAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
     
-    SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
 
     SmartDashboard.putNumber("azimuth",
         this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));

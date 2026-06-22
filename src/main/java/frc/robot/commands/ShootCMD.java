@@ -84,8 +84,7 @@ public class ShootCMD extends Command {
     SmartDashboard.putNumber("log_ax", ax);
     SmartDashboard.putNumber("log_ay", ay);
 
-    Pose2d turretPose = new Pose2d(robotPose.getTranslation().minus(new Translation2d(0.3, 0)),
-        robotPose.getRotation());
+    
     // Pose2d turretPose = robotPose.transformBy(new Transform2d(new Translation2d(-0.3,0),Rotation2d.kZero));
     Translation2d predictedTarget;
     if ((robotPose.getX() > 5 && isBlue) || (robotPose.getX() < 11 && !isBlue)) {
@@ -110,7 +109,7 @@ public class ShootCMD extends Command {
           new Translation2d(
               vx * tof,
               vy * tof));
-      distance = turretPose.getTranslation().getDistance(predictedTarget);
+      distance = robotPose.getTranslation().getDistance(predictedTarget);
       tof = shooterSubsystem.getTOFForDistance(distance);
     }
 

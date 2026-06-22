@@ -39,13 +39,13 @@ public class SetChassisAngleCMD extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    
+    this.pidController.setGoal(this.shooterSubsystem.getAzimuth(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    this.pidController.setGoal(this.shooterSubsystem.getAzimuth(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
 
     double output = this.pidController.calculate(chassisSubsystem.getYaw());
     chassisSubsystem.drive(0, 0, output, true);
