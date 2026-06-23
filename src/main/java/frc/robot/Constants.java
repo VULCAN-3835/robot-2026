@@ -233,7 +233,7 @@ public final class Constants {
 
     // offset for the azimuth angle calculation, in degrees
     public static final double kAzimuthOffset = 105;
-
+    public static final double kHoodMountingOffset = 0; //OPEN CODE'S CODE-check
     public static final double kHoodLowLimit = 0;
     public static final double kHoodHighLimit = 360;
 
@@ -253,6 +253,7 @@ public final class Constants {
     public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
     public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kHoodTolerance = 2;
+    
 
     // Turret (angle) controller
     public static final double kTurretP = 0.015;
@@ -266,6 +267,14 @@ public final class Constants {
     public static final double kTurretMaxVel = 0.0; // deg/s or appropriate units
     public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kTurretTolerance = 3.5;
+
+    //open code's code-check
+    public static final double kAimP = 0.015;
+    public static final double kAimI = 0.0;
+    public static final double kAimD = 0;
+    public static final double kAimMaxVel = 0.0;
+    public static final double kAimMaxAccel = 0.0;
+    public static final double kAimTolerance = 3.5;
 
     
   // 2026 REBUILT Field dimensions (Rebuilt Welded)

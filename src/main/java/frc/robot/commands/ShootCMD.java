@@ -8,18 +8,20 @@ import java.util.List;
 
 import com.pathplanner.lib.util.FlippingUtil;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.commands.SetChassisAngleCMD;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShootCMD extends Command {
@@ -39,15 +41,28 @@ public class ShootCMD extends Command {
       : FlippingUtil.flipFieldPose(new Pose2d(2.5, 0.8, Rotation2d.kZero));
 
   private List<Pose2d> deliveryPoses = List.of(deliveryLeft, deliveryRight);
+//open code's code-check
+private ProfiledPIDController rotationPID;
 
   public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
     // Use addRequirements() here to declare subsystem dependencies.
+    //open code's code-check TODO:Chceck open code's code
+    this.rotationPID = new ProfiledPIDController(
+    ShooterConstants.kAimP,ShooterConstants.kAimI, ShooterConstants.kAimD,
+    new Constraints(ShooterConstants.kAimMaxVel,ShooterConstants. kAimMaxAccel));
+this.rotationPID.enableContinuousInput(-180, 180);
+//
     this.chassisSubsystem = chassisSubsystem;
     this.shooterSubsystem = shooterSubsystem;
-    addRequirements(shooterSubsystem);
+    addRequirements(shooterSubsystem,chassisSubsystem);
 
   }
-
+  //open code's code-check
+  private void aimRobotAtTarget(Pose2d robotPose, Translation3d target) {
+    double targetHeading = shooterSubsystem.getTargetFieldHeading(robotPose, target);
+    double rotationOutput = rotationPID.calculate(chassisSubsystem.getYaw(), targetHeading);
+    chassisSubsystem.drive(0, 0, rotationOutput, true);
+  }
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
@@ -124,7 +139,7 @@ public class ShootCMD extends Command {
     SmartDashboard.putNumber("log_hubX", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getX());
     SmartDashboard.putNumber("log_hubY", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getY());
 
-    new SetChassisAngleCMD(chassisSubsystem, shooterSubsystem);
+    aimRobotAtTarget(robotPose, predictedTranslation3d);//open code's code-check
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
 
@@ -135,6 +150,7 @@ public class ShootCMD extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    chassisSubsystem.drive(0, 0, 0, true);
     shooterSubsystem.setFlywheelVoltage(0);
     Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 5;
     Constants.ChassisConstants.kMaxDrivingVelocity = 4.5;

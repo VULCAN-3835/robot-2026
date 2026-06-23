@@ -189,7 +189,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // VelocityVoltage velocityVoltage = new VelocityVoltage(0);
     // this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
     this.flyWheelMotor1.setVoltage(V);
-  }
+    }
 
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
     if (robotPose != null) {
@@ -219,6 +219,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
     return azimuth;
   }
+//open code's code-check
+  public double getTargetFieldHeading(Pose2d robotPose, Translation3d target) {
+    Translation2d direction = target.toTranslation2d().minus(robotPose.getTranslation());
+    return direction.getAngle().getDegrees() + ShooterConstants.kHoodMountingOffset;
+}
 
   /**
    * Sets whether the turret should automatically home at startup.

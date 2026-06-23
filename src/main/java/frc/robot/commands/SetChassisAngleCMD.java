@@ -24,13 +24,13 @@ public class SetChassisAngleCMD extends Command {
     this.chassisSubsystem = chassisSubsystem;
     this.shooterSubsystem = shooterSubsystem;
     this.pidController = new ProfiledPIDController(
-        ShooterConstants.kTurretP,
-        ShooterConstants.kTurretI,
-        ShooterConstants.kTurretD,
+        ShooterConstants.kAimP,
+        ShooterConstants.kAimI,
+        ShooterConstants.kAimD,
         new Constraints(
-            ShooterConstants.kTurretMaxVel,
-            ShooterConstants.kTurretMaxAccel));
-    this.pidController.setTolerance(ShooterConstants.kTurretTolerance);
+            ShooterConstants.kAimMaxVel,
+            ShooterConstants.kAimMaxAccel));
+    this.pidController.setTolerance(ShooterConstants.kAimTolerance);
     pidController.enableContinuousInput(-180, 180);
 
     addRequirements(chassisSubsystem);
@@ -39,7 +39,7 @@ public class SetChassisAngleCMD extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    this.pidController.setGoal(this.shooterSubsystem.getAzimuth(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    this.pidController.setGoal(this.shooterSubsystem.getTargetFieldHeading(chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
 
   }
 
