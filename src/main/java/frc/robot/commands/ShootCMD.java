@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.util.FlippingUtil;
 
@@ -18,7 +19,9 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -29,6 +32,7 @@ public class ShootCMD extends Command {
 
   private ChassisSubsystem chassisSubsystem;
   private ShooterSubsystem shooterSubsystem;
+
   private final int ITERATIONS = 10;
   private Translation3d target = Constants.ChassisConstants.getHubTopCenter();
   private static final double kLatencyMs = 30.0;
@@ -39,30 +43,45 @@ public class ShootCMD extends Command {
       : FlippingUtil.flipFieldPose(new Pose2d(2.6, 7.1, Rotation2d.kZero));
   private Pose2d deliveryRight = isBlue ? new Pose2d(1.5, 0.8, Rotation2d.kZero)
       : FlippingUtil.flipFieldPose(new Pose2d(2.5, 0.8, Rotation2d.kZero));
-
   private List<Pose2d> deliveryPoses = List.of(deliveryLeft, deliveryRight);
+  private DoubleSupplier xSpeed, ySpeed;
+
+  
 //open code's code-check
 private ProfiledPIDController rotationPID;
-
-  public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem) {
+  public ShootCMD(ChassisSubsystem chassisSubsystem, ShooterSubsystem shooterSubsystem, DoubleSupplier xSpeed, DoubleSupplier ySpeed){
     // Use addRequirements() here to declare subsystem dependencies.
     //open code's code-check TODO:Chceck open code's code
+    this.xSpeed = xSpeed;
+    this.ySpeed = ySpeed;
     this.rotationPID = new ProfiledPIDController(
     ShooterConstants.kAimP,ShooterConstants.kAimI, ShooterConstants.kAimD,
     new Constraints(ShooterConstants.kAimMaxVel,ShooterConstants. kAimMaxAccel));
 this.rotationPID.enableContinuousInput(-180, 180);
 //
+
     this.chassisSubsystem = chassisSubsystem;
     this.shooterSubsystem = shooterSubsystem;
     addRequirements(shooterSubsystem,chassisSubsystem);
 
   }
+// use controller joystick inputs to drive the robot while aiming at the target instead of current sp
+private void driveWithLeftStick(double rotationOutput) {
+    double rawX = xSpeed.getAsDouble();
+    double rawY = ySpeed.getAsDouble();
+    double dx = (Math.abs(rawX) > Constants.OperatorConstants.kDeadband ? rawX : 0)
+        * Constants.ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
+    double dy = (Math.abs(rawY) > Constants.OperatorConstants.kDeadband ? rawY : 0)
+        * Constants.ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
+    chassisSubsystem.drive(dx, dy, rotationOutput, true);
+}
   //open code's code-check
-  private void aimRobotAtTarget(Pose2d robotPose, Translation3d target) {
-    double targetHeading = shooterSubsystem.getTargetFieldHeading(robotPose, target);
-    double rotationOutput = rotationPID.calculate(chassisSubsystem.getYaw(), targetHeading);
-    chassisSubsystem.drive(0, 0, rotationOutput, true);
-  }
+
+  
+  private double aimRobotAtTarget(Pose2d robotPose, Translation3d target) {
+  double targetHeading = shooterSubsystem.getTargetFieldHeading(robotPose, target);
+  return rotationPID.calculate(chassisSubsystem.getYaw(), targetHeading);
+}
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
@@ -73,6 +92,7 @@ this.rotationPID.enableContinuousInput(-180, 180);
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    
     ChassisSpeeds fieldSpeeds = chassisSubsystem.getFieldRelativeSpeeds();
     Pose2d robotPose = chassisSubsystem.getPose();
 
@@ -139,7 +159,9 @@ this.rotationPID.enableContinuousInput(-180, 180);
     SmartDashboard.putNumber("log_hubX", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getX());
     SmartDashboard.putNumber("log_hubY", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getY());
 
-    aimRobotAtTarget(robotPose, predictedTranslation3d);//open code's code-check
+    double rotationOutput = aimRobotAtTarget(robotPose, predictedTranslation3d);//open code's code-check
+    driveWithLeftStick(rotationOutput);
+
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
 
@@ -150,7 +172,7 @@ this.rotationPID.enableContinuousInput(-180, 180);
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    chassisSubsystem.drive(0, 0, 0, true);
+    //chassisSubsystem.drive(0, 0, 0, true);
     shooterSubsystem.setFlywheelVoltage(0);
     Constants.ChassisConstants.kTeleDriveMaxAccelerationUnitsPerSec = 5;
     Constants.ChassisConstants.kMaxDrivingVelocity = 4.5;

@@ -222,7 +222,7 @@ public class ShooterSubsystem extends SubsystemBase {
 //open code's code-check
   public double getTargetFieldHeading(Pose2d robotPose, Translation3d target) {
     Translation2d direction = target.toTranslation2d().minus(robotPose.getTranslation());
-    return direction.getAngle().getDegrees() + ShooterConstants.kHoodMountingOffset;
+    return direction.getAngle().getDegrees();
 }
 
   /**
