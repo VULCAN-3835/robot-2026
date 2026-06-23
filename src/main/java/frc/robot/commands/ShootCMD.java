@@ -109,15 +109,15 @@ private void driveWithLeftStick(double rotationOutput) {
     prevVx = fieldSpeeds.vxMetersPerSecond;
     prevVy = fieldSpeeds.vyMetersPerSecond;
 
-    SmartDashboard.putNumber("log_predX", robotPose.getX());
-    SmartDashboard.putNumber("log_predY", robotPose.getY());
-    SmartDashboard.putNumber("log_actualX", chassisSubsystem.getPose().getX());
-    SmartDashboard.putNumber("log_actualY", chassisSubsystem.getPose().getY());
-    SmartDashboard.putNumber("log_vx", fieldSpeeds.vxMetersPerSecond);
-    SmartDashboard.putNumber("log_vy", fieldSpeeds.vyMetersPerSecond);
-    SmartDashboard.putNumber("log_speed", Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond));
-    SmartDashboard.putNumber("log_ax", ax);
-    SmartDashboard.putNumber("log_ay", ay);
+    SmartDashboard.putNumber("Shooter/log_predX", robotPose.getX());
+    SmartDashboard.putNumber("Shooter/log_predY", robotPose.getY());
+    SmartDashboard.putNumber("Shooter/log_actualX", chassisSubsystem.getPose().getX());
+    SmartDashboard.putNumber("Shooter/log_actualY", chassisSubsystem.getPose().getY());
+    SmartDashboard.putNumber("Shooter/log_vx", fieldSpeeds.vxMetersPerSecond);
+    SmartDashboard.putNumber("Shooter/log_vy", fieldSpeeds.vyMetersPerSecond);
+    SmartDashboard.putNumber("Shooter/log_speed", Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond));
+    SmartDashboard.putNumber("Shooter/log_ax", ax);
+    SmartDashboard.putNumber("Shooter/log_ay", ay);
 
     
     // Pose2d turretPose = robotPose.transformBy(new Transform2d(new Translation2d(-0.3,0),Rotation2d.kZero));
@@ -153,11 +153,11 @@ private void driveWithLeftStick(double rotationOutput) {
         predictedTarget.getY(),
         target.getZ());
 
-    SmartDashboard.putNumber("log_targetX", predictedTarget.getX());
-    SmartDashboard.putNumber("log_targetY", predictedTarget.getY());
-    SmartDashboard.putNumber("log_distance", distance);
-    SmartDashboard.putNumber("log_hubX", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getX());
-    SmartDashboard.putNumber("log_hubY", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getY());
+    SmartDashboard.putNumber("Shooter/log_targetX", predictedTarget.getX());
+    SmartDashboard.putNumber("Shooter/log_targetY", predictedTarget.getY());
+    SmartDashboard.putNumber("Shooter/log_distance", distance);
+    SmartDashboard.putNumber("Shooter/log_hubX", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getX());
+    SmartDashboard.putNumber("Shooter/log_hubY", Constants.ChassisConstants.getHubTopCenter().toTranslation2d().getY());
 
     double rotationOutput = aimRobotAtTarget(robotPose, predictedTranslation3d);//open code's code-check
     driveWithLeftStick(rotationOutput);
@@ -165,8 +165,8 @@ private void driveWithLeftStick(double rotationOutput) {
     shooterSubsystem.setHoodAngle(shooterSubsystem.getPitchForDistance(distance));
     shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(distance));
 
-    SmartDashboard.putNumber("vx", isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond);
-    SmartDashboard.putNumber("vy", isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond);
+    SmartDashboard.putNumber("Shooter/vx", isBlue ? fieldSpeeds.vxMetersPerSecond : -fieldSpeeds.vxMetersPerSecond);
+    SmartDashboard.putNumber("Shooter/vy", isBlue ? fieldSpeeds.vyMetersPerSecond : -fieldSpeeds.vyMetersPerSecond);
   }
 
   // Called once the command ends or is interrupted.

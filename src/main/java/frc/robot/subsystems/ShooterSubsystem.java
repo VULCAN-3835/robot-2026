@@ -8,9 +8,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
@@ -69,8 +69,11 @@ public class ShooterSubsystem extends SubsystemBase {
     this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = ShooterConstants.MagnetOffset;
-    this.hoodCancoder.getConfigurator().apply(canConfig);
+    canConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+    canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
 
+    this.hoodCancoder.getConfigurator().apply(canConfig);
+    this.hoodCancoder.setPosition(5/360.0);
     this.hoodPID = new ProfiledPIDController(
         ShooterConstants.kHoodP,
         ShooterConstants.kHoodI,
@@ -87,7 +90,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
     this.hoodPID.setGoal(0);
-    this.hoodCancoder.setPosition(this.getHoodAngleDegs() / 360);
     initializeMaps();
   }
 
@@ -167,11 +169,16 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Angle getHoodAngle() {
-    return this.hoodCancoder.getPosition().getValue();
+    return this.hoodCancoder.getAbsolutePosition().getValue();
   }
 
   public double getHoodAngleDegs() {
-    return this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
+    double rawAngle = this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
+    // Convert from signed range (-180 to +180) to unsigned range (0 to 360)
+    if (rawAngle < 0) {
+      rawAngle += 360.0;
+    }
+    return rawAngle;
   }
 
   public double getChassisAngleDegs() {
@@ -198,14 +205,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
       Translation2d direction = target.toTranslation2d().minus(chassisPosition);
 
-      SmartDashboard.putNumber("direction x", direction.getX());
-      SmartDashboard.putNumber("direction y", direction.getY());
+      SmartDashboard.putNumber("Shooter/direction x", direction.getX());
+      SmartDashboard.putNumber("Shooter/direction y", direction.getY());
 
       double fieldAngleDeg = direction.getAngle().getDegrees();
-      SmartDashboard.putNumber("atan", fieldAngleDeg);
+      SmartDashboard.putNumber("Shooter/atan", fieldAngleDeg);
 
       double chassisAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
-      SmartDashboard.putNumber("chassis angle deg", chassisAngleDeg);
+      SmartDashboard.putNumber("Shooter/chassis angle deg", chassisAngleDeg);
 
       return MathUtil.inputModulus(chassisAngleDeg, -180, 180);
     } else {
@@ -215,7 +222,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public double getAzimuth(Pose2d robotPose, Translation3d target) {
     double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
-    SmartDashboard.putNumber("calculated azimuth", azimuth);
+    SmartDashboard.putNumber("Shooter/calculated azimuth", azimuth);
 
     return azimuth;
   }
@@ -270,27 +277,27 @@ public class ShooterSubsystem extends SubsystemBase {
     // Combine PID and feedforward outputs
     this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
 
-    SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
+    SmartDashboard.putNumber("Shooter/hood set point", hoodPID.getSetpoint().position);
     // SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
-    SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
-    SmartDashboard.putNumber("turret actual", this.getChassisAngleDegs());
+    SmartDashboard.putNumber("Shooter/hood actual", this.getHoodAngle().in(Degrees));
+    SmartDashboard.putNumber("Shooter/turret actual", this.getChassisAngleDegs());
 
-    SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
-    SmartDashboard.putNumber("hood FF output", hoodFFOutput);
+    SmartDashboard.putNumber("Shooter/hood PID output", hoodPIDOutput);
+    SmartDashboard.putNumber("Shooter/hood FF output", hoodFFOutput);
 
     // SmartDashboard.putNumber("turret PID output", turretPIDOutput);
 
-    SmartDashboard.putBoolean("is at left limit", this.getChassisAngleDegs() <= 0);
-    SmartDashboard.putBoolean("is at right limit", this.getChassisAngleDegs() >= ShooterConstants.kTurretHighLimit);
+    SmartDashboard.putBoolean("Shooter/is at left limit", this.getChassisAngleDegs() <= 0);
+    SmartDashboard.putBoolean("Shooter/is at right limit", this.getChassisAngleDegs() >= ShooterConstants.kTurretHighLimit);
 
     
 
-    SmartDashboard.putNumber("azimuth",
+    SmartDashboard.putNumber("Shooter/azimuth",
         this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
-    SmartDashboard.putNumber("flywheel RPS", flyWheelMotor1.getVelocity().getValue().in(RotationsPerSecond));
-    SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
+    SmartDashboard.putNumber("Shooter/flywheel RPS", flyWheelMotor1.getVelocity().getValue().in(RotationsPerSecond));
+    SmartDashboard.putNumber("Shooter/TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
 
-    SmartDashboard.putNumber("hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
+    SmartDashboard.putNumber("Shooter/hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
   }
 }

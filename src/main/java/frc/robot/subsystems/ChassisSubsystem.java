@@ -331,9 +331,9 @@ public class ChassisSubsystem extends SubsystemBase {
    */
   public void drive(double xVelocity, double yVelocity, double rot, boolean fieldRelative) {
 
-    SmartDashboard.putNumber("Target X Velocity", xVelocity);
-    SmartDashboard.putNumber("Target Y Velocity", yVelocity);
-    SmartDashboard.putNumber("Target rot Velocity", rot);
+    SmartDashboard.putNumber("Chassis/Target X Velocity", xVelocity);
+    SmartDashboard.putNumber("Chassis/Target Y Velocity", yVelocity);
+    SmartDashboard.putNumber("Chassis/Target rot Velocity", rot);
 
     boolean invert = false;
     var alliance = DriverStation.getAlliance();
@@ -517,7 +517,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
     double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("Chassis/left distance from target", LeftdistanceFromTarget);
 
     double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
     if (this.leftCam.hasValidTarget(LeftdistanceFromTarget) && this.leftCam.distanceFromTargetMeters() < 3.3) {
@@ -532,7 +532,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
-    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("Chassis/right distance from target", RightdistanceFromTraget);
 
     double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
     if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && this.rightCam.distanceFromTargetMeters() < 3.3) {
@@ -548,7 +548,7 @@ public class ChassisSubsystem extends SubsystemBase {
     // Update pose estimator with Limelight-fuel data
     Pose2d limelightFuelPose = this.limelightFuel.getPoseFromCamera();
     double limelightFuelDistance = this.limelightFuel.distanceFromTargetMeters();
-    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
+    SmartDashboard.putNumber("Chassis/limelight-fuel distance from target", limelightFuelDistance);
 
     if (this.limelightFuel.hasValidTarget() && limelightFuelDistance < 3.3) {
       last_timestamp = Timer.getFPGATimestamp();
@@ -563,9 +563,9 @@ public class ChassisSubsystem extends SubsystemBase {
           Timer.getFPGATimestamp() - this.limelightFuel.getCameraTimeStampSec());
     }
 
-    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
-    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
-    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
+    SmartDashboard.putNumber("Chassis/left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("Chassis/right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("Chassis/limelight-fuel distance from target", limelightFuelDistance);
 
   }
   // // if has 2 cams - this one is for limelight
@@ -615,7 +615,7 @@ public class ChassisSubsystem extends SubsystemBase {
     updateSwervePositions();
     this.poseEstimator.update(getRotation2d(), getModPositions());
 
-    SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
+    SmartDashboard.putString("Chassis/odometry pose", this.poseEstimator.getEstimatedPosition().toString());
 
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
@@ -623,67 +623,67 @@ public class ChassisSubsystem extends SubsystemBase {
     this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
-    SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
-    SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
-    SmartDashboard.putNumber("max velc chassis", ChassisConstants.kMaxDrivingVelocity);
-    SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
+    SmartDashboard.putNumber("Chassis/distance from hub", this.distanceFromHub);
+    SmartDashboard.putString("Chassis/translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
+    SmartDashboard.putNumber("Chassis/max velc chassis", ChassisConstants.kMaxDrivingVelocity);
+    SmartDashboard.putNumber("Chassis/Gyro Yaw", getYaw());
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Distance",
+    SmartDashboard.putNumber("Chassis/Left Front Distance",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Distance",
+    SmartDashboard.putNumber("Chassis/Left Back Distance",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Distance",
+    SmartDashboard.putNumber("Chassis/Right Front Distance",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Distance",
+    SmartDashboard.putNumber("Chassis/Right Back Distance",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().distanceMeters);
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation",
+    SmartDashboard.putNumber("Chassis/Left Front Rotation",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation",
+    SmartDashboard.putNumber("Chassis/Left Back Rotation",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation",
+    SmartDashboard.putNumber("Chassis/Right Front Rotation",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation",
+    SmartDashboard.putNumber("Chassis/Right Back Rotation",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle.getRotations());
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation Error",
+    SmartDashboard.putNumber("Chassis/Left Front Rotation Error",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation Error",
+    SmartDashboard.putNumber("Chassis/Left Back Rotation Error",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation Error",
+    SmartDashboard.putNumber("Chassis/Right Front Rotation Error",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation Error",
+    SmartDashboard.putNumber("Chassis/Right Back Rotation Error",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleAngleError());
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation Output",
+    SmartDashboard.putNumber("Chassis/Left Front Rotation Output",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation Output",
+    SmartDashboard.putNumber("Chassis/Left Back Rotation Output",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation Output",
+    SmartDashboard.putNumber("Chassis/Right Front Rotation Output",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation Output",
+    SmartDashboard.putNumber("Chassis/Right Back Rotation Output",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleClosedLoopOutput());
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Drive Velocity",
+    SmartDashboard.putNumber("Chassis/Left Front Drive Velocity",
         swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity());
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Drive Velocity",
+    SmartDashboard.putNumber("Chassis/Left Back Drive Velocity",
         swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Drive Velocity",
+    SmartDashboard.putNumber("Chassis/Right Front Drive Velocity",
         swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Drive Velocity",
+    SmartDashboard.putNumber("Chassis/Right Back Drive Velocity",
         swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity());
 
-    SmartDashboard.putNumber("ChassisSubsystem/Left Front Drive Output",
+    SmartDashboard.putNumber("Chassis/Left Front Drive Output",
         swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Left Back Drive Output",
+    SmartDashboard.putNumber("Chassis/Left Back Drive Output",
         swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Front Drive Output",
+    SmartDashboard.putNumber("Chassis/Right Front Drive Output",
         swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("ChassisSubsystem/Right Back Drive Output",
+    SmartDashboard.putNumber("Chassis/Right Back Drive Output",
         swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleDriveOutput());
 
-    SmartDashboard.putNumber("match time", DriverStation.getMatchTime());
-    SmartDashboard.putNumber("battary voltage", RobotController.getBatteryVoltage());
+    SmartDashboard.putNumber("Chassis/match time", DriverStation.getMatchTime());
+    SmartDashboard.putNumber("Chassis/battary voltage", RobotController.getBatteryVoltage());
 
   }
 }
