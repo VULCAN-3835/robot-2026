@@ -73,7 +73,7 @@ public class ShooterSubsystem extends SubsystemBase {
     canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
 
     this.hoodCancoder.getConfigurator().apply(canConfig);
-    this.hoodCancoder.setPosition(5/360.0);
+    this.hoodCancoder.setPosition(20/360.0);
     this.hoodPID = new ProfiledPIDController(
         ShooterConstants.kHoodP,
         ShooterConstants.kHoodI,
@@ -89,7 +89,7 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kHoodKA);
 
 
-    this.hoodPID.setGoal(0);
+    this.hoodPID.setGoal(100);
     initializeMaps();
   }
 
@@ -169,7 +169,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Angle getHoodAngle() {
-    return this.hoodCancoder.getAbsolutePosition().getValue();
+    return this.hoodCancoder.getPosition().getValue();
   }
 
   public double getHoodAngleDegs() {
@@ -264,9 +264,9 @@ public class ShooterSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
 
     // Check if robot is in trench zone - if so, set hood to 0
-    if (isInTrench()) {
-      this.hoodPID.setGoal(0);
-    }
+    // if (isInTrench()) {
+    //   this.hoodPID.setGoal(0);
+    // }
 
     // Calculate PID output
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
@@ -275,23 +275,15 @@ public class ShooterSubsystem extends SubsystemBase {
     double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+    this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
 
     SmartDashboard.putNumber("Shooter/hood set point", hoodPID.getSetpoint().position);
-    // SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
 
     SmartDashboard.putNumber("Shooter/hood actual", this.getHoodAngle().in(Degrees));
     SmartDashboard.putNumber("Shooter/turret actual", this.getChassisAngleDegs());
 
     SmartDashboard.putNumber("Shooter/hood PID output", hoodPIDOutput);
     SmartDashboard.putNumber("Shooter/hood FF output", hoodFFOutput);
-
-    // SmartDashboard.putNumber("turret PID output", turretPIDOutput);
-
-    SmartDashboard.putBoolean("Shooter/is at left limit", this.getChassisAngleDegs() <= 0);
-    SmartDashboard.putBoolean("Shooter/is at right limit", this.getChassisAngleDegs() >= ShooterConstants.kTurretHighLimit);
-
-    
 
     SmartDashboard.putNumber("Shooter/azimuth",
         this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));

@@ -88,7 +88,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public double getArmAngleDegrees() {
-    return this.armEncoder.getPosition().getValue().in(Degrees) + 360;
+    return this.armEncoder.getPosition().getValue().in(Degrees);
   }
 
   public boolean isAtSetpoint() {

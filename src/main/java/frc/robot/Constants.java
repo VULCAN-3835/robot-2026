@@ -234,26 +234,27 @@ public final class Constants {
 
     // offset for the azimuth angle calculation, in degrees
     public static final double kAzimuthOffset = 105;
-    public static final double kHoodMountingOffset = 0; // OPEN CODE'S CODE-check
-    public static final double kHoodLowLimit = 0;
-    public static final double kHoodHighLimit = 360;
 
-    public static final double kTurretLowLimit = 0;
-    public static final double kTurretHighLimit = 200;
+    public static final double kHoodMountingOffset = 0; // OPEN CODE'S CODE-check
+    public static final double kHoodLowLimit = 5;
+    public static final double kHoodHighLimit = 359;
+
+    // public static final double kTurretLowLimit = 0;
+    // public static final double kTurretHighLimit = 200;
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
 
-    public static final double kHoodP = 0.003;
-    public static final double kHoodI = 0.0;
-    public static final double kHoodD = 0.00001;
+    public static final double kHoodP = 0.0175; // 0.027
+    public static final double kHoodI = 0.00000105; //0.00006
+    public static final double kHoodD = 0.000000;//0.000005;
 
     public static final double kHoodKS = 0.0;
     public static final double kHoodKV = 0.0;
     public static final double kHoodKA = 0.0;
 
-    public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
-    public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
-    public static final double kHoodTolerance = 2;
+    public static final double kHoodMaxVel = 45.0; // deg/s
+    public static final double kHoodMaxAccel = 90.0; // deg/s^2
+    public static final double kHoodTolerance = 5;
 
     // Turret (angle) controller
     public static final double kTurretP = 0.015;
@@ -322,7 +323,7 @@ public final class Constants {
     public static final double kArmGearRatio = 18 / 52.0;
 
     public static final double restPoint = 130;
-    public static final double intakePoint = 5;
+    public static final double intakePoint = 12;
     public static final double midPoint = 77;
 
     public static final double kp = 0.03;
