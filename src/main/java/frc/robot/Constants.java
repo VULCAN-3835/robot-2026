@@ -126,23 +126,27 @@ public final class Constants {
           height);
     }
 
+    // LF - 3
+    // RF - 2
+    // LB - 1
+    // RB - 0
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
-    public static final int kRightFrontDriveID = 10; // CAN ID
+    public static final int kRightFrontDriveID = 12; // CAN ID
     public static final int kLeftBackDriveID = 11; // CAN ID
-    public static final int kRightBackDriveID = 12; // CAN ID
+    public static final int kRightBackDriveID = 10; // CAN ID
 
     // Ports for angle motors
     public static final int kLeftFrontSteerID = 23; // CAN ID
-    public static final int kRightFrontSteerID = 20; // CAN ID
+    public static final int kRightFrontSteerID = 22; // CAN ID
     public static final int kLeftBackSteerID = 21; // CAN ID
-    public static final int kRightBackSteerID = 22; // CAN ID
+    public static final int kRightBackSteerID = 20; // CAN ID
 
     // Ports for encoders
     public static final int kLeftFrontEncID = 33; // CAN ID
-    public static final int kRightFrontEncID = 30; // CAN ID
+    public static final int kRightFrontEncID = 32; // CAN ID
     public static final int kLeftBackEncID = 31; // CAN ID
-    public static final int kRightBackEncID = 32; // CAN ID
+    public static final int kRightBackEncID = 30; // CAN ID
 
     // Offsets for absolute encoders in rotations (i.e: 360 degrees = 1 rotation):
     // public static final double kLeftFrontOffset = -0.029296875;
@@ -150,10 +154,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = 0.06468065039062498; // 0.113525390625
-    public static final double kRightFrontOffset = 0.06396484375; // 1.936279296875
-    public static final double kLeftBackOffset = 0.3056640625000002; // 0.3056640625000002
-    public static final double kRightBackOffset = 0.12308379296874918; // 0.12498866796875062
+    public static final double kLeftFrontOffset = -0.1897264414062505; // -0.18824683203125006
+    public static final double kRightFrontOffset = -0.1503956777343749 ; // -0.12744140625
+    public static final double kLeftBackOffset = -0.47119140625 ; // 0.05028120312499994
+    public static final double kRightBackOffset = 0.3088078671875003 ; // -0.18798828125000006
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
@@ -183,20 +187,29 @@ public final class Constants {
     public static final double kMOI = 4.3;
 
     // Swerve Kinematics:
-    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
-        new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
-        new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
-        new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
-        new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
-    );
+    // public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+    //     new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+    //     new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
+    //     new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
+    //     new Translation2d(kWheelBase / 2, kTrackWidth / 2)
 
-    // public static final SwerveDriveKinematics kDriveKinematics = new
-    // SwerveDriveKinematics(
-    // new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
-    // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
-    // new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
-    // new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
+    //     //right back and left fron switch
+    //     // new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+    //     // new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
+    //     // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
+    //     // new Translation2d(kWheelBase / 2, kTrackWidth / 2)
+
     // );
+
+    public static final SwerveDriveKinematics kDriveKinematics = new
+    SwerveDriveKinematics(
+    new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
+    new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right back
+    new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
+    new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // Left back
+       
+    
+    );
 
     public static final RobotConfig DEFAUL_ROBOT_CONFIG = new RobotConfig(kMassKG, kMOI,
         new ModuleConfig(kWheelRadius,
@@ -222,7 +235,7 @@ public final class Constants {
     // TalonFX device IDs for the shooter subsystem
     public static final int kHoodMotorID = 60;
     public static final int kFlywheelMotor1ID = 50;
-    public static final int kFlywheelMotor2ID = 51; 
+    public static final int kFlywheelMotor2ID = 51;
     public static final int kFlywheelMotor3ID = 52;
 
     // CANcoder device IDs for the shooter subsystem
@@ -245,7 +258,7 @@ public final class Constants {
     // Hood (angle) controller
 
     public static final double kHoodP = 0.055; // increased for PID-only control
-    public static final double kHoodI = 0.00000; //0.00006
+    public static final double kHoodI = 0.00000; // 0.00006
     public static final double kHoodD = 0.00; // increased further to dampen oscillation
 
     public static final double kHoodKS = 0.00;
@@ -300,7 +313,7 @@ public final class Constants {
 
     // CAN IDs for storage subsystem motors
     public static final int elevatorMotor1ID = 30;
-    public static final int elevatorMotor2ID = 31; 
+    public static final int elevatorMotor2ID = 31;
     public static final int feedMotorID = 32;
 
     public static final double reloadVoltage = 4;
@@ -340,7 +353,7 @@ public final class Constants {
     public static final double kS = 0; // 0.2
     public static final double kG = 0; // 0.3
     public static final double kV = 0; // 0.5
-    public static final double kA = 0; //3
+    public static final double kA = 0; // 3
     public static final double armHorizontalDeg = 120;
 
     // Shake command constants (for ShakeIntakeCMD)

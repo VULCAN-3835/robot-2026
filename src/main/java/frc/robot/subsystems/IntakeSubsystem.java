@@ -225,11 +225,12 @@ public class IntakeSubsystem extends SubsystemBase {
       
       double totalOutput = pidOutput + ffOutput;
 
-      if (isAtSetpoint()) {
-        this.armMotor.setVoltage(0);
-      } else {
-        this.armMotor.setVoltage(totalOutput);
-      }
+      //TODO: Uncomment this line to enable arm control
+      // if (isAtSetpoint()) {
+      //   this.armMotor.setVoltage(0);
+      // } else {
+      //   this.armMotor.setVoltage(totalOutput);
+      // }
     }
 
     // Adjust the robot's max angular speed based on the arm's angle to prevent breaking it

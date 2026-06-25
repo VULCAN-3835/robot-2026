@@ -287,7 +287,9 @@ public class ShooterSubsystem extends SubsystemBase {
     double hoodFFOutput = hoodFF.calculate(Math.toRadians(angleFromHorizontal), hoodPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
-    this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
+    
+    //TODO: Uncomment this line to enable hood control
+    // this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
 
     SmartDashboard.putNumber("Shooter/hood set point", hoodPID.getSetpoint().position);
 
