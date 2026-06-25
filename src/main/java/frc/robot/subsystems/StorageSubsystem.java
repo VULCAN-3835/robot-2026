@@ -47,12 +47,12 @@ public class StorageSubsystem extends SubsystemBase {
         setFeedMotorPower(0);
         break;
       case RELOAD:
-        setFeedMotorPower(StorageConstants.reloadPower);
+        setFeedMotorPower(StorageConstants.reloadVoltage);
     }
   }
 
-  public void setFeedMotorPower(double power) {
-    feedMotor.set(power);
+  public void setFeedMotorPower(double V) {
+    feedMotor.setVoltage(V);
   }
 
   /**
@@ -64,8 +64,8 @@ public class StorageSubsystem extends SubsystemBase {
     return feedMotor.getStatorCurrent().getValueAsDouble();
   }
 
-  public void setElevatorMotorPower(double power) {
-    elevatorMotor1.set(power);
+  public void setElevatorMotorPower(double V) {
+    elevatorMotor1.setVoltage(V);
   }
 
   public Command setFeedMotorStateCMD(StorageState state) {
@@ -88,8 +88,8 @@ public class StorageSubsystem extends SubsystemBase {
    */
   public ParallelCommandGroup runStorage() {
     return new ParallelCommandGroup(
-        new InstantCommand(() -> this.setFeedMotorPower(StorageConstants.reloadPower)),
-        new InstantCommand(() -> this.setElevatorMotorPower(StorageConstants.elevatorPower)));
+        new InstantCommand(() -> this.setFeedMotorPower(StorageConstants.reloadVoltage)),
+        new InstantCommand(() -> this.setElevatorMotorPower(StorageConstants.elevatorVoltage)));
   }
 
   /**

@@ -8,7 +8,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -18,6 +20,7 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ChassisConstants;
 import frc.robot.commands.SetChassisAngleCMD;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -42,7 +45,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private ProfiledPIDController hoodPID;
 
-  private SimpleMotorFeedforward hoodFF;
+  private ArmFeedforward hoodFF;
 
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
@@ -60,8 +63,14 @@ public class ShooterSubsystem extends SubsystemBase {
     this.flyWheelMotor2 = new TalonFX(ShooterConstants.kFlywheelMotor2ID);
     this.flyWheelMotor3 = new TalonFX(ShooterConstants.kFlywheelMotor3ID);
     
-    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Aligned));
-    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Aligned));
+    
+
+    TalonFXConfiguration motor1Config = new TalonFXConfiguration();
+    motor1Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    this.flyWheelMotor1.getConfigurator().apply(motor1Config);
+
+    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
+    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
 
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
@@ -73,7 +82,6 @@ public class ShooterSubsystem extends SubsystemBase {
     canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
 
     this.hoodCancoder.getConfigurator().apply(canConfig);
-    this.hoodCancoder.setPosition(20/360.0);
     this.hoodPID = new ProfiledPIDController(
         ShooterConstants.kHoodP,
         ShooterConstants.kHoodI,
@@ -83,13 +91,15 @@ public class ShooterSubsystem extends SubsystemBase {
             ShooterConstants.kHoodMaxAccel));
     this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
 
-    this.hoodFF = new SimpleMotorFeedforward(
+    this.hoodFF = new ArmFeedforward(
         ShooterConstants.kHoodKS,
+        ShooterConstants.kHoodKG,
         ShooterConstants.kHoodKV,
         ShooterConstants.kHoodKA);
 
 
-    this.hoodPID.setGoal(100);
+    this.hoodPID.setGoal(180);
+    this.hoodCancoder.setPosition(5/360.0);
     initializeMaps();
   }
 
@@ -169,7 +179,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Angle getHoodAngle() {
-    return this.hoodCancoder.getPosition().getValue();
+    return this.hoodCancoder.getAbsolutePosition().getValue();
   }
 
   public double getHoodAngleDegs() {
@@ -272,7 +282,9 @@ public class ShooterSubsystem extends SubsystemBase {
     double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
 
     // Calculate feedforward output using the setpoint velocity
-    double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
+    // Offset the angle so 0° = horizontal for correct gravity compensation
+    double angleFromHorizontal = hoodPID.getSetpoint().position - ShooterConstants.kHoodHorizontalAngle;
+    double hoodFFOutput = hoodFF.calculate(Math.toRadians(angleFromHorizontal), hoodPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
     this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);

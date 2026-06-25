@@ -60,7 +60,7 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armMotor.getConfigurator().apply(config);
 
     TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
-    rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
+    rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
     this.rollerMotor.getConfigurator().apply(rollerConfig);
 
     this.pidController = new ProfiledPIDController(
@@ -84,7 +84,7 @@ public class IntakeSubsystem extends SubsystemBase {
     canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
     canConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
     this.armEncoder.getConfigurator().apply(canConfig);
-    this.pidController.setGoal(IntakeConstants.restPoint);
+    this.pidController.setGoal(IntakeConstants.intakePoint);
   }
 
   public double getArmAngleDegrees() {
