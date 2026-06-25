@@ -50,8 +50,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
-  private static double angOffSetMap = 0;//40;
-  private static double voltageOffSetMap = -0.1;
+  private static double angOffSetMap = 70;   // last: 0
+  private static double voltageOffSetMap = 5; // last: 0
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
@@ -67,7 +67,16 @@ public class ShooterSubsystem extends SubsystemBase {
 
     TalonFXConfiguration motor1Config = new TalonFXConfiguration();
     motor1Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    motor1Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
     this.flyWheelMotor1.getConfigurator().apply(motor1Config);
+
+    TalonFXConfiguration motor2Config = new TalonFXConfiguration();
+    motor2Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
+    this.flyWheelMotor2.getConfigurator().apply(motor2Config);
+
+    TalonFXConfiguration motor3Config = new TalonFXConfiguration();
+    motor3Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
+    this.flyWheelMotor3.getConfigurator().apply(motor3Config);
 
     this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
     this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
@@ -105,50 +114,50 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static void initializeMaps() {
     // Example data points for distance to Voltage mapping
-    distanceToVoltageMap.put(1.5, 4.8 + voltageOffSetMap);
-    distanceToVoltageMap.put(2.0, 4.9 + voltageOffSetMap);
-    distanceToVoltageMap.put(2.25, 5.0 + voltageOffSetMap);
-    distanceToVoltageMap.put(2.5, 5.1 + voltageOffSetMap);
-    distanceToVoltageMap.put(2.75, 5.2 + voltageOffSetMap);
-    distanceToVoltageMap.put(3.0, 5.3 + voltageOffSetMap);
-    distanceToVoltageMap.put(3.25, 5.4 + voltageOffSetMap);
-    distanceToVoltageMap.put(3.5, 5.5 + voltageOffSetMap);
-    distanceToVoltageMap.put(3.75, 5.6 + voltageOffSetMap);
-    distanceToVoltageMap.put(4.0, 5.7 + voltageOffSetMap);
+    distanceToVoltageMap.put(1.5, 0+ voltageOffSetMap); // 4.8
+    distanceToVoltageMap.put(2.0, 6.5 + voltageOffSetMap); // 4.9
+    distanceToVoltageMap.put(2.25, 6.8 + voltageOffSetMap); //5
+    distanceToVoltageMap.put(2.5, 7.5+ voltageOffSetMap); //5.1
+    distanceToVoltageMap.put(2.75, 7.6 + voltageOffSetMap); // 5.2
+    distanceToVoltageMap.put(3.0, 0 + voltageOffSetMap); // 5.3
+    distanceToVoltageMap.put(3.25, 0 + voltageOffSetMap); // 5.4
+    distanceToVoltageMap.put(3.5, 0 + voltageOffSetMap); // 5.5
+    distanceToVoltageMap.put(3.75, 0 + voltageOffSetMap); // 5.6
+    distanceToVoltageMap.put(4.0, 0 + voltageOffSetMap); // 5.7
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    distanceToTOF.put(1.5, 1.1 + TOFOffset);
-    distanceToTOF.put(2.0, 1.1 + TOFOffset);
-    distanceToTOF.put(2.25, 1.1 +TOFOffset);
-    distanceToTOF.put(2.5, 1.1 + TOFOffset);
-    distanceToTOF.put(2.75, 1.1 + TOFOffset);
-    distanceToTOF.put(3.0, 1.1 + TOFOffset);
-    distanceToTOF.put(3.25, 1.1 + TOFOffset);
-    distanceToTOF.put(3.5, 1.1 + TOFOffset);
-    distanceToTOF.put(3.75, 1.1 + TOFOffset);
-    distanceToTOF.put(4.0, 1.1 + TOFOffset);
+    distanceToTOF.put(1.5, 0 + TOFOffset);
+    distanceToTOF.put(2.0, 0 + TOFOffset);
+    distanceToTOF.put(2.25, 0 +TOFOffset);
+    distanceToTOF.put(2.5, 0 + TOFOffset);
+    distanceToTOF.put(2.75, 0 + TOFOffset);
+    distanceToTOF.put(3.0, 0 + TOFOffset);
+    distanceToTOF.put(3.25, 0 + TOFOffset);
+    distanceToTOF.put(3.5, 0 + TOFOffset);
+    distanceToTOF.put(3.75, 0 + TOFOffset);
+    distanceToTOF.put(4.0, 0 + TOFOffset);
 
     // Example data points for distance to Pitch mapping
-    distanceToPitch.put(1.5, 70.0 + angOffSetMap);
-    distanceToPitch.put(2.0, 130.0 + angOffSetMap);
-    distanceToPitch.put(2.25, 160.0 + angOffSetMap);
-    distanceToPitch.put(2.5, 200.0 + angOffSetMap);
-    distanceToPitch.put(2.75, 230.0 + angOffSetMap);
-    distanceToPitch.put(3.0, 260.0 + angOffSetMap);
-    distanceToPitch.put(3.25, 290.0 + angOffSetMap);
-    distanceToPitch.put(3.5, 300.0 + angOffSetMap);
-    distanceToPitch.put(3.75, 320.0 + angOffSetMap);
-    distanceToPitch.put(4.0, 330.0 + angOffSetMap);
+    distanceToPitch.put(1.5, 0 + angOffSetMap); // 70.0
+    distanceToPitch.put(2.0, 70 + angOffSetMap); // 130.0
+    distanceToPitch.put(2.25, 100 + angOffSetMap); // 160.0
+    distanceToPitch.put(2.5, 110 + angOffSetMap); // 200.0
+    distanceToPitch.put(2.75, 0 + angOffSetMap); // 230.0
+    distanceToPitch.put(3.0, 120+ angOffSetMap); // 260.0
+    distanceToPitch.put(3.25, 0 + angOffSetMap); // 290.0
+    distanceToPitch.put(3.5, 0 + angOffSetMap); // 300.0
+    distanceToPitch.put(3.75, 0 + angOffSetMap); // 320.0
+    distanceToPitch.put(4.0, 0 + angOffSetMap); // 330.0
   }
 
-  public static void scaleUpVoltage(){
-    voltageOffSetMap += 0.1;
-    initializeMaps();
-  }
-  public static void scaleDownVoltage(){
-    voltageOffSetMap-=0.1;
-    initializeMaps();
-  }
+  public static void scaleUpVoltage()   { voltageOffSetMap += 0.1; initializeMaps(); }
+  public static void scaleDownVoltage() { voltageOffSetMap -= 0.1; initializeMaps(); }
+  public static void scaleUpAngle()     { angOffSetMap += 5;       initializeMaps(); }
+  public static void scaleDownAngle()   { angOffSetMap -= 5;       initializeMaps(); }
+
+  public static double getTunedVoltage() { return voltageOffSetMap; }
+  public static double getTunedAngle()   { return angOffSetMap; }
+
 
   /**
    * @param distance The distance to the target in meters
@@ -179,12 +188,11 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Angle getHoodAngle() {
-    return this.hoodCancoder.getAbsolutePosition().getValue();
+    return this.hoodCancoder.getPosition().getValue();
   }
 
   public double getHoodAngleDegs() {
-    double rawAngle = this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
-    // Convert from signed range (-180 to +180) to unsigned range (0 to 360)
+    double rawAngle = this.hoodCancoder.getPosition().getValue().in(Degrees);
     if (rawAngle < 0) {
       rawAngle += 360.0;
     }
@@ -279,7 +287,7 @@ public class ShooterSubsystem extends SubsystemBase {
     // }
 
     // Calculate PID output
-    double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
+    double hoodPIDOutput = hoodPID.calculate(this.hoodCancoder.getPosition().getValue().in(Degrees));
 
     // Calculate feedforward output using the setpoint velocity
     // Offset the angle so 0° = horizontal for correct gravity compensation
@@ -289,8 +297,10 @@ public class ShooterSubsystem extends SubsystemBase {
     // Combine PID and feedforward outputs
     
     //TODO: Uncomment this line to enable hood control
-    // this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
+    this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
 
+    SmartDashboard.putNumber("Shooter/voltage offset", voltageOffSetMap);
+    SmartDashboard.putNumber("Shooter/angle offset", angOffSetMap);
     SmartDashboard.putNumber("Shooter/hood set point", hoodPID.getSetpoint().position);
 
     SmartDashboard.putNumber("Shooter/hood actual", this.getHoodAngle().in(Degrees));
@@ -299,8 +309,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/hood PID output", hoodPIDOutput);
     SmartDashboard.putNumber("Shooter/hood FF output", hoodFFOutput);
 
-    SmartDashboard.putNumber("Shooter/azimuth",
-        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    SmartDashboard.putNumber("Shooter/azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
     SmartDashboard.putNumber("Shooter/flywheel RPS", flyWheelMotor1.getVelocity().getValue().in(RotationsPerSecond));
     SmartDashboard.putNumber("Shooter/TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
 

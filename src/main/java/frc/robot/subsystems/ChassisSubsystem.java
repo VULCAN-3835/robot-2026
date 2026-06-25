@@ -308,7 +308,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @return The heading of the robot in degrees
    */
   public double getYaw() {
-    return -this.imu.getAngle();
+    return this.imu.getAngle();
   }
 
   /**
@@ -644,7 +644,7 @@ public class ChassisSubsystem extends SubsystemBase {
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation()
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
     SmartDashboard.putNumber("Chassis/distance from hub", this.distanceFromHub);

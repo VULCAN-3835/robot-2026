@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
 /**
@@ -53,6 +54,7 @@ public class RobotContainer {
   private final ChassisSubsystem chassisSubsystem = new ChassisSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private final StorageSubsystem storageSubsystem = new StorageSubsystem();
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
   private final static CommandXboxController xboxControllerDrive = new CommandXboxController(
         OperatorConstants.kDriverControllerPort);
@@ -141,7 +143,10 @@ public class RobotContainer {
     //       new InstantCommand(() -> intakeSubsystem.setRollerState(false))));
 
     xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(
-        new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(7)),
+        new InstantCommand(() -> {
+            shooterSubsystem.setFlywheelVoltage(ShooterSubsystem.getTunedVoltage());
+            shooterSubsystem.setHoodAngle(ShooterSubsystem.getTunedAngle());
+        }),
         new WaitCommand(0.75),
         new ParallelCommandGroup(
             new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
@@ -149,12 +154,20 @@ public class RobotContainer {
 
     xboxControllerDrive.rightTrigger().toggleOnFalse(new ParallelCommandGroup(
         new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(0)),
+        new InstantCommand(() -> shooterSubsystem.setHoodAngle(0)),
         new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(0)),
         new InstantCommand(() -> storageSubsystem.setFeedMotorPower(0))));
   
-      //D-pad up and down scale the flywheel voltage up and down by 10%
+      // D-pad: voltage offset ±0.1 V
       xboxControllerDrive.povUp().onTrue(new InstantCommand(()->shooterSubsystem.scaleUpVoltage()));
       xboxControllerDrive.povDown().onTrue(new InstantCommand(()->shooterSubsystem.scaleDownVoltage()));
+
+      // Y / A: voltage map  +0.1 V / -0.1 V
+      // X / B: angle map    +5 °  / -5 °
+      xboxControllerDrive.y().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleUpVoltage()));
+      xboxControllerDrive.a().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleDownVoltage()));
+      xboxControllerDrive.x().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleUpAngle()));
+      xboxControllerDrive.b().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleDownAngle()));
       setUpContollers(true);
   
     }
@@ -162,9 +175,9 @@ public class RobotContainer {
     private void setUpContollers(boolean oneController) {
   
       chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-          () -> xboxControllerDrive.getLeftY(),
+          () -> -xboxControllerDrive.getLeftY(),
           () -> xboxControllerDrive.getLeftX(),
-          () -> -xboxControllerDrive.getRightX()));
+          () -> xboxControllerDrive.getRightX()));
   
       xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
   
