@@ -7,6 +7,10 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
+
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -52,10 +56,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     this.armMotor.getConfigurator().apply(config);
 
     TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
-    rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
+    rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
     this.rollerMotor.getConfigurator().apply(rollerConfig);
 
     this.pidController = new ProfiledPIDController(
@@ -76,13 +81,14 @@ public class IntakeSubsystem extends SubsystemBase {
     this.armEncoder = new CANcoder(IntakeConstants.armEncoderID);
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = IntakeConstants.MagnetOffset;
+    canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
+    canConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
     this.armEncoder.getConfigurator().apply(canConfig);
-    this.pidController.setGoal(IntakeConstants.restPoint);
+    this.pidController.setGoal(IntakeConstants.intakePoint);
   }
 
   public double getArmAngleDegrees() {
-    armEncoder.getPosition().refresh();
-    return this.armEncoder.getAbsolutePosition().getValueAsDouble() * 180 + 44.46;
+    return this.armEncoder.getPosition().getValue().in(Degrees);
   }
 
   public boolean isAtSetpoint() {
@@ -194,11 +200,11 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-    SmartDashboard.putNumber("arm ang abs", this.armEncoder.getAbsolutePosition().getValueAsDouble());
-    SmartDashboard.putNumber("arm ang", this.getArmAngleDegrees());
-    SmartDashboard.putNumber("arm ang radians",
+    SmartDashboard.putNumber("Intake/arm ang abs", this.armEncoder.getAbsolutePosition().getValueAsDouble());
+    SmartDashboard.putNumber("Intake/arm ang", this.getArmAngleDegrees());
+    SmartDashboard.putNumber("Intake/arm ang radians",
         Units.degreesToRadians(this.getArmAngleDegrees()) * IntakeConstants.kArmGearRatio);
-    SmartDashboard.putNumber("arm target", pidController.getGoal().position);
+    SmartDashboard.putNumber("Intake/arm target", pidController.getGoal().position);
 
     // If in manual mode, skip PID and use manual power
     if (manualMode) {
@@ -212,25 +218,19 @@ public class IntakeSubsystem extends SubsystemBase {
       double velocityRadPerSec = Math.toRadians(pidController.getSetpoint().velocity);
       double ffOutput = armFeedforward.calculate(angleRad, velocityRadPerSec);
 
-      SmartDashboard.putNumber("pid output", pidOutput);
-      SmartDashboard.putNumber("ff output", ffOutput);
-      SmartDashboard.putNumber("current velc", this.pidController.getVelocityError());
+      SmartDashboard.putNumber("Intake/pid output", pidOutput);
+      SmartDashboard.putNumber("Intake/ff output", ffOutput);
+      SmartDashboard.putNumber("Intake/current velc", this.pidController.getVelocityError());
 
-      if (this.pidController.getGoal().position == IntakeConstants.restPoint) {
-        factor = 0.7;
-      }
-
-      if (this.pidController.getGoal().position == IntakeConstants.intakePoint) {
-        factor = 1.5;
-        pidOutput *=1.2;
-      }
+      
       double totalOutput = pidOutput + ffOutput;
 
-      if (isAtSetpoint()) {
-        this.armMotor.setVoltage(0);
-      } else {
-        this.armMotor.setVoltage(totalOutput * factor); // scale down for safety
-      }
+      //TODO: Uncomment this line to enable arm control
+      // if (isAtSetpoint()) {
+      //   this.armMotor.setVoltage(0);
+      // } else {
+      //   this.armMotor.setVoltage(totalOutput);
+      // }
     }
 
     // Adjust the robot's max angular speed based on the arm's angle to prevent breaking it

@@ -63,7 +63,8 @@ public class AtCamUtil {
             fieldWork = false;
         }
         SmartDashboard.putBoolean("filed works?", fieldWork);
-        this.photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, robotToCamera);
+        this.photonPoseEstimator = new PhotonPoseEstimator(
+                aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamera);
         this.result = new PhotonPipelineResult();
     }
 
@@ -83,14 +84,9 @@ public class AtCamUtil {
     }
 
     public boolean hasValidTarget(double distance) {
-        // System.out.println("[target] in hasValidTarget");
-
         boolean distance_ok = distance < 2;
         boolean has_target = hasTarget();
-        // System.out.println("[target] " + distance_ok + " " + has_target);
-
-        // return has_target && distance_ok;
-        return has_target;
+        return has_target && distance_ok;
     }
 
     // public void updateResult() {
@@ -271,8 +267,9 @@ public class AtCamUtil {
     public Pose2d updateResult(Pose2d currentPose) {
         var results = this.cam.getAllUnreadResults();
         var estimatedPose = new Pose2d();
-        if (results == null) {
-            SmartDashboard.putString(name + "/status", "result is null");
+        if (results == null || results.isEmpty()) {
+            // No new camera frames — return origin sentinel so caller's field-bounds check rejects it
+            SmartDashboard.putString(name + "/status", "no new results");
             return estimatedPose;
         }
         for (var result : results) {

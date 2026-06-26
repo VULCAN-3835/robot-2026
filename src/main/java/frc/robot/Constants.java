@@ -4,11 +4,9 @@
 
 package frc.robot;
 
-
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
-
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -128,6 +126,10 @@ public final class Constants {
           height);
     }
 
+    // LF - 3
+    // RF - 2
+    // LB - 1
+    // RB - 0
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
     public static final int kRightFrontDriveID = 10; // CAN ID
@@ -152,10 +154,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = 0.06468065039062498; //0.113525390625 
-    public static final double kRightFrontOffset =0.06396484375; //1.936279296875
-    public static final double kLeftBackOffset = 0.3056640625000002; //0.3056640625000002 
-    public static final double kRightBackOffset = 0.12308379296874918; //0.12498866796875062 
+    public static final double kLeftFrontOffset =0.05101505468749857; // -0.18824683203125006
+    public static final double kRightFrontOffset = 0.3710389609375122 ; // -0.12744140625
+    public static final double kLeftBackOffset = 0.30438732031250026; // 0.05028120312499994
+    public static final double kRightBackOffset = -0.188720703125 ; // -0.18798828125000006
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
@@ -168,33 +170,43 @@ public final class Constants {
     public static double kTeleDriveMaxSpeedMetersPerSec = kMaxDrivingVelocity;
     public static double kTeleDriveMaxAngulerSpeedRadiansPerSec = Math.PI * 1.8;
 
-    // Distance between centers of right and left wheels on robot meters (synced with PathPlanner settings.json robotTrackwidth)
+    // Distance between centers of right and left wheels on robot meters (synced
+    // with PathPlanner settings.json robotTrackwidth)
     public static final double kTrackWidth = 0.546;
-    // Distance between front and back wheels on robot meters (synced with PathPlanner module positions)
+    // Distance between front and back wheels on robot meters (synced with
+    // PathPlanner module positions)
     public static final double kWheelBase = 0.546;
-    // Drive wheel radius in meters (synced with PathPlanner settings.json driveWheelRadius)
+    // Drive wheel radius in meters (synced with PathPlanner settings.json
+    // driveWheelRadius)
     public static final double kWheelRadius = 0.051;
 
     // the mass of the robot in KG (synced with PathPlanner settings.json robotMass)
     public static final double kMassKG = 53.0;
-    // the moment of inertia of the robot (synced with PathPlanner settings.json robotMOI)
+    // the moment of inertia of the robot (synced with PathPlanner settings.json
+    // robotMOI)
     public static final double kMOI = 4.3;
 
     // Swerve Kinematics:
-    public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+    // public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+    //     new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+    //     new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
+    //     new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
+    //     new Translation2d(kWheelBase / 2, kTrackWidth / 2)
+
+    //     //right back and left fron switch
+    //     // new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+    //     // new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
+    //     // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),
+    //     // new Translation2d(kWheelBase / 2, kTrackWidth / 2)
+
+    // );
+
+   public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
         new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
         new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
         new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
         new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
     );
-
-    // public static final SwerveDriveKinematics kDriveKinematics = new
-    // SwerveDriveKinematics(
-    // new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
-    // new Translation2d(-kWheelBase / 2, -kTrackWidth / 2), // Left back
-    // new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
-    // new Translation2d(kWheelBase / 2, -kTrackWidth / 2) // Right back
-    // );
 
     public static final RobotConfig DEFAUL_ROBOT_CONFIG = new RobotConfig(kMassKG, kMOI,
         new ModuleConfig(kWheelRadius,
@@ -218,17 +230,14 @@ public final class Constants {
   public static class ShooterConstants {
 
     // TalonFX device IDs for the shooter subsystem
-    public static final int kTurretMotorID = 61;
-    public static final int kHoodMotorID = 60;
-    public static final int kFlywheelMotorID = 62;
-    public static final int kElevatorMotorID = 41;
+    public static final int kHoodMotorID = 53;
+    public static final int kFlywheelMotor1ID = 50;
+    public static final int kFlywheelMotor2ID = 51;
+    public static final int kFlywheelMotor3ID = 52;
 
     // CANcoder device IDs for the shooter subsystem
     public static final int kHoodCANcoderID = 59;
-    public static final double MagnetOffset = 0.13;
-
-    // Digital input port for the limit switch
-    public static final int kLimitSwitchID = 0;
+    public static final double MagnetOffset = 0.1298828125;
 
     // Gear ratios for the shooter subsystem
     public static final double kTurretGearRatio = (18.0 / 100.0) * (1 / 9.0);
@@ -236,25 +245,27 @@ public final class Constants {
     // offset for the azimuth angle calculation, in degrees
     public static final double kAzimuthOffset = 105;
 
-    public static final double kHoodLowLimit = 0;
-    public static final double kHoodHighLimit = 360;
+    public static final double kHoodHorizontalAngle = 80; // encoder angle when hood is horizontal (for gravity FF)
+    public static final double kHoodLowLimit = 5;
+    public static final double kHoodHighLimit = 359;
 
-    public static final double kTurretLowLimit = 0;
-    public static final double kTurretHighLimit = 200;
+    // public static final double kTurretLowLimit = 0;
+    // public static final double kTurretHighLimit = 200;
     // PID and feedforward constants for shooter subsystem
     // Hood (angle) controller
 
-    public static final double kHoodP = 0.003;
-    public static final double kHoodI = 0.0;
-    public static final double kHoodD = 0.00001;
+    public static final double kHoodP = 0.055; // increased for PID-only control
+    public static final double kHoodI = 0.00000; // 0.00006
+    public static final double kHoodD = 0.00; // increased further to dampen oscillation
 
-    public static final double kHoodKS = 0.0;
-    public static final double kHoodKV = 0.0;
+    public static final double kHoodKS = 0.00;
+    public static final double kHoodKV = 0.13;
     public static final double kHoodKA = 0.0;
+    public static final double kHoodKG = 0.0; // disabled for debugging
 
-    public static final double kHoodMaxVel = 0.0; // deg/s or appropriate units
-    public static final double kHoodMaxAccel = 0.0; // deg/s^2 or appropriate units
-    public static final double kHoodTolerance = 2;
+    public static final double kHoodMaxVel = 45.0; // deg/s
+    public static final double kHoodMaxAccel = 60.0; // reduced from 90.0 deg/s^2
+    public static final double kHoodTolerance = 5;
 
     // Turret (angle) controller
     public static final double kTurretP = 0.015;
@@ -269,19 +280,26 @@ public final class Constants {
     public static final double kTurretMaxAccel = 0.0; // deg/s^2 or appropriate units
     public static final double kTurretTolerance = 3.5;
 
-    
-  // 2026 REBUILT Field dimensions (Rebuilt Welded)
-  public static final double kFieldLength = 16.459; // meters (54ft)
-  public static final double kFieldWidth = 8.231;   // meters (27ft)
-  public static final double kFieldCenterX = kFieldLength / 2;
+    // open code's code-check
+    public static final double kAimP = 0.015;
+    public static final double kAimI = 0.0;
+    public static final double kAimD = 0;
+    public static final double kAimMaxVel = 0.0;
+    public static final double kAimMaxAccel = 0.0;
+    public static final double kAimTolerance = 3.5;
 
-  // 2026 REBUILT Field Trench Zone
-  // The trench is the center lane that runs the length of the field
-  // Blue trench zone (red is mirrored)
-  public static final double kTrenchBlueMinX = 5.5;
-  public static final double kTrenchBlueMaxX = 11.0;
-  public static final double kTrenchBlueMinY = 2.5;
-  public static final double kTrenchBlueMaxY = 5.7;
+    // 2026 REBUILT Field dimensions (Rebuilt Welded)
+    public static final double kFieldLength = 16.459; // meters (54ft)
+    public static final double kFieldWidth = 8.231; // meters (27ft)
+    public static final double kFieldCenterX = kFieldLength / 2;
+
+    // 2026 REBUILT Field Trench Zone
+    // The trench is the center lane that runs the length of the field
+    // Blue trench zone (red is mirrored)
+    public static final double kTrenchBlueMinX = 5.5;
+    public static final double kTrenchBlueMaxX = 11.0;
+    public static final double kTrenchBlueMinY = 2.5;
+    public static final double kTrenchBlueMaxY = 5.7;
   }
 
   public static final class StorageConstants {
@@ -291,11 +309,12 @@ public final class Constants {
     }
 
     // CAN IDs for storage subsystem motors
-    public static final int feedMotorID = 40;
-    public static final int elevatorMotorID = 41;
+    public static final int elevatorMotor1ID = 60;
+    public static final int elevatorMotor2ID = 61;
+    public static final int feedMotorID = 32;
 
-    public static final double reloadPower = 0.5;
-    public static final double elevatorPower = 0.6;
+    public static final double reloadVoltage = 4;
+    public static final double elevatorVoltage = 3.5;
     public static final double reloadTime = 0;
   }
 
@@ -304,39 +323,39 @@ public final class Constants {
       REST, INTAKE
     }
 
-    public static final int armMotorID = 51;
-    public static final int rollerMotorID = 50;
+    public static final int armMotorID = 43;
+    public static final int rollerMotorID = 44;
 
     public static final int armEncoderID = 52;
 
-    //intake power in Voltage
+    // intake power in Voltage
     public static final double intakePower = 5;
 
-    public static final double kArmGearRatio = 18/52.0;
+    public static final double kArmGearRatio = 18 / 52.0;
 
-    public static final double restPoint = 110;
-    public static final double intakePoint = 27;
+    public static final double restPoint = 130;
+    public static final double intakePoint = 15;
     public static final double midPoint = 77;
 
-    public static final double kp = 0.04;
+    public static final double kp = 0.03;
     public static final double ki = 0;
     public static final double kd = 0;
     public static final double kMaxVelocity = 100;
     public static final double kMaxAcceleration = 200;
 
     public static final double pidTolerance = 10;
-    public static final double MagnetOffset = 0.45;
+    public static final double MagnetOffset = -0.97;
 
     // ArmFeedforward constants
-    public static final double kS = 1;
-    public static final double kG = 2.5;
-    public static final double kV = 0.5;
-    public static final double kA = 3;
+    public static final double kS = 0; // 0.2
+    public static final double kG = 0; // 0.3
+    public static final double kV = 0; // 0.5
+    public static final double kA = 0; // 3
     public static final double armHorizontalDeg = 120;
 
     // Shake command constants (for ShakeIntakeCMD)
     public static final double shakeAmplitude = 10; // degrees to oscillate from center
-    public static final double shakePeriod = 0.5;   // seconds per half-cycle
+    public static final double shakePeriod = 0.5; // seconds per half-cycle
 
   }
 
@@ -350,7 +369,7 @@ public final class Constants {
 
   // 2026 REBUILT Field dimensions
   public static final double kFieldLength = 16.459; // meters (54ft)
-  public static final double kFieldWidth = 8.231;   // meters (27ft)
+  public static final double kFieldWidth = 8.231; // meters (27ft)
   public static final double kFieldCenterX = kFieldLength / 2;
 
   // 2026 REBUILT Welded Field - Trench Zones
