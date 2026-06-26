@@ -132,21 +132,21 @@ public final class Constants {
     // RB - 0
     // Ports for driving motors
     public static final int kLeftFrontDriveID = 13; // CAN ID
-    public static final int kRightFrontDriveID = 12; // CAN ID
+    public static final int kRightFrontDriveID = 10; // CAN ID
     public static final int kLeftBackDriveID = 11; // CAN ID
-    public static final int kRightBackDriveID = 10; // CAN ID
+    public static final int kRightBackDriveID = 12; // CAN ID
 
     // Ports for angle motors
     public static final int kLeftFrontSteerID = 23; // CAN ID
-    public static final int kRightFrontSteerID = 22; // CAN ID
+    public static final int kRightFrontSteerID = 20; // CAN ID
     public static final int kLeftBackSteerID = 21; // CAN ID
-    public static final int kRightBackSteerID = 20; // CAN ID
+    public static final int kRightBackSteerID = 22; // CAN ID
 
     // Ports for encoders
     public static final int kLeftFrontEncID = 33; // CAN ID
-    public static final int kRightFrontEncID = 32; // CAN ID
+    public static final int kRightFrontEncID = 30; // CAN ID
     public static final int kLeftBackEncID = 31; // CAN ID
-    public static final int kRightBackEncID = 30; // CAN ID
+    public static final int kRightBackEncID = 32; // CAN ID
 
     // Offsets for absolute encoders in rotations (i.e: 360 degrees = 1 rotation):
     // public static final double kLeftFrontOffset = -0.029296875;
@@ -154,10 +154,10 @@ public final class Constants {
     // public static final double kLeftBackOffset = 0.406494140625;
     // public static final double kRightBackOffset = -0.228515625;
 
-    public static final double kLeftFrontOffset = -0.1897264414062505; // -0.18824683203125006
-    public static final double kRightFrontOffset = -0.1503956777343749 ; // -0.12744140625
-    public static final double kLeftBackOffset = -0.47119140625 ; // 0.05028120312499994
-    public static final double kRightBackOffset = 0.3088078671875003 ; // -0.18798828125000006
+    public static final double kLeftFrontOffset =0.05101505468749857; // -0.18824683203125006
+    public static final double kRightFrontOffset = 0.3710389609375122 ; // -0.12744140625
+    public static final double kLeftBackOffset = 0.30438732031250026; // 0.05028120312499994
+    public static final double kRightBackOffset = -0.188720703125 ; // -0.18798828125000006
     // Which motors are inverted: public static final boolean frontLeftDriveInverted
     // = true;
     public static final boolean kLeftFrontInverted = true;
@@ -201,14 +201,11 @@ public final class Constants {
 
     // );
 
-    public static final SwerveDriveKinematics kDriveKinematics = new
-    SwerveDriveKinematics(
-    new Translation2d(-kWheelBase / 2, kTrackWidth / 2), // Left front
-    new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right back
-    new Translation2d(kWheelBase / 2, kTrackWidth / 2), // Right front
-    new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // Left back
-       
-    
+   public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+        new Translation2d(kWheelBase / 2, kTrackWidth / 2), // right front
+        new Translation2d(kWheelBase / 2, -kTrackWidth / 2), // Right front
+        new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+        new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) // right back
     );
 
     public static final RobotConfig DEFAUL_ROBOT_CONFIG = new RobotConfig(kMassKG, kMOI,
@@ -233,7 +230,7 @@ public final class Constants {
   public static class ShooterConstants {
 
     // TalonFX device IDs for the shooter subsystem
-    public static final int kHoodMotorID = 60;
+    public static final int kHoodMotorID = 53;
     public static final int kFlywheelMotor1ID = 50;
     public static final int kFlywheelMotor2ID = 51;
     public static final int kFlywheelMotor3ID = 52;
@@ -312,8 +309,8 @@ public final class Constants {
     }
 
     // CAN IDs for storage subsystem motors
-    public static final int elevatorMotor1ID = 30;
-    public static final int elevatorMotor2ID = 31;
+    public static final int elevatorMotor1ID = 60;
+    public static final int elevatorMotor2ID = 61;
     public static final int feedMotorID = 32;
 
     public static final double reloadVoltage = 4;

@@ -175,9 +175,9 @@ public class RobotContainer {
     private void setUpContollers(boolean oneController) {
   
       chassisSubsystem.setDefaultCommand(new DefaultTeleopCommand(chassisSubsystem,
-          () -> -xboxControllerDrive.getLeftY(),
+          () -> xboxControllerDrive.getLeftY(),
           () -> xboxControllerDrive.getLeftX(),
-          () -> xboxControllerDrive.getRightX()));
+          () -> -xboxControllerDrive.getRightX()));
   
       xboxControllerDrive.start().onTrue(new InstantCommand(() -> chassisSubsystem.zeroHeading()));
   
