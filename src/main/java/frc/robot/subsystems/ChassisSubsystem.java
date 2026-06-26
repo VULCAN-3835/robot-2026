@@ -92,9 +92,6 @@ public class ChassisSubsystem extends SubsystemBase {
 
   private double distanceFromHub;
 
-  // Snaps odometry to vision on the first valid Limelight fix
-  private boolean visionInitialized = false;
-
   // The states of the modules
   private SwerveModuleState[] swerveModuleStates = new SwerveModuleState[] {
       new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
@@ -308,7 +305,7 @@ public class ChassisSubsystem extends SubsystemBase {
    * @return The heading of the robot in degrees
    */
   public double getYaw() {
-    return this.imu.getAngle();
+    return -this.imu.getAngle();
   }
 
   /**
@@ -334,9 +331,9 @@ public class ChassisSubsystem extends SubsystemBase {
    */
   public void drive(double xVelocity, double yVelocity, double rot, boolean fieldRelative) {
 
-    SmartDashboard.putNumber("Chassis/Target X Velocity", xVelocity);
-    SmartDashboard.putNumber("Chassis/Target Y Velocity", yVelocity);
-    SmartDashboard.putNumber("Chassis/Target rot Velocity", rot);
+    SmartDashboard.putNumber("Target X Velocity", xVelocity);
+    SmartDashboard.putNumber("Target Y Velocity", yVelocity);
+    SmartDashboard.putNumber("Target rot Velocity", rot);
 
     boolean invert = false;
     var alliance = DriverStation.getAlliance();
@@ -514,83 +511,62 @@ public class ChassisSubsystem extends SubsystemBase {
   }
 
   /**
-   * Update pose estimator using vision data from cameras and Limelight.
+   * Update pose estimator using vision data from the At Cam
    */
   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
-    // ── AtCam left ───────────────────────────────────────────────────────────
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
     double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
-    SmartDashboard.putNumber("Chassis/left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
 
-    // Field-boundary check rejects (0,0) origin poses that updateResult() returns on failure
-    boolean leftPoseOnField = leftVisionBotPose.getX() > 0.1 && leftVisionBotPose.getX() < 16.5
-        && leftVisionBotPose.getY() > 0.1 && leftVisionBotPose.getY() < 8.2;
-    if (leftPoseOnField
-        && this.leftCam.hasValidTarget(LeftdistanceFromTarget)
-        && this.leftCam.distanceFromTargetMeters() < 3.3
-        && this.leftCam.getTagCount() > 0) {
-      double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
-      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft, 9999));
-      poseEstimator.addVisionMeasurement(leftVisionBotPose, this.leftCam.getCameraTimeStampSec());
+    double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
+    if (this.leftCam.hasValidTarget(LeftdistanceFromTarget) && this.leftCam.distanceFromTargetMeters() < 3.3) {
       last_timestamp = Timer.getFPGATimestamp();
+
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft,
+          Units.degreesToRadians(15)));
+
+      poseEstimator.addVisionMeasurement(leftVisionBotPose,
+          this.leftCam.getCameraTimeStampSec());
     }
 
-    // ── AtCam right ──────────────────────────────────────────────────────────
     double RightdistanceFromTraget = rightCam.distanceFromTargetMeters();
     Pose2d rightVisionBotPose = this.rightCam.updateResult(currentPose2d);
-    SmartDashboard.putNumber("Chassis/right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
 
-    boolean rightPoseOnField = rightVisionBotPose.getX() > 0.1 && rightVisionBotPose.getX() < 16.5
-        && rightVisionBotPose.getY() > 0.1 && rightVisionBotPose.getY() < 8.2;
-    if (rightPoseOnField
-        && this.rightCam.hasValidTarget(RightdistanceFromTraget)
-        && this.rightCam.distanceFromTargetMeters() < 3.3
-        && this.rightCam.getTagCount() > 0) {
-      double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
-      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight, 9999));
-      poseEstimator.addVisionMeasurement(rightVisionBotPose, this.rightCam.getCameraTimeStampSec());
+    double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
+    if (this.rightCam.hasValidTarget(RightdistanceFromTraget) && this.rightCam.distanceFromTargetMeters() < 3.3) {
       last_timestamp = Timer.getFPGATimestamp();
+
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight,
+          Units.degreesToRadians(15)));
+
+      poseEstimator.addVisionMeasurement(rightVisionBotPose,
+          this.rightCam.getCameraTimeStampSec());
     }
 
-    // ── Limelight (MegaTag 1, yellow camera) ─────────────────────────────────
-    this.limelightFuel.setRobotOrientation(getYaw());
-    LimelightUtil.PoseEstimate ll = this.limelightFuel.getPoseEstimate();
+    // Update pose estimator with Limelight-fuel data
+    Pose2d limelightFuelPose = this.limelightFuel.getPoseFromCamera();
+    double limelightFuelDistance = this.limelightFuel.distanceFromTargetMeters();
+    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
 
-    SmartDashboard.putBoolean("Chassis/limelight has target", ll != null);
-    SmartDashboard.putBoolean("Chassis/limelight initialized", visionInitialized);
-
-    if (ll != null && ll.tagCount > 0
-        // Reject if robot is spinning fast (bad MegaTag1 solve)
-        && Math.abs(imu.getRate()) < 720
-        // Reject poses outside the 2026 field boundaries
-        && ll.pose.getX() > 0.1 && ll.pose.getX() < 16.5
-        && ll.pose.getY() > 0.1 && ll.pose.getY() < 8.2) {
-
-      if (!visionInitialized) {
-        // First valid fix: hard-reset odometry to Limelight position
-        poseEstimator.resetPose(ll.pose);
-        visionInitialized = true;
-      } else {
-        // After init: only accept if pose hasn't jumped > 3.0 m (allows for odometry drift)
-        double jumpDist = currentPose2d.getTranslation().getDistance(ll.pose.getTranslation());
-        if (jumpDist < 3.0) {
-          // Use avgTagDist for std devs; fall back to 2.0 m if not reported (prevents 0 std dev)
-          double dist   = ll.avgTagDist > 0.01 ? Math.min(ll.avgTagDist, 5.0) : 2.0;
-          double xyStds = ll.tagCount == 1
-              ? 0.5 * dist * dist
-              : 0.3 * dist * dist / ll.tagCount;
-          xyStds = Math.max(xyStds, 0.05); // never fully trust: minimum std dev
-
-          // 9999 for rotation = never correct heading from vision (IMU is better)
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds, 9999));
-          poseEstimator.addVisionMeasurement(ll.pose, ll.timestampSeconds);
-        }
-      }
+    if (this.limelightFuel.hasValidTarget() && limelightFuelDistance < 3.3) {
       last_timestamp = Timer.getFPGATimestamp();
+
+      // Calculate standard deviation based on distance (closer = more accurate)
+      double xyStdsLimelight = 0.5 * Math.pow(limelightFuelDistance, 2);
+
+      poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLimelight, xyStdsLimelight,
+          Units.degreesToRadians(15)));
+
+      poseEstimator.addVisionMeasurement(limelightFuelPose,
+          Timer.getFPGATimestamp() - this.limelightFuel.getCameraTimeStampSec());
     }
 
-    SmartDashboard.putNumber("Chassis/right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("left distance from target", LeftdistanceFromTarget);
+    SmartDashboard.putNumber("right distance from target", RightdistanceFromTraget);
+    SmartDashboard.putNumber("limelight-fuel distance from target", limelightFuelDistance);
+
   }
   // // if has 2 cams - this one is for limelight
   // // if (visionBotPoseSource.getX() != 0.0 &&
@@ -639,75 +615,75 @@ public class ChassisSubsystem extends SubsystemBase {
     updateSwervePositions();
     this.poseEstimator.update(getRotation2d(), getModPositions());
 
-    SmartDashboard.putString("Chassis/odometry pose", this.poseEstimator.getEstimatedPosition().toString());
+    SmartDashboard.putString("odometry pose", this.poseEstimator.getEstimatedPosition().toString());
 
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
 
-    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation()
+    this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation().minus(new Translation2d(0.3, 0))
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
 
-    SmartDashboard.putNumber("Chassis/distance from hub", this.distanceFromHub);
-    SmartDashboard.putString("Chassis/translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
-    SmartDashboard.putNumber("Chassis/max velc chassis", ChassisConstants.kMaxDrivingVelocity);
-    SmartDashboard.putNumber("Chassis/Gyro Yaw", getYaw());
+    SmartDashboard.putNumber("distance from hub", this.distanceFromHub);
+    SmartDashboard.putString("translation of hub", ChassisConstants.getHubTopCenter().toTranslation2d().toString());
+    SmartDashboard.putNumber("max velc chassis", ChassisConstants.kMaxDrivingVelocity);
+    SmartDashboard.putNumber("ChassisSubsystem/Gyro Yaw", getYaw());
 
-    SmartDashboard.putNumber("Chassis/Left Front Distance",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Distance",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("Chassis/Left Back Distance",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Distance",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("Chassis/Right Front Distance",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Distance",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().distanceMeters);
-    SmartDashboard.putNumber("Chassis/Right Back Distance",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Distance",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().distanceMeters);
 
-    SmartDashboard.putNumber("Chassis/Left Front Rotation",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("Chassis/Left Back Rotation",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("Chassis/Right Front Rotation",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition().angle.getRotations());
-    SmartDashboard.putNumber("Chassis/Right Back Rotation",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition().angle.getRotations());
 
-    SmartDashboard.putNumber("Chassis/Left Front Rotation Error",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation Error",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("Chassis/Left Back Rotation Error",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation Error",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("Chassis/Right Front Rotation Error",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation Error",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleAngleError());
-    SmartDashboard.putNumber("Chassis/Right Back Rotation Error",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation Error",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleAngleError());
 
-    SmartDashboard.putNumber("Chassis/Left Front Rotation Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Rotation Output",
         this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("Chassis/Left Back Rotation Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Rotation Output",
         this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("Chassis/Right Front Rotation Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Rotation Output",
         this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleClosedLoopOutput());
-    SmartDashboard.putNumber("Chassis/Right Back Rotation Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Rotation Output",
         this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleClosedLoopOutput());
 
-    SmartDashboard.putNumber("Chassis/Left Front Drive Velocity",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Drive Velocity",
         swerve_modules[Wheels.LEFT_FRONT.ordinal()].getVelocity());
-    SmartDashboard.putNumber("Chassis/Left Back Drive Velocity",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Drive Velocity",
         swerve_modules[Wheels.LEFT_BACK.ordinal()].getVelocity());
-    SmartDashboard.putNumber("Chassis/Right Front Drive Velocity",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Drive Velocity",
         swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getVelocity());
-    SmartDashboard.putNumber("Chassis/Right Back Drive Velocity",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Drive Velocity",
         swerve_modules[Wheels.RIGHT_BACK.ordinal()].getVelocity());
 
-    SmartDashboard.putNumber("Chassis/Left Front Drive Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Front Drive Output",
         swerve_modules[Wheels.LEFT_FRONT.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("Chassis/Left Back Drive Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Left Back Drive Output",
         swerve_modules[Wheels.LEFT_BACK.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("Chassis/Right Front Drive Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Front Drive Output",
         swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getModuleDriveOutput());
-    SmartDashboard.putNumber("Chassis/Right Back Drive Output",
+    SmartDashboard.putNumber("ChassisSubsystem/Right Back Drive Output",
         swerve_modules[Wheels.RIGHT_BACK.ordinal()].getModuleDriveOutput());
 
-    SmartDashboard.putNumber("Chassis/match time", DriverStation.getMatchTime());
-    SmartDashboard.putNumber("Chassis/battary voltage", RobotController.getBatteryVoltage());
+    SmartDashboard.putNumber("match time", DriverStation.getMatchTime());
+    SmartDashboard.putNumber("battary voltage", RobotController.getBatteryVoltage());
 
   }
 }

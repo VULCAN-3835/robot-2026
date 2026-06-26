@@ -8,19 +8,13 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
+
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.ShooterConstants;
 
 import frc.robot.Constants.ChassisConstants;
-import frc.robot.commands.SetChassisAngleCMD;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,62 +29,47 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
+  private TalonFX turretMotor;
   private TalonFX hoodMotor;
-  private TalonFX flyWheelMotor1;
-  private TalonFX flyWheelMotor2;
-  private TalonFX flyWheelMotor3;
+  private TalonFX flyWheelMotor;
 
 
   private CANcoder hoodCancoder;
 
   private ProfiledPIDController hoodPID;
+  private ProfiledPIDController turretPID;
 
-  private ArmFeedforward hoodFF;
+  private SimpleMotorFeedforward hoodFF;
+  private SimpleMotorFeedforward turretFF;
+
+  private DigitalInput limitSwitch;
 
   private static InterpolatingDoubleTreeMap distanceToVoltageMap = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
-  private static double angOffSetMap = 70;   // last: 0
-  private static double voltageOffSetMap = 5; // last: 0
+  private static double angOffSetMap = 0;//40;
+  private static double voltageOffSetMap = -0.1;
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
+  private boolean isAtYawLimit;
+  private boolean isTurretHomed = false;
+  private boolean shouldHomeTurret = true;
   
 
   public ShooterSubsystem(ChassisSubsystem chassisSubsystem) {
     this.chassisSubsystem = chassisSubsystem;
-    this.flyWheelMotor1 = new TalonFX(ShooterConstants.kFlywheelMotor1ID);
-    this.flyWheelMotor2 = new TalonFX(ShooterConstants.kFlywheelMotor2ID);
-    this.flyWheelMotor3 = new TalonFX(ShooterConstants.kFlywheelMotor3ID);
-    
-    
-
-    TalonFXConfiguration motor1Config = new TalonFXConfiguration();
-    motor1Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    motor1Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
-    this.flyWheelMotor1.getConfigurator().apply(motor1Config);
-
-    TalonFXConfiguration motor2Config = new TalonFXConfiguration();
-    motor2Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
-    this.flyWheelMotor2.getConfigurator().apply(motor2Config);
-
-    TalonFXConfiguration motor3Config = new TalonFXConfiguration();
-    motor3Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
-    this.flyWheelMotor3.getConfigurator().apply(motor3Config);
-
-    this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
-    this.flyWheelMotor3.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));
-
+    this.turretMotor = new TalonFX(ShooterConstants.kTurretMotorID);
+    this.flyWheelMotor = new TalonFX(ShooterConstants.kFlywheelMotorID);
 
     this.hoodMotor = new TalonFX(ShooterConstants.kHoodMotorID);
 
     this.hoodCancoder = new CANcoder(ShooterConstants.kHoodCANcoderID);
     CANcoderConfiguration canConfig = new CANcoderConfiguration();
     canConfig.MagnetSensor.MagnetOffset = ShooterConstants.MagnetOffset;
-    canConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-    canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
-
     this.hoodCancoder.getConfigurator().apply(canConfig);
+    this.limitSwitch = new DigitalInput(ShooterConstants.kLimitSwitchID);
+
     this.hoodPID = new ProfiledPIDController(
         ShooterConstants.kHoodP,
         ShooterConstants.kHoodI,
@@ -100,64 +79,75 @@ public class ShooterSubsystem extends SubsystemBase {
             ShooterConstants.kHoodMaxAccel));
     this.hoodPID.setTolerance(ShooterConstants.kHoodTolerance);
 
-    this.hoodFF = new ArmFeedforward(
+    this.turretPID = new ProfiledPIDController(
+        ShooterConstants.kTurretP,
+        ShooterConstants.kTurretI,
+        ShooterConstants.kTurretD,
+        new Constraints(
+            ShooterConstants.kTurretMaxVel,
+            ShooterConstants.kTurretMaxAccel));
+    this.turretPID.setTolerance(ShooterConstants.kTurretTolerance);
+
+    this.hoodFF = new SimpleMotorFeedforward(
         ShooterConstants.kHoodKS,
-        ShooterConstants.kHoodKG,
         ShooterConstants.kHoodKV,
         ShooterConstants.kHoodKA);
+    this.turretFF = new SimpleMotorFeedforward(
+        ShooterConstants.kTurretKS,
+        ShooterConstants.kTurretKV,
+        ShooterConstants.kTurretKA);
 
-
-    this.hoodPID.setGoal(180);
-    this.hoodCancoder.setPosition(5/360.0);
+    this.hoodPID.setGoal(0);
+    this.hoodCancoder.setPosition(this.getHoodAngleDegs() / 360);
     initializeMaps();
   }
 
   private static void initializeMaps() {
     // Example data points for distance to Voltage mapping
-    distanceToVoltageMap.put(1.5, 0+ voltageOffSetMap); // 4.8
-    distanceToVoltageMap.put(2.0, 6.5 + voltageOffSetMap); // 4.9
-    distanceToVoltageMap.put(2.25, 6.8 + voltageOffSetMap); //5
-    distanceToVoltageMap.put(2.5, 7.5+ voltageOffSetMap); //5.1
-    distanceToVoltageMap.put(2.75, 7.6 + voltageOffSetMap); // 5.2
-    distanceToVoltageMap.put(3.0, 0 + voltageOffSetMap); // 5.3
-    distanceToVoltageMap.put(3.25, 0 + voltageOffSetMap); // 5.4
-    distanceToVoltageMap.put(3.5, 0 + voltageOffSetMap); // 5.5
-    distanceToVoltageMap.put(3.75, 0 + voltageOffSetMap); // 5.6
-    distanceToVoltageMap.put(4.0, 0 + voltageOffSetMap); // 5.7
+    distanceToVoltageMap.put(1.5, 4.8 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.0, 4.9 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.25, 5.0 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.5, 5.1 + voltageOffSetMap);
+    distanceToVoltageMap.put(2.75, 5.2 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.0, 5.3 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.25, 5.4 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.5, 5.5 + voltageOffSetMap);
+    distanceToVoltageMap.put(3.75, 5.6 + voltageOffSetMap);
+    distanceToVoltageMap.put(4.0, 5.7 + voltageOffSetMap);
 
     // Example data points for distance to Time of Flight (TOF) mapping
-    distanceToTOF.put(1.5, 0 + TOFOffset);
-    distanceToTOF.put(2.0, 0 + TOFOffset);
-    distanceToTOF.put(2.25, 0 +TOFOffset);
-    distanceToTOF.put(2.5, 0 + TOFOffset);
-    distanceToTOF.put(2.75, 0 + TOFOffset);
-    distanceToTOF.put(3.0, 0 + TOFOffset);
-    distanceToTOF.put(3.25, 0 + TOFOffset);
-    distanceToTOF.put(3.5, 0 + TOFOffset);
-    distanceToTOF.put(3.75, 0 + TOFOffset);
-    distanceToTOF.put(4.0, 0 + TOFOffset);
+    distanceToTOF.put(1.5, 1.1 + TOFOffset);
+    distanceToTOF.put(2.0, 1.1 + TOFOffset);
+    distanceToTOF.put(2.25, 1.1 +TOFOffset);
+    distanceToTOF.put(2.5, 1.1 + TOFOffset);
+    distanceToTOF.put(2.75, 1.1 + TOFOffset);
+    distanceToTOF.put(3.0, 1.1 + TOFOffset);
+    distanceToTOF.put(3.25, 1.1 + TOFOffset);
+    distanceToTOF.put(3.5, 1.1 + TOFOffset);
+    distanceToTOF.put(3.75, 1.1 + TOFOffset);
+    distanceToTOF.put(4.0, 1.1 + TOFOffset);
 
     // Example data points for distance to Pitch mapping
-    distanceToPitch.put(1.5, 0 + angOffSetMap); // 70.0
-    distanceToPitch.put(2.0, 70 + angOffSetMap); // 130.0
-    distanceToPitch.put(2.25, 100 + angOffSetMap); // 160.0
-    distanceToPitch.put(2.5, 110 + angOffSetMap); // 200.0
-    distanceToPitch.put(2.75, 0 + angOffSetMap); // 230.0
-    distanceToPitch.put(3.0, 120+ angOffSetMap); // 260.0
-    distanceToPitch.put(3.25, 0 + angOffSetMap); // 290.0
-    distanceToPitch.put(3.5, 0 + angOffSetMap); // 300.0
-    distanceToPitch.put(3.75, 0 + angOffSetMap); // 320.0
-    distanceToPitch.put(4.0, 0 + angOffSetMap); // 330.0
+    distanceToPitch.put(1.5, 70.0 + angOffSetMap);
+    distanceToPitch.put(2.0, 130.0 + angOffSetMap);
+    distanceToPitch.put(2.25, 160.0 + angOffSetMap);
+    distanceToPitch.put(2.5, 200.0 + angOffSetMap);
+    distanceToPitch.put(2.75, 230.0 + angOffSetMap);
+    distanceToPitch.put(3.0, 260.0 + angOffSetMap);
+    distanceToPitch.put(3.25, 290.0 + angOffSetMap);
+    distanceToPitch.put(3.5, 300.0 + angOffSetMap);
+    distanceToPitch.put(3.75, 320.0 + angOffSetMap);
+    distanceToPitch.put(4.0, 330.0 + angOffSetMap);
   }
 
-  public static void scaleUpVoltage()   { voltageOffSetMap += 0.1; initializeMaps(); }
-  public static void scaleDownVoltage() { voltageOffSetMap -= 0.1; initializeMaps(); }
-  public static void scaleUpAngle()     { angOffSetMap += 5;       initializeMaps(); }
-  public static void scaleDownAngle()   { angOffSetMap -= 5;       initializeMaps(); }
-
-  public static double getTunedVoltage() { return voltageOffSetMap; }
-  public static double getTunedAngle()   { return angOffSetMap; }
-
+  public static void scaleUpVoltage(){
+    voltageOffSetMap += 0.1;
+    initializeMaps();
+  }
+  public static void scaleDownVoltage(){
+    voltageOffSetMap-=0.1;
+    initializeMaps();
+  }
 
   /**
    * @param distance The distance to the target in meters
@@ -192,15 +182,16 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public double getHoodAngleDegs() {
-    double rawAngle = this.hoodCancoder.getPosition().getValue().in(Degrees);
-    if (rawAngle < 0) {
-      rawAngle += 360.0;
-    }
-    return rawAngle;
+    return this.hoodCancoder.getAbsolutePosition().getValue().in(Degrees);
   }
 
-  public double getChassisAngleDegs() {
-    return chassisSubsystem.getYaw();
+  public double getTurretAngleDegs() {
+    return this.turretMotor.getPosition().getValue().in(Degrees) * ShooterConstants.kTurretGearRatio;
+  }
+
+  public void setTurretAngle(double deg) {
+    if (deg >= ShooterConstants.kTurretLowLimit && deg < ShooterConstants.kTurretHighLimit)
+      this.turretPID.setGoal(deg);
   }
 
   public void setHoodAngle(double deg) {
@@ -213,56 +204,58 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setFlywheelVoltage(double V) {
     // VelocityVoltage velocityVoltage = new VelocityVoltage(0);
     // this.flyWheelMotor.setControl(velocityVoltage.withVelocity(RPM / 60.0));
-    this.flyWheelMotor1.setVoltage(V);
-    }
+    this.flyWheelMotor.setVoltage(V);
+  }
+
+  public boolean getLimitSwitch() {
+    return this.limitSwitch.get();
+  }
 
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
     if (robotPose != null) {
 
-      Translation2d chassisPosition = robotPose.getTranslation();
+      Translation2d turretPosition = robotPose.getTranslation();
 
-      Translation2d direction = target.toTranslation2d().minus(chassisPosition);
+      Translation2d direction = target.toTranslation2d().minus(turretPosition);
 
-      SmartDashboard.putNumber("Shooter/direction x", direction.getX());
-      SmartDashboard.putNumber("Shooter/direction y", direction.getY());
+      SmartDashboard.putNumber("direction x", direction.getX());
+      SmartDashboard.putNumber("direction y", direction.getY());
 
       double fieldAngleDeg = direction.getAngle().getDegrees();
-      SmartDashboard.putNumber("Shooter/atan", fieldAngleDeg);
+      SmartDashboard.putNumber("atan", fieldAngleDeg);
 
-      double chassisAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
-      SmartDashboard.putNumber("Shooter/chassis angle deg", chassisAngleDeg);
+      double turretAngleDeg = fieldAngleDeg - robotPose.getRotation().getDegrees();
+      SmartDashboard.putNumber("turret angle deg", turretAngleDeg);
 
-      return MathUtil.inputModulus(chassisAngleDeg, -180, 180);
+      return MathUtil.inputModulus(turretAngleDeg, -180, 180);
     } else {
       return -1;
     }
-  } 
-
-  public double getAzimuth(Pose2d robotPose, Translation3d target) {
-    double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
-    SmartDashboard.putNumber("Shooter/calculated azimuth", azimuth);
-
-    return azimuth;
   }
-//open code's code-check
-  public double getTargetFieldHeading(Pose2d robotPose, Translation3d target) {
-    Translation2d direction = target.toTranslation2d().minus(robotPose.getTranslation());
-    return direction.getAngle().getDegrees();
-}
+
+  public void aimAtTarget(Pose2d robotPose, Translation3d target) {
+    double azimuth = ShooterConstants.kAzimuthOffset - calculateAzimuthAngle(robotPose, target);
+    SmartDashboard.putNumber("calculated azimuth", azimuth);
+    setTurretAngle(azimuth);
+  }
 
   /**
    * Sets whether the turret should automatically home at startup.
    * 
    * @param shouldHome true to enable auto-homing, false to disable
    */
-
+  public void setShouldHomeTurret(boolean shouldHome) {
+    this.shouldHomeTurret = shouldHome;
+  }
 
   /**
    * Returns whether the turret has completed homing.
    * 
    * @return true if homing is complete
    */
-
+  public boolean isTurretHomed() {
+    return isTurretHomed;
+  }
 
   /**
    * Checks if the robot is currently in any of the 4 trench zones of the 2026 REBUILT field.
@@ -282,37 +275,67 @@ public class ShooterSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
 
     // Check if robot is in trench zone - if so, set hood to 0
-    // if (isInTrench()) {
-    //   this.hoodPID.setGoal(0);
-    // }
+    if (isInTrench()) {
+      this.hoodPID.setGoal(0);
+    }
 
     // Calculate PID output
-    double hoodPIDOutput = hoodPID.calculate(this.hoodCancoder.getPosition().getValue().in(Degrees));
+    double hoodPIDOutput = hoodPID.calculate(this.getHoodAngle().in(Degrees));
+    // double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
+    double turretPIDOutput = turretPID.calculate(this.getTurretAngleDegs());
 
     // Calculate feedforward output using the setpoint velocity
-    // Offset the angle so 0° = horizontal for correct gravity compensation
-    double angleFromHorizontal = hoodPID.getSetpoint().position - ShooterConstants.kHoodHorizontalAngle;
-    double hoodFFOutput = hoodFF.calculate(Math.toRadians(angleFromHorizontal), hoodPID.getSetpoint().velocity);
+    double hoodFFOutput = hoodFF.calculate(hoodPID.getSetpoint().velocity);
 
     // Combine PID and feedforward outputs
+    this.hoodMotor.set(hoodPIDOutput + hoodFFOutput);
+
+    // Auto-home turret at startup if enabled
+    if (shouldHomeTurret && !isTurretHomed) {
+      if (!getLimitSwitch()) {
+        this.turretMotor.setVoltage(-1);
+      } else {
+        this.turretMotor.setVoltage(0);
+        this.turretMotor.setPosition(0);
+        isTurretHomed = true;
+      }
+    } else {
+      this.turretMotor.set(turretPIDOutput);
+    }
+
+    SmartDashboard.putNumber("hood set point", hoodPID.getSetpoint().position);
+    SmartDashboard.putNumber("turret set point", turretPID.getSetpoint().position);
+
+    SmartDashboard.putNumber("hood actual", this.getHoodAngle().in(Degrees));
+    SmartDashboard.putNumber("turret actual", this.getTurretAngleDegs());
+
+    SmartDashboard.putNumber("hood PID output", hoodPIDOutput);
+    SmartDashboard.putNumber("hood FF output", hoodFFOutput);
+
+    SmartDashboard.putNumber("turret PID output", turretPIDOutput);
+
+    // Reset the turret encoder position to 0 when the limit switch is triggered
+    if (getLimitSwitch()) {
+      this.turretMotor.setPosition(0);
+    }
+    SmartDashboard.putBoolean("is at left limit", this.getTurretAngleDegs() <= 0);
+    SmartDashboard.putBoolean("is at right limit", this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit);
+
+    this.isAtYawLimit = (this.getTurretAngleDegs() <= 0
+        && turretMotor.getVelocity().getValue().in(RotationsPerSecond) < 0)
+        || (this.getTurretAngleDegs() >= ShooterConstants.kTurretHighLimit
+            && turretMotor.getVelocity().getValue().in(RotationsPerSecond) > 0);
+    // Prevent the turret from moving past the limit switch in the negative
+    // direction
+
     
-    //TODO: Uncomment this line to enable hood control
-    this.hoodMotor.setVoltage(hoodPIDOutput + hoodFFOutput);
+    SmartDashboard.putBoolean("is at yaw limit", isAtYawLimit);
 
-    SmartDashboard.putNumber("Shooter/voltage offset", voltageOffSetMap);
-    SmartDashboard.putNumber("Shooter/angle offset", angOffSetMap);
-    SmartDashboard.putNumber("Shooter/hood set point", hoodPID.getSetpoint().position);
+    SmartDashboard.putNumber("azimuth",
+        this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
+    SmartDashboard.putNumber("flywheel RPS", flyWheelMotor.getVelocity().getValue().in(RotationsPerSecond));
+    SmartDashboard.putNumber("TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
 
-    SmartDashboard.putNumber("Shooter/hood actual", this.getHoodAngle().in(Degrees));
-    SmartDashboard.putNumber("Shooter/turret actual", this.getChassisAngleDegs());
-
-    SmartDashboard.putNumber("Shooter/hood PID output", hoodPIDOutput);
-    SmartDashboard.putNumber("Shooter/hood FF output", hoodFFOutput);
-
-    SmartDashboard.putNumber("Shooter/azimuth",this.calculateAzimuthAngle(this.chassisSubsystem.getPose(), ChassisConstants.getHubTopCenter()));
-    SmartDashboard.putNumber("Shooter/flywheel RPS", flyWheelMotor1.getVelocity().getValue().in(RotationsPerSecond));
-    SmartDashboard.putNumber("Shooter/TOF", this.getTOFForDistance(chassisSubsystem.getDistanceFromHub()));
-
-    SmartDashboard.putNumber("Shooter/hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
+    SmartDashboard.putNumber("hood abs ang", this.hoodCancoder.getAbsolutePosition().getValueAsDouble());
   }
 }
