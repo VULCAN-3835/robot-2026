@@ -156,7 +156,7 @@ public class RobotContainer {
             shooterSubsystem.setFlywheelVoltage(ShooterSubsystem.getTunedVoltage());
             shooterSubsystem.setHoodAngle(ShooterSubsystem.getTunedAngle());
         }),
-        new WaitCommand(0.75),
+        new WaitCommand(1.2),
         new ParallelCommandGroup(
             new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
             new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage)))));

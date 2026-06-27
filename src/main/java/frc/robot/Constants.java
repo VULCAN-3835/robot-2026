@@ -311,10 +311,10 @@ public final class Constants {
     // CAN IDs for storage subsystem motors
     public static final int elevatorMotor1ID = 60;
     public static final int elevatorMotor2ID = 61;
-    public static final int feedMotorID = 32;
+    public static final int feedMotorID = 62;
 
-    public static final double reloadVoltage = 4;
-    public static final double elevatorVoltage = 3.5;
+    public static final double reloadVoltage = 5;
+    public static final double elevatorVoltage = 6.5;
     public static final double reloadTime = 0;
   }
 
@@ -333,8 +333,8 @@ public final class Constants {
 
     public static final double kArmGearRatio = 18 / 52.0;
 
-    public static final double restPoint = 130;
-    public static final double intakePoint = 15;
+    public static final double restPoint = 150;
+    public static final double intakePoint = 27;
     public static final double midPoint = 77;
 
     public static final double kp = 0.03;

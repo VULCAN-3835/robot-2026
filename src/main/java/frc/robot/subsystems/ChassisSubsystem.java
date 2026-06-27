@@ -21,6 +21,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -582,8 +583,9 @@ public class ChassisSubsystem extends SubsystemBase {
               : 0.3 * dist * dist / ll.tagCount;
           xyStds = Math.max(xyStds, 0.05); // never fully trust: minimum std dev
 
-          // 9999 for rotation = never correct heading from vision (IMU is better)
-          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds, 9999));
+          // Trust LL yaw only when 2+ tags visible; single-tag yaw solve is too noisy
+          double rotStds = ll.tagCount >= 2 ? Units.degreesToRadians(5) : 9999;
+          poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStds, xyStds, rotStds));
           poseEstimator.addVisionMeasurement(ll.pose, ll.timestampSeconds);
         }
       }

@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,6 +19,8 @@ import frc.robot.subsystems.ChassisSubsystem;
 public class TurnToHubCMD extends Command {
 
     private static final double kP = 0.05;
+    // Positive = rotate robot clockwise (right), negative = counter-clockwise (left)
+    private static final double kAngleOffset = 0; // -15.0
 
     private final ChassisSubsystem chassisSubsystem;
     private final Supplier<Double> xVelocitySupplier, yVelocitySupplier;
@@ -48,10 +51,11 @@ public class TurnToHubCMD extends Command {
         xVelocity = xLimiter.calculate(xVelocity) * ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
         yVelocity = yLimiter.calculate(yVelocity) * ChassisConstants.kTeleDriveMaxSpeedMetersPerSec;
 
-        // Angle from robot to hub, updated every loop so tracking is continuous
         Translation2d hubPos = ChassisConstants.getHubTopCenter().toTranslation2d();
         Translation2d robotPos = chassisSubsystem.getPose().getTranslation();
-        double targetYaw = hubPos.minus(robotPos).getAngle().getDegrees();
+        double targetYaw = hubPos.minus(robotPos).getAngle()
+                .plus(Rotation2d.fromDegrees(kAngleOffset))
+                .getDegrees();
 
         double error = MathUtil.inputModulus(targetYaw - chassisSubsystem.getYaw(), -180, 180);
         double rotOutput = MathUtil.clamp(

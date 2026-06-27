@@ -84,7 +84,7 @@ public class IntakeSubsystem extends SubsystemBase {
     canConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
     canConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
     this.armEncoder.getConfigurator().apply(canConfig);
-    this.pidController.setGoal(IntakeConstants.intakePoint);
+    this.pidController.setGoal(IntakeConstants.restPoint);
   }
 
   public double getArmAngleDegrees() {
