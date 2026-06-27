@@ -9,7 +9,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.IntakeConstants.intakeStates;
 import frc.robot.Constants.StorageConstants;
 import frc.robot.commands.DefaultTeleopCommand;
-
+import frc.robot.commands.TurnToHubCMD;
 import frc.robot.commands.ShootDelayCMD;
 import frc.robot.commands.StorageUpCMD;
 import frc.robot.commands.SetChassisAngleCMD;
@@ -126,6 +126,15 @@ public class RobotContainer {
           new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
           new InstantCommand(() -> intakeSubsystem.setRollerVoltage(3))));
       xboxControllerDrive.leftTrigger().onFalse(new InstantCommand(() -> intakeSubsystem.setRollerVoltage(0)));
+
+      //Right bumper drops intake to intake position
+      xboxControllerDrive.rightBumper()
+          .onTrue(new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.REST)));
+
+      //Left bumper locks chassis yaw onto the hub (big dumper mode)
+      xboxControllerDrive.leftBumper().whileTrue(new TurnToHubCMD(chassisSubsystem,
+          () -> xboxControllerDrive.getLeftY(),
+          () -> xboxControllerDrive.getLeftX()));
   
 
   

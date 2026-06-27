@@ -106,9 +106,8 @@ public class ShooterSubsystem extends SubsystemBase {
         ShooterConstants.kHoodKV,
         ShooterConstants.kHoodKA);
 
-
-    this.hoodPID.setGoal(180);
-    this.hoodCancoder.setPosition(5/360.0);
+    this.hoodCancoder.setPosition(this.hoodCancoder.getAbsolutePosition().getValue());
+    this.hoodPID.setGoal(5);
     initializeMaps();
   }
 

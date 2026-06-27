@@ -88,7 +88,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public double getArmAngleDegrees() {
-    return this.armEncoder.getPosition().getValue().in(Degrees);
+    return this.armEncoder.getAbsolutePosition().getValue().in(Degrees);
   }
 
   public boolean isAtSetpoint() {
@@ -225,12 +225,11 @@ public class IntakeSubsystem extends SubsystemBase {
       
       double totalOutput = pidOutput + ffOutput;
 
-      //TODO: Uncomment this line to enable arm control
-      // if (isAtSetpoint()) {
-      //   this.armMotor.setVoltage(0);
-      // } else {
-      //   this.armMotor.setVoltage(totalOutput);
-      // }
+      if (isAtSetpoint()) {
+        this.armMotor.setVoltage(0);
+      } else {
+        this.armMotor.setVoltage(totalOutput);
+      }
     }
 
     // Adjust the robot's max angular speed based on the arm's angle to prevent breaking it

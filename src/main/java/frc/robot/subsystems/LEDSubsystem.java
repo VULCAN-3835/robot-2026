@@ -7,21 +7,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    private static final int kPort   = 2;
-    private static final int kLength = 12;
+    private static final int    kPort          = 2;
+    private static final int    kLength        = 12;
+    private static final double kMinBrightness = 0.25; // no LED goes fully off
 
     private final AddressableLED       led;
     private final AddressableLEDBuffer buffer;
     private final Timer                timer = new Timer();
-
-    // Two scanners — each has a retained trail array that decays each frame
-    private final double[] trail1 = new double[kLength];
-    private final double[] trail2 = new double[kLength];
-
-    private double pos1 = 0.0,  vel1 =  9.0;  // LEDs/sec
-    private double pos2 = 6.0,  vel2 = -6.5;  // opposite direction, slightly different speed
-
-    private double lastT = 0.0;
 
     public LEDSubsystem() {
         led    = new AddressableLED(kPort);
@@ -34,50 +26,37 @@ public class LEDSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        double t  = timer.get();
-        double dt = Math.min(t - lastT, 0.05); // cap to avoid big jump on first frame
-        lastT = t;
+        double t = timer.get();
 
-        // Move scanners and bounce off ends
-        pos1 += vel1 * dt;
-        if (pos1 >= kLength - 1) { pos1 = 2 * (kLength - 1) - pos1; vel1 = -vel1; }
-        if (pos1 <= 0)            { pos1 = -pos1;                     vel1 = -vel1; }
+        // Hue drifts very slowly through a tight purple band (WPILib 0-180)
+        // 130 = blue-purple, 135 = pure purple, 140 = red-purple/violet
+        // Slow 12-second cycle, stays clearly purple the whole time
+        double baseHue = 135 + 5 * Math.sin(t * (2 * Math.PI / 12.0));
 
-        pos2 += vel2 * dt;
-        if (pos2 >= kLength - 1) { pos2 = 2 * (kLength - 1) - pos2; vel2 = -vel2; }
-        if (pos2 <= 0)            { pos2 = -pos2;                     vel2 = -vel2; }
+        // Every 7 seconds: 0.8 s shift toward a richer violet, then back
+        double accentPhase = t % 7.0;
+        double accentBlend = accentPhase < 0.8
+                ? Math.sin(accentPhase / 0.8 * Math.PI)
+                : 0.0;
 
-        // Decay trails — frame-rate independent
-        double decay = Math.pow(0.82, dt * 60);
         for (int i = 0; i < kLength; i++) {
-            trail1[i] *= decay;
-            trail2[i] *= decay;
-        }
+            // Single clean wave flowing along the strip
+            double phase = i * (2 * Math.PI / kLength) * 1.5 - t * 2.5;
+            double wave  = (Math.sin(phase) + 1.0) / 2.0; // [0, 1]
 
-        // Subpixel head paint — splits brightness across the two nearest LEDs
-        paintHead(trail1, pos1);
-        paintHead(trail2, pos2);
+            // Floor so no LED ever goes dark
+            double brightness = kMinBrightness + (1.0 - kMinBrightness) * wave;
 
-        // Render — scanner1 = warm white, scanner2 = ice blue, overlap = pure white
-        for (int i = 0; i < kLength; i++) {
-            double a = trail1[i] * trail1[i]; // gamma correct
-            double b = trail2[i] * trail2[i];
+            // Accent nudges hue toward deeper violet
+            double hue = baseHue + accentBlend * 6.0;
 
-            int r = (int) Math.min(255, a * 240);
-            int g = (int) Math.min(255, a * 220 + b * 200);
-            int bl = (int) Math.min(255, a * 200 + b * 255);
+            // Full saturation — pure vivid purple, slight breathe during accent
+            int sat = (int) Math.min(255, 245 + accentBlend * 10);
+            int val = (int) (brightness * 255);
 
-            buffer.setRGB(i, g, r, bl); // GRB strip
+            buffer.setHSV(i, (int) hue, sat, val);
         }
 
         led.setData(buffer);
-    }
-
-    // Splits the head brightness across two adjacent LEDs for smooth subpixel motion
-    private void paintHead(double[] trail, double pos) {
-        int    lo   = (int) pos;
-        double frac = pos - lo;
-        if (lo     < kLength) trail[lo]     = Math.max(trail[lo],     1.0 - frac);
-        if (lo + 1 < kLength) trail[lo + 1] = Math.max(trail[lo + 1], frac);
     }
 }
