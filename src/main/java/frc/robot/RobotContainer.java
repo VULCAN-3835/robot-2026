@@ -153,8 +153,8 @@ public class RobotContainer {
 
     xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(
         new InstantCommand(() -> {
-            shooterSubsystem.setFlywheelVoltage(ShooterSubsystem.getTunedVoltage());
-            shooterSubsystem.setHoodAngle(ShooterSubsystem.getTunedAngle());
+            double dist = chassisSubsystem.getDistanceFromHub();
+            shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(dist));
         }),
         new WaitCommand(1.2),
         new ParallelCommandGroup(
