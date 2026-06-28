@@ -10,7 +10,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -55,8 +54,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private static double voltageOffSetMap = 5; // last: 0
   private static double TOFOffset = 0;
 
-  private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-
   private ChassisSubsystem chassisSubsystem;
   
 
@@ -71,12 +68,6 @@ public class ShooterSubsystem extends SubsystemBase {
     TalonFXConfiguration motor1Config = new TalonFXConfiguration();
     motor1Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     motor1Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25;
-    // Slot 0: velocity closed-loop (kS + kV feedforward, kP feedback)
-    motor1Config.Slot0.kS = 0.1;   // V — static friction
-    motor1Config.Slot0.kV = 0.12;  // V/RPS — tune: 12 / free_speed_RPS
-    motor1Config.Slot0.kP = 0.11;  // V/RPS error — increase if slow to recover
-    motor1Config.Slot0.kI = 0;
-    motor1Config.Slot0.kD = 0;
     this.flyWheelMotor1.getConfigurator().apply(motor1Config);
 
     TalonFXConfiguration motor2Config = new TalonFXConfiguration();
@@ -220,11 +211,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void setFlywheelVoltage(double V) {
     this.flyWheelMotor1.setVoltage(V);
-  }
-
-  /** Closed-loop velocity control (rotations per second). Motors 2+3 follow automatically. */
-  public void setFlywheelVelocity(double rps) {
-    this.flyWheelMotor1.setControl(velocityRequest.withVelocity(rps));
   }
 
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
