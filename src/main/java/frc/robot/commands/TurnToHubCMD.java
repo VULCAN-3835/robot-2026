@@ -54,6 +54,7 @@ public class TurnToHubCMD extends Command {
         Translation2d hubPos = ChassisConstants.getHubTopCenter().toTranslation2d();
         Translation2d robotPos = chassisSubsystem.getPose().getTranslation();
         double targetYaw = hubPos.minus(robotPos).getAngle()
+                .plus(Rotation2d.k180deg)
                 .plus(Rotation2d.fromDegrees(kAngleOffset))
                 .getDegrees();
 

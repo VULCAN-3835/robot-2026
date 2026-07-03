@@ -3,9 +3,12 @@
   "robotLength": 0.7,
   "holonomicMode": true,
   "pathFolders": [
-    "Depots"
+    "Depots",
+    "Old Robot"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Old Robot Autos"
+  ],
   "defaultMaxVel": 4.5,
   "defaultMaxAccel": 5.0,
   "defaultMaxAngVel": 180.0,

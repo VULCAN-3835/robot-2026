@@ -67,13 +67,15 @@ public class RobotContainer {
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
-      NamedCommands.registerCommand("shoot",
-          new ParallelCommandGroup(
-              new InstantCommand(() -> shooterSubsystem
-                  .setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(chassisSubsystem.getDistanceFromHub()))),
-              new InstantCommand(() -> shooterSubsystem
-                  .setHoodAngle(shooterSubsystem.getPitchForDistance(chassisSubsystem.getDistanceFromHub()))),
-              new SetChassisAngleCMD(chassisSubsystem, shooterSubsystem)));
+      NamedCommands.registerCommand("shoot",new SequentialCommandGroup(
+        new InstantCommand(() -> {
+            double dist = chassisSubsystem.getDistanceFromHub();
+            shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(dist));
+        }),
+        new WaitCommand(1.2),
+        new ParallelCommandGroup(
+            new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
+            new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage)))));
   
       NamedCommands.registerCommand("intake", new ParallelCommandGroup(
           new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
@@ -205,8 +207,8 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
       // return new PathPlannerAuto("Left-Nuetral-Depot");
-      // return new PathPlannerAuto("Left-Depot");
-      return new PathPlannerAuto("Depot-Nuetral");
+      return new PathPlannerAuto("mid-back-shoot");
+      // return autoChooser.getSelected();
       
     }
     
