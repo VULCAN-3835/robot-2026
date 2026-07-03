@@ -64,14 +64,20 @@ public class ShooterSubsystem extends SubsystemBase {
     TalonFXConfiguration motor1Config = new TalonFXConfiguration();
     motor1Config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     motor1Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25;
+    motor1Config.CurrentLimits.SupplyCurrentLimit = 60;
+    motor1Config.CurrentLimits.SupplyCurrentLimitEnable = true;
     this.flyWheelMotor1.getConfigurator().apply(motor1Config);
 
     TalonFXConfiguration motor2Config = new TalonFXConfiguration();
     motor2Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
+    motor2Config.CurrentLimits.SupplyCurrentLimit = 60;
+    motor2Config.CurrentLimits.SupplyCurrentLimitEnable = true;
     this.flyWheelMotor2.getConfigurator().apply(motor2Config);
 
     TalonFXConfiguration motor3Config = new TalonFXConfiguration();
     motor3Config.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.25; // seconds 0→full
+    motor3Config.CurrentLimits.SupplyCurrentLimit = 60;
+    motor3Config.CurrentLimits.SupplyCurrentLimitEnable = true;
     this.flyWheelMotor3.getConfigurator().apply(motor3Config);
 
     this.flyWheelMotor2.setControl(new Follower(ShooterConstants.kFlywheelMotor1ID, MotorAlignmentValue.Opposed));

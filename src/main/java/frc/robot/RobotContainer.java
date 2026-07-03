@@ -173,12 +173,20 @@ public class RobotContainer {
       xboxControllerDrive.povUp().onTrue(new InstantCommand(()->shooterSubsystem.scaleUpVoltage()));
       xboxControllerDrive.povDown().onTrue(new InstantCommand(()->shooterSubsystem.scaleDownVoltage()));
 
-      // Y / A: voltage map  +0.1 V / -0.1 V
-      // X / B: angle map    +5 °  / -5 °
-      xboxControllerDrive.y().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleUpVoltage()));
-      xboxControllerDrive.a().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleDownVoltage()));
-      xboxControllerDrive.x().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleUpAngle()));
-      xboxControllerDrive.b().onTrue(new InstantCommand(() -> ShooterSubsystem.scaleDownAngle()));
+      // A: shoot with a preset distance of 2 m (no limelight needed)
+      xboxControllerDrive.a().whileTrue(new SequentialCommandGroup(
+          new InstantCommand(() -> shooterSubsystem
+              .setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(2.0))),
+          new WaitCommand(1.2),
+          new ParallelCommandGroup(
+              new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
+              new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage)))));
+
+      xboxControllerDrive.a().toggleOnFalse(new ParallelCommandGroup(
+          new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(0)),
+          new InstantCommand(() -> shooterSubsystem.setHoodAngle(0)),
+          new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(0)),
+          new InstantCommand(() -> storageSubsystem.setFeedMotorPower(0))));
       setUpContollers(true);
   
     }
