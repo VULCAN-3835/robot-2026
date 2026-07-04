@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.StorageSubsystem;
@@ -16,16 +17,20 @@ import frc.robot.subsystems.StorageSubsystem;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class ShootDelayCMD extends ParallelCommandGroup {
   /** Creates a new ShootDelayCMD. */
-  public ShootDelayCMD(ShooterSubsystem shooterSubsystem,StorageSubsystem storageSubsystem,ChassisSubsystem chassisSubsystem) {
+
+  public ShootDelayCMD(ShooterSubsystem shooterSubsystem,StorageSubsystem storageSubsystem,ChassisSubsystem chassisSubsystem,RobotContainer robotContainer) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
 
+    
+
     addCommands(
-      new ShootCMD(chassisSubsystem, shooterSubsystem),
+      new ShootCMD(chassisSubsystem, shooterSubsystem, robotContainer::getXSpeed, robotContainer::getYSpeed),
       new SequentialCommandGroup(
         new WaitCommand(0.2),
         storageSubsystem.runStorage()
       )
     );
   }
+
 }

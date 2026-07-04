@@ -45,6 +45,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Old Robot Autos",
   "choreoAuto": false
 }
