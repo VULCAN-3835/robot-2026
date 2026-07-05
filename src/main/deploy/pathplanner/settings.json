@@ -4,10 +4,13 @@
   "holonomicMode": true,
   "pathFolders": [
     "Depots",
+    "New Robot",
     "Old Robot"
   ],
   "autoFolders": [
-    "Old Robot Autos"
+    "DCMP autos",
+    "Old Robot Autos",
+    "dis 1 autos"
   ],
   "defaultMaxVel": 4.5,
   "defaultMaxAccel": 5.0,

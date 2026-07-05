@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "mid - back"
+            "pathName": "right - mid"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "shoot"
+            "pathName": "mid - right - shoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "dis 1 autos",
+  "folder": "DCMP autos",
   "choreoAuto": false
 }

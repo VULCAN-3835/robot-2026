@@ -45,7 +45,7 @@
     "rotation": 27.89727103094767
   },
   "reversed": false,
-  "folder": null,
+  "folder": "New Robot",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
