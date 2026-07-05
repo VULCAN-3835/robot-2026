@@ -93,6 +93,10 @@ public class ChassisSubsystem extends SubsystemBase {
 
   private double distanceFromHub;
 
+  // Above this vertical acceleration (g, gravity removed) the wheels are being
+  // jolted (bump/collision), so vision stds drop from dist^2 to linear dist
+  private static final double kZAccelBumpThresholdG = 0.3;
+
   // Snaps odometry to vision on the first valid Limelight fix
   private boolean visionInitialized = false;
 
@@ -519,6 +523,12 @@ public class ChassisSubsystem extends SubsystemBase {
    */
   private void updatePoseEstimatorWithVisionBotPose(Pose2d currentPose2d) {
 
+    // While the robot is being jolted vertically the wheel odometry is unreliable,
+    // so vision stds use linear distance instead of distance^2 (more camera trust)
+    boolean zBump = Math.abs(this.imu.getWorldLinearAccelZ()) > kZAccelBumpThresholdG;
+    SmartDashboard.putNumber("Chassis/z accel g", this.imu.getWorldLinearAccelZ());
+    SmartDashboard.putBoolean("Chassis/z bump detected", zBump);
+
     // ── AtCam left ───────────────────────────────────────────────────────────
     Pose2d leftVisionBotPose = this.leftCam.updateResult(currentPose2d);
     double LeftdistanceFromTarget = leftCam.distanceFromTargetMeters();
@@ -531,7 +541,9 @@ public class ChassisSubsystem extends SubsystemBase {
         && this.leftCam.hasValidTarget(LeftdistanceFromTarget)
         && this.leftCam.distanceFromTargetMeters() < 3.3
         && this.leftCam.getTagCount() > 0) {
-      double xyStdsLeft = Math.pow(this.leftCam.getTargetsDistanceAvg(), 2) / this.leftCam.getTagCount();
+      double xyStdsLeft = (zBump
+          ? this.leftCam.getTargetsDistanceAvg()
+          : Math.pow(this.leftCam.getTargetsDistanceAvg(), 2)) / this.leftCam.getTagCount();
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsLeft, xyStdsLeft, 9999));
       poseEstimator.addVisionMeasurement(leftVisionBotPose, this.leftCam.getCameraTimeStampSec());
       last_timestamp = Timer.getFPGATimestamp();
@@ -548,7 +560,9 @@ public class ChassisSubsystem extends SubsystemBase {
         && this.rightCam.hasValidTarget(RightdistanceFromTraget)
         && this.rightCam.distanceFromTargetMeters() < 3.3
         && this.rightCam.getTagCount() > 0) {
-      double xyStdsRight = Math.pow(this.rightCam.getTargetsDistanceAvg(), 2) / this.rightCam.getTagCount();
+      double xyStdsRight = (zBump
+          ? this.rightCam.getTargetsDistanceAvg()
+          : Math.pow(this.rightCam.getTargetsDistanceAvg(), 2)) / this.rightCam.getTagCount();
       poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdsRight, xyStdsRight, 9999));
       poseEstimator.addVisionMeasurement(rightVisionBotPose, this.rightCam.getCameraTimeStampSec());
       last_timestamp = Timer.getFPGATimestamp();
@@ -578,9 +592,10 @@ public class ChassisSubsystem extends SubsystemBase {
         if (jumpDist < 3.0) {
           // Use avgTagDist for std devs; fall back to 2.0 m if not reported (prevents 0 std dev)
           double dist   = ll.avgTagDist > 0.01 ? Math.min(ll.avgTagDist, 5.0) : 2.0;
+          double distFactor = zBump ? dist : dist * dist;
           double xyStds = ll.tagCount == 1
-              ? 0.5 * dist * dist
-              : 0.3 * dist * dist / ll.tagCount;
+              ? 0.5 * distFactor
+              : 0.3 * distFactor / ll.tagCount;
           xyStds = Math.max(xyStds, 0.05); // never fully trust: minimum std dev
 
           // Trust LL yaw only when 2+ tags visible; single-tag yaw solve is too noisy
