@@ -3,43 +3,64 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.0,
-        "y": 7.349
+        "x": 7.77,
+        "y": 5.151
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6652035318072675,
-        "y": 7.128073747495014
+        "x": 7.853051711926973,
+        "y": 6.147545238885818
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.049,
-        "y": 4.989
+        "x": 6.339717948717951,
+        "y": 7.349
       },
       "prevControl": {
-        "x": 2.049,
-        "y": 4.989
+        "x": 7.533225406731342,
+        "y": 7.4129378995364315
+      },
+      "nextControl": {
+        "x": 5.688538461538465,
+        "y": 7.314115384615385
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.0,
+        "y": 7.349
+      },
+      "prevControl": {
+        "x": 4.246644465539376,
+        "y": 7.389822881069267
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "shoot",
-      "waypointRelativePos": 1.0,
+      "name": "stop intake",
+      "waypointRelativePos": 0.6288557213930406,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "shoot"
+          "name": "stop intake"
         }
       }
     }
@@ -54,13 +75,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -35.074
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "New Robot",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

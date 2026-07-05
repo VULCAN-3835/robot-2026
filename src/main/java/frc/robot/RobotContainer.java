@@ -96,6 +96,10 @@ public class RobotContainer {
       }
   
       autoChooser.setDefaultOption("Do Nothing", new InstantCommand());
+      autoChooser.addOption("Left - Depot - Shoot", new PathPlannerAuto("Left - Depot - Shoot"));
+      autoChooser.addOption("center - depot - shoot", new PathPlannerAuto("center - depot - shoot"));
+      autoChooser.addOption("left - mid - left - shoot", new PathPlannerAuto("left - mid - left - shoot"));
+      autoChooser.addOption("right - mid - right - shoot", new PathPlannerAuto("right - mid - right - shoot"));
       SmartDashboard.putData("Auto Chooser", autoChooser);
   
       configureBindings();
@@ -209,8 +213,8 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
       // return new PathPlannerAuto("Left-Nuetral-Depot");
       // return new PathPlannerAuto("mid-back-shoot");
-      return new PathPlannerAuto("right - mid - right - shoot");
-      // return autoChooser.getSelected();
+      // return new PathPlannerAuto("right - mid - right - shoot");
+      return autoChooser.getSelected();
       
     }
     

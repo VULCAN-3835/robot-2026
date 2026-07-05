@@ -1,0 +1,95 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.316410256410258,
+        "y": 7.314153846153846
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.316410256410259,
+        "y": 7.314153846153846
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.77,
+        "y": 6.988564102564103
+      },
+      "prevControl": {
+        "x": 7.756445428534673,
+        "y": 7.639901655891252
+      },
+      "nextControl": {
+        "x": 7.781615384615385,
+        "y": 6.430410256410258
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.77,
+        "y": 5.151
+      },
+      "prevControl": {
+        "x": 7.749237072018256,
+        "y": 4.901863690278545
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.2061191626408977,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.1819645732688668,
+      "rotationDegrees": 90.0
+    },
+    {
+      "waypointRelativePos": 1.3784219001610187,
+      "rotationDegrees": 90.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "intake",
+      "waypointRelativePos": 1.0507462686567217,
+      "endWaypointRelativePos": 2.0,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "intake"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 5.0,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "New Robot",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}
