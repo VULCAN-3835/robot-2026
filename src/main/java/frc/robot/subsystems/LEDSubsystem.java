@@ -7,8 +7,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    private static final int    kPort          = 2;
-    private static final int    kLength        = 12;
+    private static final int    kPort          = 1;
+    private static final int    kLength        = 40;
     private static final double kMinBrightness = 0.25; // no LED goes fully off
 
     private AddressableLED       led;
@@ -24,6 +24,7 @@ public class LEDSubsystem extends SubsystemBase {
             led.setData(buffer);
             led.start();
             timer.start();
+            System.out.println("[LEDSubsystem] Initialized OK on PWM port " + kPort);
         } catch (Exception e) {
             System.err.println("[LEDSubsystem] Init failed, LEDs disabled: " + e.getMessage());
             enabled = false;
@@ -40,12 +41,6 @@ public class LEDSubsystem extends SubsystemBase {
             // Slow drift between electric blue and cyan-blue over 10 seconds
             double baseHue = 118 + 6 * Math.sin(t * (2 * Math.PI / 10.0));
 
-            // Every 5 seconds: quick 0.6 s pulse toward bright cyan, then back
-            double accentPhase = t % 5.0;
-            double accentBlend = accentPhase < 0.6
-                    ? Math.sin(accentPhase / 0.6 * Math.PI)
-                    : 0.0;
-
             for (int i = 0; i < kLength; i++) {
                 // Wave flows along the strip; 1.5 wave cycles visible, moderate speed
                 double phase = i * (2 * Math.PI / kLength) * 1.5 - t * 2.0;
@@ -54,13 +49,7 @@ public class LEDSubsystem extends SubsystemBase {
                 // No LED goes fully off
                 double brightness = kMinBrightness + (1.0 - kMinBrightness) * wave;
 
-                // Accent pulls hue toward cyan
-                double hue = baseHue - accentBlend * 8.0;
-
-                int sat = (int) Math.min(255, 240 + accentBlend * 15);
-                int val = (int) (brightness * 255);
-
-                buffer.setHSV(i, (int) hue, sat, val);
+                buffer.setHSV(i, (int) baseHue, 255, (int) (brightness * 255));
             }
 
             led.setData(buffer);

@@ -74,8 +74,8 @@ public class RobotContainer {
         }),
         new WaitCommand(1.2),
         new ParallelCommandGroup(
-            new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
-            new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage)))));
+            new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage + 1)),
+            new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage + 2)))));
   
       NamedCommands.registerCommand("intake", new ParallelCommandGroup(
           new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
@@ -94,7 +94,7 @@ public class RobotContainer {
         e.printStackTrace();
         autoChooser = new SendableChooser<>();
       }
-  
+      
       autoChooser.setDefaultOption("Do Nothing", new InstantCommand());
       autoChooser.addOption("Left - Depot - Shoot", new PathPlannerAuto("Left - Depot - Shoot"));
       autoChooser.addOption("center - depot - shoot", new PathPlannerAuto("center - depot - shoot"));

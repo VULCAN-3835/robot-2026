@@ -50,7 +50,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private static InterpolatingDoubleTreeMap distanceToTOF = new InterpolatingDoubleTreeMap();
   private static InterpolatingDoubleTreeMap distanceToPitch = new InterpolatingDoubleTreeMap();
   private static double angOffSetMap = 70; // last: 0
-  private static double voltageOffSetMap = 0.2; // last: 0
+  private static double voltageOffSetMap = 0.4; // last: 0
   private static double TOFOffset = 0;
 
   private ChassisSubsystem chassisSubsystem;
