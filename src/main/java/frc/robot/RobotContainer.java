@@ -13,6 +13,7 @@ import frc.robot.commands.TurnToHubCMD;
 import frc.robot.commands.ShootDelayCMD;
 import frc.robot.commands.StorageUpCMD;
 import frc.robot.commands.SetChassisAngleCMD;
+import frc.robot.commands.ShootAndStorageCMD;
 import frc.robot.commands.ShootCMD;
 import frc.robot.subsystems.ChassisSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -25,6 +26,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.wpilibj.RuntimeType;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -67,15 +69,7 @@ public class RobotContainer {
      * The container for the robot. Contains subsystems, OI devices, and commands.
      */
     public RobotContainer() {
-      NamedCommands.registerCommand("shoot",new SequentialCommandGroup(
-        new InstantCommand(() -> {
-            double dist = chassisSubsystem.getDistanceFromHub();
-            shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(dist));
-        }),
-        new WaitCommand(1.2),
-        new ParallelCommandGroup(
-            new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage + 1)),
-            new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage + 2)))));
+      NamedCommands.registerCommand("shoot",new ShootAndStorageCMD(shooterSubsystem,storageSubsystem,chassisSubsystem));
   
       NamedCommands.registerCommand("intake", new ParallelCommandGroup(
           new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
@@ -123,8 +117,13 @@ public class RobotContainer {
   
       xboxControllerDrive.leftTrigger().whileTrue(new ParallelCommandGroup(
           new InstantCommand(() -> intakeSubsystem.setArmState(intakeStates.INTAKE)),
-          new InstantCommand(() -> intakeSubsystem.setRollerVoltage(3))));
-      xboxControllerDrive.leftTrigger().onFalse(new InstantCommand(() -> intakeSubsystem.setRollerVoltage(0)));
+          new InstantCommand(() -> intakeSubsystem.setRollerVoltage(3)),
+          new InstantCommand(()->xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0.5))));
+
+      xboxControllerDrive.leftTrigger().onFalse(new ParallelCommandGroup(
+        new InstantCommand(() -> intakeSubsystem.setRollerVoltage(0)),
+        new InstantCommand(()-> xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0))
+        ));
 
       //Right bumper drops intake to intake position
       xboxControllerDrive.rightBumper()
@@ -134,37 +133,19 @@ public class RobotContainer {
       xboxControllerDrive.leftBumper().whileTrue(new TurnToHubCMD(chassisSubsystem,
           () -> xboxControllerDrive.getLeftY(),
           () -> xboxControllerDrive.getLeftX()));
-  
 
-  
-  
-      //Right trigger shoots while true, and turns off flywheel, hood, and storage when released
 
-    //   xboxControllerDrive.rightTrigger().whileTrue(new ParallelCommandGroup(
-    //       new ShootDelayCMD(shooterSubsystem, storageSubsystem, chassisSubsystem, this),
-    //       new InstantCommand(() -> xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0.7))));
-    //   xboxControllerDrive.rightTrigger().toggleOnFalse(new ParallelCommandGroup(
-    //       new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(0), shooterSubsystem),
-    //       new InstantCommand(() -> shooterSubsystem.setHoodAngle(0)),
-    //       storageSubsystem.stopStorage(), 
-    //       new InstantCommand(() -> xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0)),
-    //       new InstantCommand(() -> intakeSubsystem.setRollerState(false))));
-
-    xboxControllerDrive.rightTrigger().whileTrue(new SequentialCommandGroup(
-        new InstantCommand(() -> {
-            double dist = chassisSubsystem.getDistanceFromHub();
-            shooterSubsystem.setFlywheelVoltage(shooterSubsystem.getVoltageForDistance(dist));
-        }),
-        new WaitCommand(1.2),
-        new ParallelCommandGroup(
-            new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(StorageConstants.elevatorVoltage)),
-            new InstantCommand(() -> storageSubsystem.setFeedMotorPower(StorageConstants.reloadVoltage)))));
-
+    //Right trigger-while holding : warms up the flywheel to the voltage according to the map and then starts the rollers to shoot 
+    xboxControllerDrive.rightTrigger().whileTrue(new ParallelCommandGroup(
+      new ShootAndStorageCMD(shooterSubsystem, storageSubsystem, chassisSubsystem),
+      new InstantCommand(()->xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0.5))));
+    
+    //Right trigger-once releasing it :stops the flywheel and rollers together
     xboxControllerDrive.rightTrigger().toggleOnFalse(new ParallelCommandGroup(
         new InstantCommand(() -> shooterSubsystem.setFlywheelVoltage(0)),
-        new InstantCommand(() -> shooterSubsystem.setHoodAngle(0)),
         new InstantCommand(() -> storageSubsystem.setElevatorMotorPower(0)),
-        new InstantCommand(() -> storageSubsystem.setFeedMotorPower(0))));
+        new InstantCommand(() -> storageSubsystem.setFeedMotorPower(0)),
+        new InstantCommand(()-> xboxControllerDrive.setRumble(RumbleType.kBothRumble, 0))));
   
       // D-pad: voltage offset ±0.1 V
       xboxControllerDrive.povUp().onTrue(new InstantCommand(()->shooterSubsystem.scaleUpVoltage()));

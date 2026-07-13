@@ -56,16 +56,11 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 
-
-
-
 public class ChassisSubsystem extends SubsystemBase {
   // An enum with the names of the wheel modules
   public enum Wheels {
     LEFT_FRONT, RIGHT_FRONT, RIGHT_BACK, LEFT_BACK
   }
-
- 
 
   private AtCamUtil leftCam;
   private AtCamUtil rightCam;
@@ -110,9 +105,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
   // Sysid Rotinue
   SysIdRoutine routine;
-
   public ChassisSubsystem() {
-    System.out.println("[ChassisSubsystem] Constructor starting...");
 
     // Modules Initilization:
     this.swerve_modules[Wheels.LEFT_FRONT.ordinal()] = new SwerveModule(
