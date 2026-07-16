@@ -227,6 +227,10 @@ public class ShooterSubsystem extends SubsystemBase {
     this.flyWheelMotor1.setVoltage(V);
   }
 
+  public TalonFX getFlywheelMotor() {
+    return this.flyWheelMotor1;
+  }
+
   public double calculateAzimuthAngle(Pose2d robotPose, Translation3d target) {
     if (robotPose != null) {
 

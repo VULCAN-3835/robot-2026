@@ -36,7 +36,10 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -49,6 +52,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.ChassisConstants;
 import frc.robot.Constants.ModuleConstants;
 import frc.robot.Util.SwerveModule;
+import frc.robot.sim.ChassisSimulation;
 import frc.robot.Util.AtCamUtil;
 import frc.robot.Util.LimelightUtil;
 
@@ -102,6 +106,15 @@ public class ChassisSubsystem extends SubsystemBase {
       new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
       new SwerveModuleState(0, Rotation2d.fromDegrees(0))
   };
+
+  // maple-sim physics bridge, only non-null in simulation
+  private ChassisSimulation chassisSimulation = null;
+
+  // Struct publishers so AdvantageScope's 3D field can display the poses
+  private final StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("Chassis/EstimatedPose", Pose2d.struct).publish();
+  private final StructPublisher<Pose2d> simTruePosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("Chassis/SimTruePose", Pose2d.struct).publish();
 
   // Sysid Rotinue
   SysIdRoutine routine;
@@ -177,6 +190,12 @@ public class ChassisSubsystem extends SubsystemBase {
 
     // Resets distance from hub
     this.distanceFromHub = 0;
+
+    // Hooks the drivetrain into the maple-sim physics world (sim only). Created after
+    // the modules and IMU so their sim devices already exist.
+    if (RobotBase.isSimulation()) {
+      this.chassisSimulation = new ChassisSimulation(this.swerve_modules, startingPos);
+    }
 
     try {
       AutoBuilder.configure(
@@ -271,14 +290,18 @@ public class ChassisSubsystem extends SubsystemBase {
 
   /**
    * Updates the swerve_positions array based on the current SwerveModulePositions
-   * reported by the SwerveModules
+   * reported by the SwerveModules.
+   *
+   * <p>The array must follow the kinematics module order (FL, FR, BL, BR) that the
+   * pose estimator expects — which is NOT the Wheels enum order (LF, RF, RB, LB).
+   * Indexing by Wheels ordinal used to hand the estimator the two rear modules
+   * swapped.
    */
   private void updateSwervePositions() {
-    this.swerve_positions[Wheels.LEFT_FRONT.ordinal()] = this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition();
-    this.swerve_positions[Wheels.RIGHT_FRONT.ordinal()] = this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()]
-        .getPosition();
-    this.swerve_positions[Wheels.LEFT_BACK.ordinal()] = this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition();
-    this.swerve_positions[Wheels.RIGHT_BACK.ordinal()] = this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition();
+    this.swerve_positions[0] = this.swerve_modules[Wheels.LEFT_FRONT.ordinal()].getPosition();
+    this.swerve_positions[1] = this.swerve_modules[Wheels.RIGHT_FRONT.ordinal()].getPosition();
+    this.swerve_positions[2] = this.swerve_modules[Wheels.LEFT_BACK.ordinal()].getPosition();
+    this.swerve_positions[3] = this.swerve_modules[Wheels.RIGHT_BACK.ordinal()].getPosition();
   }
 
   /**
@@ -298,6 +321,11 @@ public class ChassisSubsystem extends SubsystemBase {
 
   public LimelightUtil getLimelightFuel() {
     return this.limelightFuel;
+  }
+
+  /** The maple-sim bridge; null on the real robot. */
+  public ChassisSimulation getChassisSimulation() {
+    return this.chassisSimulation;
   }
 
   /**
@@ -461,6 +489,11 @@ public class ChassisSubsystem extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     this.poseEstimator.resetPose(pose);
+
+    // Teleport the physics-world robot too, so sim matches (e.g. at auto start)
+    if (this.chassisSimulation != null) {
+      this.chassisSimulation.setPose(pose);
+    }
   }
 
   /**
@@ -653,6 +686,7 @@ public class ChassisSubsystem extends SubsystemBase {
 
     updatePoseEstimatorWithVisionBotPose(this.poseEstimator.getEstimatedPosition());
     this.field.setRobotPose(this.poseEstimator.getEstimatedPosition());
+    this.estimatedPosePublisher.set(this.poseEstimator.getEstimatedPosition());
 
     this.distanceFromHub = (this.poseEstimator.getEstimatedPosition().getTranslation()
         .getDistance(ChassisConstants.getHubTopCenter().toTranslation2d()));
@@ -719,5 +753,15 @@ public class ChassisSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Chassis/match time", DriverStation.getMatchTime());
     SmartDashboard.putNumber("Chassis/battary voltage", RobotController.getBatteryVoltage());
 
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // Feeds the maple-sim gyro reading into the NavX and publishes the ground-truth
+    // pose (where the robot physically is in the sim world, as opposed to where
+    // odometry thinks it is). The physics world itself ticks in Robot.simulationPeriodic
+    this.chassisSimulation.update();
+    this.simTruePosePublisher.set(this.chassisSimulation.getActualPose());
+    this.field.getObject("simTruePose").setPose(this.chassisSimulation.getActualPose());
   }
 }

@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import org.ironmaple.simulation.SimulatedArena;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -129,13 +134,28 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
   }
 
+  // Publishes the simulated fuel positions so AdvantageScope can draw them in 3D
+  private StructArrayPublisher<Pose3d> simFuelPublisher;
+
   /** This function is called once when the robot is first started up. */
   @Override
   public void simulationInit() {
+    // Spawns the 2026 REBUILT field's game pieces in the physics world
+    SimulatedArena.getInstance().resetFieldForAuto();
+
+    simFuelPublisher = NetworkTableInstance.getDefault()
+        .getStructArrayTopic("FieldSimulation/Fuel", Pose3d.struct).publish();
   }
 
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
+    // Advances the maple-sim physics world (drivetrain, collisions, game pieces)
+    SimulatedArena.getInstance().simulationPeriodic();
+
+    // Intake pickup, flywheel physics and shooting
+    m_robotContainer.updateSimulation();
+
+    simFuelPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
   }
 }

@@ -91,6 +91,20 @@ public class IntakeSubsystem extends SubsystemBase {
     return this.armEncoder.getAbsolutePosition().getValue().in(Degrees);
   }
 
+  /** The state most recently commanded via setArmState (null until first command). */
+  public intakeStates getTargetState() {
+    return this.target;
+  }
+
+  /** The arm angle the PID is currently driving toward, in degrees. */
+  public double getArmTargetDegrees() {
+    return this.pidController.getGoal().position;
+  }
+
+  public TalonFX getRollerMotor() {
+    return this.rollerMotor;
+  }
+
   public boolean isAtSetpoint() {
     return pidController.atGoal();
   }

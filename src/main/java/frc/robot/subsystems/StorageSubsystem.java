@@ -68,6 +68,10 @@ public class StorageSubsystem extends SubsystemBase {
     elevatorMotor1.setVoltage(V);
   }
 
+  public TalonFX getFeedMotor() {
+    return this.feedMotor;
+  }
+
   public Command setFeedMotorStateCMD(StorageState state) {
     return new InstantCommand(() -> setFeedMotorState(state));
   }

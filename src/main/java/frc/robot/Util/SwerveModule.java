@@ -23,6 +23,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.AngleUnit;
@@ -88,10 +89,12 @@ public class SwerveModule {
     /**
      * Configures encoder offset
     */
-    private void configEnc() { 
+    private void configEnc() {
         CANcoderConfiguration canConfigs = new CANcoderConfiguration();
 
-        canConfigs.MagnetSensor.MagnetOffset = this.absoluteEncoderOffset; // Sets the offset of the Cancoder
+        // In simulation the encoder directly measures the simulated azimuth, so the
+        // physical magnet offset must not be applied
+        canConfigs.MagnetSensor.MagnetOffset = RobotBase.isSimulation() ? 0 : this.absoluteEncoderOffset;
 
         this.absEncoder.getConfigurator().apply(canConfigs);
     }
@@ -106,6 +109,13 @@ public class SwerveModule {
         TalonFXConfiguration steerConfigs = new TalonFXConfiguration();
 
         steerConfigs.Slot0 = Constants.ModuleConstants.getSteerMotorGains(); // Sets constant closed loop values
+
+        // The real-robot steer gains are tuned against physical friction the sim model
+        // doesn't reproduce; the sim gains come from the official maple-sim CTRE template
+        if (RobotBase.isSimulation()) {
+            steerConfigs.Slot0.kP = Constants.SimulationConstants.kSimSteerP;
+            steerConfigs.Slot0.kD = Constants.SimulationConstants.kSimSteerD;
+        }
 
         steerConfigs.Feedback.FeedbackRemoteSensorID = absEncoderID; // Changes the feedback sensor of the Steer motor into Cancoder
         steerConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder; // Sets the source into can coder
@@ -138,7 +148,11 @@ public class SwerveModule {
         driveConfigs.CurrentLimits.SupplyCurrentLimitEnable = ModuleConstants.kDriveEnableCurrentLimit;
 
         driveConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveConfigs.MotorOutput.Inverted = inverted?InvertedValue.Clockwise_Positive:InvertedValue.CounterClockwise_Positive;
+        // Inversion is a physical wiring/mounting property; the simulated module always
+        // uses the positive convention (known maple-sim + Phoenix sim interaction issue)
+        driveConfigs.MotorOutput.Inverted = (inverted && RobotBase.isReal())
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
 
         this.driveMotor.getConfigurator().apply(driveConfigs);
         this.driveMotor.getConfigurator().setPosition(0);
@@ -159,6 +173,9 @@ public class SwerveModule {
     }
     public TalonFX getSteerMotor(){
         return this.steerMotor;
+    }
+    public CANcoder getAbsEncoder(){
+        return this.absEncoder;
     }
     /**
      * Returns the module's angle closed loop controller output to the motor in power precentage (i.e between -1 to 1 where 1 is full 

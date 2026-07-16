@@ -359,6 +359,46 @@ public final class Constants {
 
   }
 
+  public static final class SimulationConstants {
+    // Robot footprint including bumpers (chassis is 0.7x0.7 per PathPlanner settings)
+    public static final double kBumperLengthXMeters = 0.76;
+    public static final double kBumperWidthYMeters = 0.76;
+
+    // maple-sim module physics (values from the official CTRE maple-sim template)
+    public static final double kDriveFrictionVoltage = 0.1; // volts to overcome static friction
+    public static final double kSteerFrictionVoltage = 0.05;
+    public static final double kSteerRotationalInertia = 0.05; // kg*m^2
+    public static final double kWheelCOF = 1.2; // wheel-carpet coefficient of friction
+
+    // Steer closed-loop gains used in sim only: the real-robot kP is tuned for the
+    // physical module's friction/inertia, which the sim model doesn't reproduce
+    public static final double kSimSteerP = 70.0;
+    public static final double kSimSteerD = 4.5;
+
+    // ── Intake sim ──
+    public static final double kIntakeWidthMeters = 0.55; // lateral reach of the intake
+    public static final double kIntakeExtensionMeters = 0.25; // how far past the bumper it reaches
+    public static final int kIntakeCapacity = 25; // max fuel the robot can hold
+    public static final int kPreloadedFuel = 8; // fuel loaded at sim start
+    public static final double kIntakeMinRollerVoltage = 1.0; // rollers "on" above this
+
+    // ── Flywheel sim ──
+    public static final double kFlywheelMOI = 0.004; // kg*m^2, 3-Kraken flywheel assembly
+    public static final double kFlywheelRadiusMeters = 0.0508; // 4in wheel
+
+    // ── Shooting sim (tune these against real shot data) ──
+    public static final double kFuelLaunchSpeedFactor = 0.5; // wheel surface speed -> fuel exit speed
+    public static final double kMinShootFlywheelRPS = 15; // flywheel speed to actually launch
+    public static final double kMinFeedVoltage = 1.0; // feed motor "on" above this
+    public static final double kSecondsBetweenShots = 0.25;
+    public static final double kShooterHeightMeters = 0.6; // fuel exit height
+    public static final double kShooterPitchDegrees = 55; // launch elevation (hood not simulated)
+
+    // ── Component visualization placeholders (calibrate when the CAD is imported) ──
+    public static final double kArmPivotXMeters = 0.30;
+    public static final double kArmPivotZMeters = 0.25;
+  }
+
   // Safe angle ranges (degrees) for barrier checks in periodic
   // These are conservative defaults — update to match your physical limits.
   public static final double kHoodMinAngleDeg = 0.0;

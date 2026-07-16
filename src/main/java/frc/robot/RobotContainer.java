@@ -35,8 +35,10 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.sim.SuperstructureSimulation;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 
@@ -57,6 +59,18 @@ public class RobotContainer {
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(chassisSubsystem);
   private final StorageSubsystem storageSubsystem = new StorageSubsystem();
   private final LEDSubsystem ledSubsystem = new LEDSubsystem();
+
+  // Simulates intake pickup, flywheel physics and shooting; null on the real robot
+  private final SuperstructureSimulation superstructureSimulation = RobotBase.isSimulation()
+      ? new SuperstructureSimulation(chassisSubsystem, intakeSubsystem, storageSubsystem, shooterSubsystem)
+      : null;
+
+  /** Called by Robot.simulationPeriodic each sim loop. */
+  public void updateSimulation() {
+    if (superstructureSimulation != null) {
+      superstructureSimulation.update();
+    }
+  }
 
   private final static CommandXboxController xboxControllerDrive = new CommandXboxController(
         OperatorConstants.kDriverControllerPort);
