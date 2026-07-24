@@ -4,9 +4,8 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -21,18 +20,14 @@ import frc.robot.Constants.StorageConstants.StorageState;
 public class StorageSubsystem extends SubsystemBase {
   /** Creates a new StorageSubsystem. */
   private TalonFX feedMotor;
-  private TalonFX elevatorMotor1;
-  private TalonFX elevatorMotor2;
+  private TalonFX elevatorMotor;
 
   private StorageState state;
 
   public StorageSubsystem() {
 
     this.feedMotor = new TalonFX(StorageConstants.feedMotorID);
-    this.elevatorMotor1 = new TalonFX(StorageConstants.elevatorMotor1ID);
-    this.elevatorMotor2 = new TalonFX(StorageConstants.elevatorMotor2ID);
-
-    this.elevatorMotor2.setControl(new Follower(StorageConstants.elevatorMotor1ID, MotorAlignmentValue.Aligned));
+    this.elevatorMotor = new TalonFX(StorageConstants.elevatorMotorID);
 
     // this.elevatorMotor.setControl(new Follower(feedMotor.getDeviceID(),
     // MotorAlignmentValue.Opposed));
@@ -47,12 +42,12 @@ public class StorageSubsystem extends SubsystemBase {
         setFeedMotorPower(0);
         break;
       case RELOAD:
-        setFeedMotorPower(StorageConstants.reloadVoltage);
+        setFeedMotorPower(StorageConstants.reloadPower);
     }
   }
 
-  public void setFeedMotorPower(double V) {
-    feedMotor.setVoltage(V);
+  public void setFeedMotorPower(double power) {
+    feedMotor.set(power);
   }
 
   /**
@@ -64,8 +59,8 @@ public class StorageSubsystem extends SubsystemBase {
     return feedMotor.getStatorCurrent().getValueAsDouble();
   }
 
-  public void setElevatorMotorPower(double V) {
-    elevatorMotor1.setVoltage(V);
+  public void setElevatorMotorPower(double power) {
+    elevatorMotor.set(power);
   }
 
   public Command setFeedMotorStateCMD(StorageState state) {
@@ -88,8 +83,8 @@ public class StorageSubsystem extends SubsystemBase {
    */
   public ParallelCommandGroup runStorage() {
     return new ParallelCommandGroup(
-        new InstantCommand(() -> this.setFeedMotorPower(StorageConstants.reloadVoltage)),
-        new InstantCommand(() -> this.setElevatorMotorPower(StorageConstants.elevatorVoltage)));
+        new InstantCommand(() -> this.setFeedMotorPower(StorageConstants.reloadPower)),
+        new InstantCommand(() -> this.setElevatorMotorPower(StorageConstants.elevatorPower)));
   }
 
   /**
